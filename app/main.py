@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.core.database import init_db
+from app.core.scheduler import start_scheduler, stop_scheduler
 
 app = FastAPI(
     title="Uptraqr",
@@ -10,6 +11,11 @@ app = FastAPI(
 @app.on_event("startup")
 def startup():
     init_db()
+    start_scheduler()
+
+@app.on_event("shutdown")
+def shutdown():
+    stop_scheduler()
 
 @app.get("/")
 def root():
