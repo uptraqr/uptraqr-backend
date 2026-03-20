@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.core.database import init_db
 from app.core.scheduler import start_scheduler, stop_scheduler
+from app.api.monitors import router as monitors_router
 
 app = FastAPI(
     title="Uptraqr",
@@ -28,3 +29,5 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+app.include_router(monitors_router, prefix="/api")
