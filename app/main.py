@@ -1,10 +1,15 @@
 from fastapi import FastAPI
+from app.core.database import init_db
 
 app = FastAPI(
     title="Uptraqr",
     description="Uptime monitoring platform for local businesses",
     version="0.1.0"
 )
+
+@app.on_event("startup")
+def startup():
+    init_db()
 
 @app.get("/")
 def root():
