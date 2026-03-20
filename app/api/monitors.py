@@ -52,3 +52,13 @@ def get_incidents(monitor_id: int, db: Session = Depends(get_db)):
     return db.query(Incident).filter(
         Incident.monitor_id == monitor_id
     ).order_by(Incident.started_at.desc()).all()
+
+@router.get("/monitors/{monitor_id}/ssl")
+def check_ssl_status(monitor_id: int, db: Session = Depends(get_db)):
+    from app.services.ssl_checker import check_ssl
+    monitor = db.query(Monitor).filter(Monitor.id == monitor_id).first()
+    if not monitor:
+        raise HTTPException(status_code=404, detail="Monitor not found")
+    hostname = monitor.url.replace("https://", "").replace("http://", "").split("/")[0]
+    result = check_ssl(hostname)
+    return {"monitor": monitor.name, "url": monitor.url, **result}
