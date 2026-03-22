@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from app.core.database import init_db
 from app.core.scheduler import start_scheduler, stop_scheduler
@@ -11,6 +12,8 @@ app = FastAPI(
     version="0.1.0"
 )
 
+templates = Jinja2Templates(directory="app/templates")
+
 @app.on_event("startup")
 def startup():
     init_db()
@@ -20,13 +23,9 @@ def startup():
 def shutdown():
     stop_scheduler()
 
-@app.get("/")
-def root():
-    return {
-        "name": "Uptraqr",
-        "status": "running",
-        "version": "0.1.0"
-    }
+@app.get("/", response_class=HTMLResponse)
+def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/health")
 def health():

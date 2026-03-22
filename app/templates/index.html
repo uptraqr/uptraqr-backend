@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uptraqr — Uptime Monitoring for Local Businesses</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+        
+        /* NAV */
+        nav { background: #1e293b; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 24px; font-weight: 700; color: #38bdf8; }
+        .logo span { color: #e2e8f0; }
+        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-links a { color: #94a3b8; text-decoration: none; font-size: 15px; }
+        .nav-links a:hover { color: #e2e8f0; }
+        .btn-primary { background: #38bdf8; color: #0f172a; padding: 10px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 15px; }
+        .btn-primary:hover { background: #7dd3fc; color: #0f172a !important; }
+
+        /* HERO */
+        .hero { text-align: center; padding: 100px 40px; max-width: 800px; margin: 0 auto; }
+        .hero-badge { display: inline-block; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 24px; }
+        .hero h1 { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
+        .hero h1 span { color: #38bdf8; }
+        .hero p { font-size: 20px; color: #94a3b8; margin-bottom: 40px; line-height: 1.6; }
+        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn-secondary { background: transparent; color: #e2e8f0; padding: 12px 28px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 16px; border: 1px solid #334155; }
+        .btn-large { padding: 14px 32px; font-size: 16px; }
+
+        /* STATS */
+        .stats { background: #1e293b; border-top: 1px solid #334155; border-bottom: 1px solid #334155; padding: 40px; display: flex; justify-content: center; gap: 80px; flex-wrap: wrap; }
+        .stat { text-align: center; }
+        .stat .number { font-size: 36px; font-weight: 800; color: #38bdf8; }
+        .stat .label { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+
+        /* FEATURES */
+        .features { max-width: 1100px; margin: 80px auto; padding: 0 40px; }
+        .features h2 { text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+        .features .subtitle { text-align: center; color: #94a3b8; font-size: 18px; margin-bottom: 60px; }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .feature-card { background: #1e293b; border-radius: 16px; padding: 32px; border: 1px solid #334155; }
+        .feature-icon { font-size: 36px; margin-bottom: 16px; }
+        .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+        .feature-card p { color: #94a3b8; font-size: 15px; line-height: 1.6; }
+
+        /* PRICING */
+        .pricing { max-width: 1100px; margin: 80px auto; padding: 0 40px; }
+        .pricing h2 { text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+        .pricing .subtitle { text-align: center; color: #94a3b8; font-size: 18px; margin-bottom: 60px; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .pricing-card { background: #1e293b; border-radius: 16px; padding: 32px; border: 1px solid #334155; }
+        .pricing-card.popular { border: 2px solid #38bdf8; position: relative; }
+        .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #38bdf8; color: #0f172a; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .pricing-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .price { font-size: 48px; font-weight: 800; color: #38bdf8; margin: 16px 0; }
+        .price span { font-size: 18px; color: #94a3b8; font-weight: 400; }
+        .pricing-features { list-style: none; margin: 24px 0 32px; }
+        .pricing-features li { padding: 8px 0; color: #94a3b8; font-size: 15px; border-bottom: 1px solid #334155; }
+        .pricing-features li::before { content: "✅ "; }
+
+        /* CTA */
+        .cta { text-align: center; padding: 100px 40px; background: #1e293b; border-top: 1px solid #334155; }
+        .cta h2 { font-size: 40px; font-weight: 700; margin-bottom: 16px; }
+        .cta p { color: #94a3b8; font-size: 18px; margin-bottom: 40px; }
+
+        /* FOOTER */
+        footer { text-align: center; padding: 40px; color: #475569; font-size: 14px; border-top: 1px solid #334155; }
+        footer a { color: #475569; text-decoration: none; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 36px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .stats { gap: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">up<span>traqr</span></div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="mailto:hello@uptraqr.com" class="btn-primary">Get Started</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-badge">🚀 Now monitoring local businesses across Canada</div>
+        <h1>Know when your website goes down <span>before your customers do</span></h1>
+        <p>Uptraqr monitors your website 24/7 and alerts you instantly when something goes wrong. Never lose a customer to downtime again.</p>
+        <div class="hero-buttons">
+            <a href="mailto:hello@uptraqr.com" class="btn-primary btn-large">Start Free Trial</a>
+            <a href="#features" class="btn-secondary btn-large">See How It Works</a>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="number">24/7</div>
+            <div class="label">Continuous Monitoring</div>
+        </div>
+        <div class="stat">
+            <div class="number">5min</div>
+            <div class="label">Check Interval</div>
+        </div>
+        <div class="stat">
+            <div class="number">&lt;1min</div>
+            <div class="label">Alert Response Time</div>
+        </div>
+        <div class="stat">
+            <div class="number">$10</div>
+            <div class="label">Starting Per Month</div>
+        </div>
+    </div>
+
+    <div class="features" id="features">
+        <h2>Everything you need to stay online</h2>
+        <p class="subtitle">Simple, powerful monitoring built for local businesses</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🟢</div>
+                <h3>Uptime Monitoring</h3>
+                <p>We check your website every 5 minutes, 24/7. The moment it goes down you get an instant alert via email.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>SSL Certificate Alerts</h3>
+                <p>We warn you 30 days before your SSL certificate expires. No more scary "Not Secure" warnings scaring away customers.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Response Time Tracking</h3>
+                <p>Track how fast your website loads. Slow websites lose customers — we help you catch performance issues early.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Incident History</h3>
+                <p>A full log of every outage — when it happened, how long it lasted. Perfect for holding your hosting provider accountable.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📧</div>
+                <h3>Instant Email Alerts</h3>
+                <p>Get notified the moment your site goes down and when it recovers. No more finding out from an angry customer.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>Status Dashboard</h3>
+                <p>A clean dashboard showing all your sites, their current status, response times and SSL expiry dates in one place.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="pricing" id="pricing">
+        <h2>Simple, honest pricing</h2>
+        <p class="subtitle">No hidden fees. Cancel anytime.</p>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Starter</h3>
+                <div class="price">$10<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>3 websites monitored</li>
+                    <li>5 minute checks</li>
+                    <li>Email alerts</li>
+                    <li>SSL monitoring</li>
+                    <li>30 day history</li>
+                </ul>
+                <a href="mailto:hello@uptraqr.com" class="btn-primary" style="display:block; text-align:center;">Get Started</a>
+            </div>
+            <div class="pricing-card popular">
+                <div class="popular-badge">MOST POPULAR</div>
+                <h3>Pro</h3>
+                <div class="price">$25<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>10 websites monitored</li>
+                    <li>1 minute checks</li>
+                    <li>Email + SMS alerts</li>
+                    <li>SSL monitoring</li>
+                    <li>90 day history</li>
+                </ul>
+                <a href="mailto:hello@uptraqr.com" class="btn-primary" style="display:block; text-align:center;">Get Started</a>
+            </div>
+            <div class="pricing-card">
+                <h3>Agency</h3>
+                <div class="price">$65<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>Unlimited websites</li>
+                    <li>1 minute checks</li>
+                    <li>Email + SMS alerts</li>
+                    <li>SSL monitoring</li>
+                    <li>1 year history</li>
+                </ul>
+                <a href="mailto:hello@uptraqr.com" class="btn-primary" style="display:block; text-align:center;">Get Started</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta">
+        <h2>Ready to never miss downtime again?</h2>
+        <p>Join local businesses across Canada who trust Uptraqr to watch their websites 24/7.</p>
+        <a href="mailto:hello@uptraqr.com" class="btn-primary btn-large">Start Your Free Trial</a>
+    </div>
+
+    <footer>
+        <p>© 2026 Uptraq Technologies — <a href="mailto:hello@uptraqr.com">hello@uptraqr.com</a> — Surrey, BC, Canada</p>
+    </footer>
+
+</body>
+</html>
