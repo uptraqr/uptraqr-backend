@@ -62,3 +62,4 @@ def check_ssl_status(monitor_id: int, db: Session = Depends(get_db)):
     hostname = monitor.url.replace("https://", "").replace("http://", "").split("/")[0]
     result = check_ssl(hostname)
     return {"monitor": monitor.name, "url": monitor.url, **result}
+
