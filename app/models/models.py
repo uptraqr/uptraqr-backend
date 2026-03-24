@@ -9,6 +9,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    name = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Monitor(Base):
