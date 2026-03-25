@@ -1,64 +1,61 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.auth import hash_password, verify_password, create_access_token
 from app.models.models import User
 
 router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
 
-class UserSignup(BaseModel):
-    email: str
-    password: str
-    name: str
+@router.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
 
-@router.post("/auth/signup")
-def signup(user: UserSignup, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == user.email).first()
+@router.get("/signup", response_class=HTMLResponse)
+def signup_page(request: Request):
+    return templates.TemplateResponse("signup.html", {"request": request})
+
+@router.post("/api/auth/signup")
+def signup(
+    name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    existing = db.query(User).filter(User.email == email).first()
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Email already registered"
-        )
+        raise HTTPException(status_code=400, detail="Email already registered")
     new_user = User(
-        email=user.email,
-        password=hash_password(user.password),
-        name=user.name
+        email=email,
+        password=hash_password(password),
+        name=name
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     token = create_access_token({"sub": new_user.email})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": new_user.id,
-            "email": new_user.email,
-            "name": new_user.name
-        }
-    }
+    response = RedirectResponse(url="/dashboard", status_code=302)
+    response.set_cookie(key="access_token", value=token, httponly=True, max_age=60*60*24*7)
+    return response
 
-@router.post("/auth/login")
-def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == form.username).first()
-    if not user or not verify_password(form.password, user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
-        )
+@router.post("/api/auth/login")
+def login(
+    email: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not verify_password(password, user.password):
+        raise HTTPException(status_code=401, detail="Incorrect email or password")
     token = create_access_token({"sub": user.email})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name
-        }
-    }
+    response = RedirectResponse(url="/dashboard", status_code=302)
+    response.set_cookie(key="access_token", value=token, httponly=True, max_age=60*60*24*7)
+    return response
 
-@router.get("/auth/me")
-def get_me(db: Session = Depends(get_db)):
-    return {"message": "Auth working"}
+@router.get("/logout")
+def logout():
+    response = RedirectResponse(url="/login", status_code=302)
+    response.delete_cookie("access_token")
+    return response

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Request, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.models import Monitor, CheckResult
+from app.core.auth import get_current_user_optional
+from app.models.models import Monitor, CheckResult, User
 from app.services.ssl_checker import check_ssl
 
 router = APIRouter()
@@ -11,7 +12,16 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request, db: Session = Depends(get_db)):
-    monitors = db.query(Monitor).filter(Monitor.is_active == True).all()
+    current_user = get_current_user_optional(request, db)
+
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    monitors = db.query(Monitor).filter(
+        Monitor.user_id == current_user.id,
+        Monitor.is_active == True
+    ).all()
+
     monitor_data = []
     sites_up = 0
     sites_down = 0
@@ -30,15 +40,16 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         ssl_days = ssl["days_left"] if ssl["valid"] else "N/A"
         ssl_warning = ssl.get("expiring_soon", False)
 
-        if is_up:
+        if is_up == True:
             sites_up += 1
-        else:
+        elif is_up == False:
             sites_down += 1
 
         if ssl_warning:
             ssl_warnings += 1
 
         monitor_data.append({
+            "id": monitor.id,
             "name": monitor.name,
             "url": monitor.url,
             "is_up": is_up,
@@ -48,11 +59,15 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "last_checked": last_checked
         })
 
-    return templates.TemplateResponse("dashboard.html", {
+    response = templates.TemplateResponse("dashboard.html", {
         "request": request,
         "monitors": monitor_data,
         "total_monitors": len(monitors),
         "sites_up": sites_up,
         "sites_down": sites_down,
-        "ssl_warnings": ssl_warnings
+        "ssl_warnings": ssl_warnings,
+        "user": current_user
     })
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    return response
