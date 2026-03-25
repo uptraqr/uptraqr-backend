@@ -10,6 +10,8 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     name = Column(String, nullable=True)
+    plan = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Monitor(Base):
