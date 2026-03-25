@@ -59,3 +59,22 @@ def logout():
     response = RedirectResponse(url="/login", status_code=302)
     response.delete_cookie("access_token")
     return response
+
+from pydantic import BaseModel
+
+class UpdatePhone(BaseModel):
+    phone: str
+
+@router.post("/api/auth/update-phone")
+def update_phone(
+    data: UpdatePhone,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    from app.core.auth import get_current_user_optional
+    current_user = get_current_user_optional(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    current_user.phone = data.phone
+    db.commit()
+    return {"message": "Phone updated successfully"}

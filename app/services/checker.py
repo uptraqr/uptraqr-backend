@@ -1,8 +1,9 @@
 import requests
 from datetime import datetime
 from app.core.database import SessionLocal
-from app.models.models import Monitor, CheckResult, Incident
+from app.models.models import Monitor, CheckResult, Incident, User
 from app.services.email_alerts import send_down_alert, send_recovery_alert
+from app.services.sms_alerts import send_down_sms, send_recovery_sms
 
 def check_url(url: str):
     try:
@@ -34,6 +35,8 @@ def run_checks():
             )
             db.add(check)
 
+            user = db.query(User).filter(User.id == monitor.user_id).first()
+
             if not result["is_up"]:
                 existing = db.query(Incident).filter(
                     Incident.monitor_id == monitor.id,
@@ -43,6 +46,8 @@ def run_checks():
                     incident = Incident(monitor_id=monitor.id)
                     db.add(incident)
                     send_down_alert(monitor.name, monitor.url)
+                    if user and user.phone:
+                        send_down_sms(monitor.name, monitor.url, user.phone)
             else:
                 open_incident = db.query(Incident).filter(
                     Incident.monitor_id == monitor.id,
@@ -52,6 +57,8 @@ def run_checks():
                     open_incident.is_resolved = True
                     open_incident.resolved_at = datetime.utcnow()
                     send_recovery_alert(monitor.name, monitor.url)
+                    if user and user.phone:
+                        send_recovery_sms(monitor.name, monitor.url, user.phone)
 
             db.commit()
     finally:
