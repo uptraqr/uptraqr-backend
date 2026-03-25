@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+load_dotenv()
+from app.api.admin import router as admin_router
+from app.api.status import router as status_router
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -35,3 +39,5 @@ def health():
 app.include_router(monitors_router, prefix="/api")
 app.include_router(dashboard_router)
 app.include_router(auth_router, prefix="/api")
+app.include_router(status_router)
+app.include_router(admin_router)
