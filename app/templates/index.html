@@ -38,7 +38,8 @@
         .features { max-width: 1100px; margin: 80px auto; padding: 0 40px; }
         .features h2 { text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 16px; }
         .features .subtitle { text-align: center; color: #94a3b8; font-size: 18px; margin-bottom: 60px; }
-        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .features-grid { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+        .feature-card { flex: 1 1 calc(33% - 24px); min-width: 280px; max-width: 380px; }
         .feature-card { background: #1e293b; border-radius: 16px; padding: 32px; border: 1px solid #334155; }
         .feature-icon { font-size: 36px; margin-bottom: 16px; }
         .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
