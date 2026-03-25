@@ -13,10 +13,15 @@ from app.api.status import router as status_router
 from app.api.admin import router as admin_router
 from app.api.payments import router as payments_router
 
+import os
+
 app = FastAPI(
     title="Uptraqr",
     description="Uptime monitoring platform for local businesses",
-    version="0.1.0"
+    version="0.1.0",
+    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None,
+    openapi_url="/openapi.json" if os.getenv("ENVIRONMENT") != "production" else None
 )
 
 templates = Jinja2Templates(directory="app/templates")
