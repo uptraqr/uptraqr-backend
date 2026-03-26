@@ -13,6 +13,8 @@
         .header-right { display: flex; align-items: center; gap: 20px; }
         .user-name { font-size: 14px; color: #94a3b8; }
         .user-name strong { color: #e2e8f0; }
+        .btn-upgrade { background: #7c3aed; color: white; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; }
+        .btn-upgrade:hover { background: #6d28d9; }
         .btn-logout { background: transparent; color: #94a3b8; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; }
         .btn-logout:hover { color: #ef4444; border-color: #ef4444; }
         .container { max-width: 1200px; margin: 40px auto; padding: 0 40px; }
@@ -73,6 +75,7 @@
         <div class="header-right">
             <div class="user-name">Welcome, <strong>{{ user.name or user.email }}</strong></div>
             <a href="/status/{{ user.name }}" class="status-link" target="_blank">🌐 My Status Page</a>
+            <a href="/pricing" class="btn-upgrade">⚡ Upgrade Plan</a>
             <a href="/logout" class="btn-logout">Logout</a>
         </div>
     </div>

@@ -43,6 +43,10 @@ def root(request: Request):
 def health():
     return {"status": "healthy"}
 
+@app.get("/pricing", response_class=HTMLResponse)
+def pricing(request: Request):
+    return templates.TemplateResponse("pricing.html", {"request": request})    
+
 app.include_router(monitors_router, prefix="/api")
 app.include_router(dashboard_router)
 app.include_router(auth_router, prefix="/api")

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing — Uptraqr</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+        .header { background: #1e293b; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; }
+        .logo { font-size: 24px; font-weight: 700; color: #38bdf8; text-decoration: none; }
+        .logo span { color: #e2e8f0; }
+        .container { max-width: 1100px; margin: 60px auto; padding: 0 40px; }
+        h1 { text-align: center; font-size: 40px; font-weight: 700; margin-bottom: 16px; }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 18px; margin-bottom: 60px; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .pricing-card { background: #1e293b; border-radius: 16px; padding: 32px; border: 1px solid #334155; }
+        .pricing-card.popular { border: 2px solid #38bdf8; position: relative; }
+        .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #38bdf8; color: #0f172a; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .pricing-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+        .price { font-size: 48px; font-weight: 800; color: #38bdf8; margin: 16px 0; }
+        .price span { font-size: 18px; color: #94a3b8; font-weight: 400; }
+        .pricing-features { list-style: none; margin: 24px 0 32px; }
+        .pricing-features li { padding: 8px 0; color: #94a3b8; font-size: 15px; border-bottom: 1px solid #334155; }
+        .pricing-features li::before { content: "✅ "; }
+        .btn { width: 100%; padding: 14px; background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn:hover { background: #7dd3fc; }
+        .back-link { text-align: center; margin-top: 40px; }
+        .back-link a { color: #94a3b8; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="logo">up<span>traqr</span></a>
+        <a href="/dashboard" style="color:#94a3b8; text-decoration:none; font-size:14px;">← Back to Dashboard</a>
+    </div>
+
+    <div class="container">
+        <h1>Choose Your Plan</h1>
+        <p class="subtitle">No hidden fees. Cancel anytime.</p>
+
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Starter</h3>
+                <div class="price">$10<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>3 websites monitored</li>
+                    <li>5 minute checks</li>
+                    <li>Email alerts</li>
+                    <li>SSL monitoring</li>
+                    <li>30 day history</li>
+                </ul>
+                <button class="btn" onclick="checkout('starter')">Get Started</button>
+            </div>
+            <div class="pricing-card popular">
+                <div class="popular-badge">MOST POPULAR</div>
+                <h3>Pro</h3>
+                <div class="price">$25<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>10 websites monitored</li>
+                    <li>1 minute checks</li>
+                    <li>Email + SMS alerts</li>
+                    <li>SSL monitoring</li>
+                    <li>90 day history</li>
+                </ul>
+                <button class="btn" onclick="checkout('pro')">Get Started</button>
+            </div>
+            <div class="pricing-card">
+                <h3>Agency</h3>
+                <div class="price">$65<span>/mo</span></div>
+                <ul class="pricing-features">
+                    <li>Unlimited websites</li>
+                    <li>1 minute checks</li>
+                    <li>Email + SMS alerts</li>
+                    <li>SSL monitoring</li>
+                    <li>1 year history</li>
+                </ul>
+                <button class="btn" onclick="checkout('agency')">Get Started</button>
+            </div>
+        </div>
+
+        <div class="back-link">
+            <a href="/dashboard">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        async function checkout(plan) {
+            const response = await fetch(`/api/payments/checkout/${plan}`);
+            const data = await response.json();
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
+            } else {
+                alert('Please log in first to upgrade your plan');
+                window.location.href = '/login';
+            }
+        }
+    </script>
+</body>
+</html>
