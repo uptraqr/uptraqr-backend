@@ -85,14 +85,9 @@
     </div>
 
     <script>
-        function checkout(plan) {
-    window.location.href = `/api/payments/checkout/${plan}`;
-}
-            } else {
-                alert('Please log in first to upgrade your plan');
-                window.location.href = '/login';
-            }
-        }
-    </script>
+    function checkout(plan) {
+        window.location.href = `/api/payments/checkout/${plan}`;
+    }
+</script>
 </body>
 </html>
