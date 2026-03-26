@@ -63,7 +63,32 @@
         .btn-cancel { background: transparent; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
         .status-link { font-size: 13px; color: #38bdf8; text-decoration: none; }
         .footer { text-align: center; padding: 40px; color: #475569; font-size: 13px; }
-        @media (max-width: 768px) { .stats { grid-template-columns: repeat(2, 1fr); } .monitor-stats { gap: 16px; } }
+        @media (max-width: 768px) {
+    /* HEADER */
+    .header { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
+    .header-right { flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+    .user-name { font-size: 12px; }
+
+    /* STATS */
+    .stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .stat-card { padding: 16px; }
+    .stat-card .value { font-size: 24px; }
+
+    /* CONTAINER */
+    .container { padding: 20px; margin: 20px auto; }
+
+    /* SECTION HEADER */
+    .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .btn-add { width: 100%; text-align: center; }
+
+    /* MONITOR CARDS */
+    .monitor-card { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .monitor-stats { flex-wrap: wrap; gap: 12px; width: 100%; }
+    .stat { text-align: left; }
+
+    /* MODAL */
+    .modal-card { padding: 24px; margin: 20px; }
+}
         .btn-check { background: transparent; color: #38bdf8; border: 1px solid #38bdf8; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
 .btn-check:hover { background: #38bdf8; color: #0f172a; }
    </style>

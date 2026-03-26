@@ -70,11 +70,41 @@
         footer a { color: #475569; text-decoration: none; }
 
         @media (max-width: 768px) {
-            .hero h1 { font-size: 36px; }
-            .features-grid { grid-template-columns: 1fr; }
-            .pricing-grid { grid-template-columns: 1fr; }
-            .stats { gap: 40px; }
-        }
+    /* NAV */
+    nav { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
+    .nav-links { gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .nav-links a { font-size: 13px; }
+
+    /* HERO */
+    .hero { padding: 60px 20px; }
+    .hero h1 { font-size: 32px; }
+    .hero p { font-size: 16px; }
+    .hero-buttons { flex-direction: column; align-items: center; }
+    .btn-large { width: 100%; text-align: center; padding: 14px 20px; }
+
+    /* STATS */
+    .stats { gap: 24px; padding: 30px 20px; flex-wrap: wrap; }
+    .stat .number { font-size: 28px; }
+
+    /* FEATURES */
+    .features { padding: 40px 20px; }
+    .features h2 { font-size: 26px; }
+    .features-grid { flex-direction: column; }
+    .feature-card { min-width: unset; max-width: 100%; }
+
+    /* PRICING */
+    .pricing { padding: 40px 20px; }
+    .pricing h2 { font-size: 26px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .pricing-card.popular { margin-top: 20px; }
+
+    /* CTA */
+    .cta { padding: 60px 20px; }
+    .cta h2 { font-size: 28px; }
+
+    /* FOOTER */
+    footer { padding: 24px 20px; font-size: 12px; }
+}
     </style>
 </head>
 <body>
