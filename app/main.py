@@ -26,11 +26,28 @@ app = FastAPI(
 
 templates = Jinja2Templates(directory="app/templates")
 
+
 @app.exception_handler(StarletteHTTPException)
-async def not_found_handler(request: Request, exc: StarletteHTTPException):
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code == 404:
-        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
-    return templates.TemplateResponse("404.html", {"request": request}, status_code=exc.status_code)
+        return templates.TemplateResponse(
+            "404.html", 
+            {"request": request}, 
+            status_code=404
+        )
+    return templates.TemplateResponse(
+        "404.html",
+        {"request": request},
+        status_code=exc.status_code
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    return templates.TemplateResponse(
+        "404.html",
+        {"request": request},
+        status_code=500
+    )
 
 @app.on_event("startup")
 def startup():
@@ -60,3 +77,7 @@ app.include_router(auth_router)
 app.include_router(status_router)
 app.include_router(admin_router)
 app.include_router(payments_router, prefix="/api")
+
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def catch_all(request: Request, path: str):
+    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
