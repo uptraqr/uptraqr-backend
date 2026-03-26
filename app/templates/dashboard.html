@@ -74,6 +74,7 @@
         <div class="logo">up<span>traqr</span></div>
         <div class="header-right">
             <div class="user-name">Welcome, <strong>{{ user.name or user.email }}</strong></div>
+            <div class="user-name">Plan: <strong style="color: #38bdf8;">{{ user.plan or 'Free Trial' }}</strong></div>
             <a href="/status/{{ user.name }}" class="status-link" target="_blank">🌐 My Status Page</a>
             <a href="/pricing" class="btn-upgrade">⚡ Upgrade Plan</a>
             <a href="/logout" class="btn-logout">Logout</a>
