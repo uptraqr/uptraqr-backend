@@ -1,6 +1,9 @@
 from dotenv import load_dotenv
 load_dotenv()
 
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.exceptions import HTTPException as StarletteHTTPException
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -42,6 +45,10 @@ def root(request: Request):
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc):
+    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)    
 
 @app.get("/pricing", response_class=HTMLResponse)
 def pricing(request: Request):
