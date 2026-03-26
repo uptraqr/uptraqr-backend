@@ -1,6 +1,11 @@
 import resend
 import os
 from datetime import datetime
+import pytz
+
+def get_vancouver_time():
+    vancouver_tz = pytz.timezone('America/Vancouver')
+    return datetime.now(vancouver_tz).strftime('%Y-%m-%d %H:%M:%S PST')
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -53,7 +58,7 @@ def send_down_alert(monitor_name: str, url: str):
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time (UTC)</td>
-                        <td style="padding: 12px 16px; color: #0f172a;">{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC</td>
+                        <td style="padding: 12px 16px; color: #0f172a;">{get_vancouver_time()}</td>
                     </tr>
                 </table>
                 <p style="color: #475569; margin-top: 20px; font-size: 14px;">We are actively monitoring and will notify you the moment it recovers.</p>
@@ -88,7 +93,7 @@ def send_recovery_alert(monitor_name: str, url: str):
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time (UTC)</td>
-                        <td style="padding: 12px 16px; color: #0f172a;">{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC</td>
+                        <td style="padding: 12px 16px; color: #0f172a;">{get_vancouver_time()}</td>
                     </tr>
                 </table>
                 <p style="color: #475569; margin-top: 20px; font-size: 14px;">Your site is back online and we are continuing to monitor it 24/7.</p>
