@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.auth import hash_password, verify_password, create_access_token
 from app.models.models import User
@@ -37,7 +38,14 @@ def signup(
     db.refresh(new_user)
     token = create_access_token({"sub": new_user.email})
     response = RedirectResponse(url="/dashboard", status_code=302)
-    response.set_cookie(key="access_token", value=token, httponly=True, max_age=60*60*24*7)
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="Lax",
+        max_age=60*60*24
+    )
     return response
 
 @router.post("/api/auth/login")
@@ -51,7 +59,14 @@ def login(
         raise HTTPException(status_code=401, detail="Incorrect email or password")
     token = create_access_token({"sub": user.email})
     response = RedirectResponse(url="/dashboard", status_code=302)
-    response.set_cookie(key="access_token", value=token, httponly=True, max_age=60*60*24*7)
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="Lax",
+        max_age=60*60*24
+    )
     return response
 
 @router.get("/logout")
@@ -59,8 +74,6 @@ def logout():
     response = RedirectResponse(url="/login", status_code=302)
     response.delete_cookie("access_token")
     return response
-
-from pydantic import BaseModel
 
 class UpdatePhone(BaseModel):
     phone: str
