@@ -1,12 +1,11 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import Request
-from fastapi.responses import HTMLResponse
-from fastapi.exceptions import HTTPException as StarletteHTTPException
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.database import init_db
 from app.core.scheduler import start_scheduler, stop_scheduler
 from app.api.monitors import router as monitors_router
@@ -15,8 +14,6 @@ from app.api.auth_routes import router as auth_router
 from app.api.status import router as status_router
 from app.api.admin import router as admin_router
 from app.api.payments import router as payments_router
-
-import os
 
 app = FastAPI(
     title="Uptraqr",
@@ -28,6 +25,12 @@ app = FastAPI(
 )
 
 templates = Jinja2Templates(directory="app/templates")
+
+@app.exception_handler(StarletteHTTPException)
+async def not_found_handler(request: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    return templates.TemplateResponse("404.html", {"request": request}, status_code=exc.status_code)
 
 @app.on_event("startup")
 def startup():
@@ -46,13 +49,9 @@ def root(request: Request):
 def health():
     return {"status": "healthy"}
 
-@app.exception_handler(404)
-async def not_found_handler(request: Request, exc):
-    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)    
-
 @app.get("/pricing", response_class=HTMLResponse)
 def pricing(request: Request):
-    return templates.TemplateResponse("pricing.html", {"request": request})    
+    return templates.TemplateResponse("pricing.html", {"request": request})
 
 app.include_router(monitors_router, prefix="/api")
 app.include_router(dashboard_router)
