@@ -85,11 +85,9 @@
     </div>
 
     <script>
-        async function checkout(plan) {
-            const response = await fetch(`/api/payments/checkout/${plan}`);
-            const data = await response.json();
-            if (data.checkout_url) {
-                window.location.href = data.checkout_url;
+        function checkout(plan) {
+    window.location.href = `/api/payments/checkout/${plan}`;
+}
             } else {
                 alert('Please log in first to upgrade your plan');
                 window.location.href = '/login';

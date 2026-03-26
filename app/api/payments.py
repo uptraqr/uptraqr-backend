@@ -11,15 +11,19 @@ import os
 router = APIRouter()
 
 @router.get("/payments/checkout/{plan}")
-def checkout(plan: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def checkout(plan: str, request: Request, db: Session = Depends(get_db)):
+    from app.core.auth import get_current_user_optional
+    current_user = get_current_user_optional(request, db)
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=302)
     try:
         session = create_checkout_session(
             plan=plan,
             user_email=current_user.email,
             success_url="https://www.uptraqr.com/dashboard?payment=success",
-            cancel_url="https://www.uptraqr.com/dashboard?payment=cancelled"
+            cancel_url="https://www.uptraqr.com/pricing"
         )
-        return {"checkout_url": session.url}
+        return RedirectResponse(url=session.url, status_code=302)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

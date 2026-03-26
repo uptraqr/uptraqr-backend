@@ -23,6 +23,28 @@ def get_monitors(db: Session = Depends(get_db), current_user: User = Depends(get
 
 @router.post("/monitors")
 def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    
+    # Check plan limits
+    monitor_count = db.query(Monitor).filter(
+        Monitor.user_id == current_user.id,
+        Monitor.is_active == True
+    ).count()
+
+    limits = {
+        None: 1,        # Free — 1 monitor trial
+        "starter": 3,
+        "pro": 10,
+        "agency": 999
+    }
+
+    limit = limits.get(current_user.plan, 1)
+
+    if monitor_count >= limit:
+        raise HTTPException(
+            status_code=403,
+            detail=f"You've reached your plan limit of {limit} monitors. Please upgrade your plan."
+        )
+
     new_monitor = Monitor(
         name=monitor.name,
         url=monitor.url,
