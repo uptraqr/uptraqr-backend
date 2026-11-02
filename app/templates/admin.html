@@ -128,7 +128,7 @@
 
         async function deleteUser(id) {
             if (!confirm('Delete this user and ALL their monitors?')) return;
-            const response = await fetch(`/admin/users/${id}?secret=${secret}`, { method: 'DELETE' });
+            const response = await fetch(`/admin/users/${id}?secret=${encodeURIComponent(secret)}`, { method: 'DELETE' });
             if (response.ok) {
                 window.location.reload();
             } else {
@@ -138,7 +138,7 @@
 
         async function deleteMonitor(id) {
             if (!confirm('Delete this monitor?')) return;
-            const response = await fetch(`/admin/monitors/${id}?secret=${secret}`, { method: 'DELETE' });
+            const response = await fetch(`/admin/monitors/${id}?secret=${encodeURIComponent(secret)}`, { method: 'DELETE' });
             if (response.ok) {
                 window.location.reload();
             } else {
