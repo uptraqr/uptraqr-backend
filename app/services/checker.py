@@ -45,7 +45,7 @@ def run_checks():
                 if not existing:
                     incident = Incident(monitor_id=monitor.id)
                     db.add(incident)
-                    send_down_alert(monitor.name, monitor.url)
+                    send_down_alert(monitor.name, monitor.url, user.email if user else None)
                     if user and user.phone:
                         send_down_sms(monitor.name, monitor.url, user.phone)
             else:
@@ -56,7 +56,7 @@ def run_checks():
                 if open_incident:
                     open_incident.is_resolved = True
                     open_incident.resolved_at = datetime.utcnow()
-                    send_recovery_alert(monitor.name, monitor.url)
+                    send_recovery_alert(monitor.name, monitor.url, user.email if user else None)
                     if user and user.phone:
                         send_recovery_sms(monitor.name, monitor.url, user.phone)
 

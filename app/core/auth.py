@@ -1,4 +1,6 @@
+import os
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt
@@ -8,7 +10,17 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.models import User
 
-SECRET_KEY = "uptraqr-secret-key-change-in-production"
+load_dotenv()
+
+# The key that signs every login. It must come from a hidden setting
+# (environment variable), never from the code, or anyone reading the
+# code could create fake logins.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY or len(SECRET_KEY) < 32:
+    raise RuntimeError(
+        "SECRET_KEY is missing or too short. Set a long random SECRET_KEY "
+        "environment variable before starting UpTraQR."
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 

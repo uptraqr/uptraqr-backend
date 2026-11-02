@@ -5,15 +5,17 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.models import Monitor, CheckResult, User
 import os
+import hmac
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
-ADMIN_SECRET = os.getenv("ADMIN_SECRET", "fallback-secret")
+# No fallback: if ADMIN_SECRET isn't set, the admin page stays locked.
+ADMIN_SECRET = os.getenv("ADMIN_SECRET")
 
 @router.get("/admin", response_class=HTMLResponse)
 def admin_panel(request: Request, secret: str = "", db: Session = Depends(get_db)):
-    if secret != ADMIN_SECRET:
+    if not ADMIN_SECRET or not hmac.compare_digest(secret.encode(), ADMIN_SECRET.encode()):
         raise HTTPException(status_code=403, detail="Access denied")
 
     users = db.query(User).all()

@@ -35,11 +35,16 @@ SIGNATURE = """
 </table>
 """
 
-def send_down_alert(monitor_name: str, url: str):
+def _send(params: dict):
+    # Drop empty fields (e.g. no bcc) so the email service doesn't reject them
+    return resend.Emails.send({k: v for k, v in params.items() if v})
+
+def send_down_alert(monitor_name: str, url: str, to_email: str = None):
     try:
-        resend.Emails.send({
+        _send({
             "from": FROM_EMAIL,
-            "to": ALERT_EMAIL,
+            "to": to_email or ALERT_EMAIL,
+            "bcc": ALERT_EMAIL if to_email else None,
             "subject": f"🔴 ALERT: {monitor_name} is DOWN",
             "html": f"""
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -70,11 +75,12 @@ def send_down_alert(monitor_name: str, url: str):
     except Exception as e:
         print(f"Failed to send alert: {e}")
 
-def send_recovery_alert(monitor_name: str, url: str):
+def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
     try:
-        resend.Emails.send({
+        _send({
             "from": FROM_EMAIL,
-            "to": ALERT_EMAIL,
+            "to": to_email or ALERT_EMAIL,
+            "bcc": ALERT_EMAIL if to_email else None,
             "subject": f"✅ RESOLVED: {monitor_name} is back UP",
             "html": f"""
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -105,11 +111,12 @@ def send_recovery_alert(monitor_name: str, url: str):
     except Exception as e:
         print(f"Failed to send alert: {e}")
 
-def send_ssl_alert(monitor_name: str, url: str, days_left: int):
+def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = None):
     try:
-        resend.Emails.send({
+        _send({
             "from": FROM_EMAIL,
-            "to": ALERT_EMAIL,
+            "to": to_email or ALERT_EMAIL,
+            "bcc": ALERT_EMAIL if to_email else None,
             "subject": f"⚠️ SSL Warning: {monitor_name} expires in {days_left} days",
             "html": f"""
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
