@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0D1524">
+<title>{% block title %}Uptraqr{% endblock %}</title>
+<meta name="description" content="{% block description %}Uptraqr watches your website day and night: downtime, hacked pages and expiring security certificates. Plain-English alerts for Canadian small businesses.{% endblock %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0D1524; --console:#142036; --console-2:#1A2843; --rule:#24324D; --rule-strong:#34466A;
+  --ink:#E8EEF7; --muted:#8D9BB4; --faint:#5F6E89;
+  --signal:#5CC8FF; --signal-ink:#06213A;
+  --clear:#3FD69A; --clear-bg:rgba(63,214,154,.12);
+  --watch:#F5B547; --watch-bg:rgba(245,181,71,.12);
+  --breach:#FF5C70; --breach-bg:rgba(255,92,112,.12);
+  --display:"Chakra Petch",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --gutter:clamp(16px,4vw,40px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--night);color:var(--ink);font:400 16px/1.6 var(--body);min-height:100vh;display:flex;flex-direction:column}
+img,svg{display:block;max-width:100%}
+a{color:var(--signal)}
+a:hover{color:#9ADDFF}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.15;margin:0;letter-spacing:-.01em}
+p{margin:0}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:4px}
+.wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 var(--gutter)}
+main{flex:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Brand */
+.brand{font-family:var(--display);font-weight:700;font-size:24px;text-decoration:none;color:var(--ink);letter-spacing:-.02em;display:inline-flex;align-items:center;gap:8px}
+.brand .up{color:var(--signal)}
+.brand-mark{width:22px;height:22px}
+
+/* Top bar */
+.topbar{border-bottom:1px solid var(--rule);background:rgba(13,21,36,.92);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px}
+.nav{display:flex;align-items:center;gap:22px}
+.nav a{color:var(--muted);text-decoration:none;font-size:15px}
+.nav a:hover{color:var(--ink)}
+.nav a.btn-primary,.nav a.btn-primary:hover{color:var(--signal-ink)}
+.menu-btn{display:none}
+@media (max-width:760px){
+  .menu-btn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:none;border:1px solid var(--rule);border-radius:var(--r-sm);color:var(--ink);cursor:pointer}
+  .nav{display:none;position:absolute;left:0;right:0;top:64px;flex-direction:column;align-items:stretch;gap:0;background:var(--night);border-bottom:1px solid var(--rule);padding:8px var(--gutter) 16px}
+  .nav.open{display:flex}
+  .nav a{padding:12px 0;border-bottom:1px solid var(--rule)}
+  .nav a.btn{margin-top:12px;border:0}
+}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:var(--r-sm);font:600 15px/1 var(--body);text-decoration:none;cursor:pointer;border:1px solid transparent;transition:background .15s,border-color .15s,color .15s}
+.btn-primary{background:var(--signal);color:var(--signal-ink)}
+.btn-primary:hover{background:#86D7FF;color:var(--signal-ink)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--rule-strong)}
+.btn-ghost:hover{border-color:var(--signal);color:var(--ink)}
+.btn-quiet{background:transparent;color:var(--muted);border-color:var(--rule)}
+.btn-quiet:hover{color:var(--ink);border-color:var(--rule-strong)}
+.btn-danger{background:transparent;color:var(--breach);border-color:rgba(255,92,112,.4)}
+.btn-danger:hover{background:var(--breach-bg);color:var(--breach)}
+.btn-sm{min-height:36px;padding:0 12px;font-size:14px}
+.btn-lg{min-height:52px;padding:0 26px;font-size:16px}
+.btn[disabled]{opacity:.55;cursor:wait}
+
+/* Status pills (shared language: clear / watch / breach / idle) */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.pill.clear{color:var(--clear);background:var(--clear-bg)}
+.pill.watch{color:var(--watch);background:var(--watch-bg)}
+.pill.breach{color:var(--breach);background:var(--breach-bg)}
+.pill.idle{color:var(--muted);background:rgba(141,155,180,.12)}
+
+/* Forms */
+.field{display:grid;gap:6px;margin-bottom:16px}
+.field label{font-size:14px;font-weight:500;color:#C6D0E0}
+.field input{width:100%;min-height:46px;padding:10px 14px;background:var(--night);border:1px solid var(--rule-strong);border-radius:var(--r-sm);color:var(--ink);font:400 16px var(--body)}
+.field input:focus{outline:none;border-color:var(--signal);box-shadow:0 0 0 3px rgba(92,200,255,.18)}
+.field .hint{font-size:13px;color:var(--muted)}
+.notice{padding:12px 14px;border-radius:var(--r-sm);font-size:14px;margin-bottom:16px}
+.notice.error{background:var(--breach-bg);color:#FFC2CA;border:1px solid rgba(255,92,112,.35)}
+.notice.info{background:rgba(92,200,255,.08);color:#BFE6FF;border:1px solid rgba(92,200,255,.25)}
+
+/* Footer */
+.foot{border-top:1px solid var(--rule);margin-top:72px}
+.foot .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:28px;padding-bottom:28px;color:var(--faint);font-size:14px}
+.foot a{color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+{% block styles %}{% endblock %}
+</style>
+</head>
+<body>
+{% block topbar %}
+<header class="topbar">
+  <div class="wrap">
+    <a href="/" class="brand" aria-label="Uptraqr home">
+      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 20 6v6c0 4.6-3.3 8.4-8 9.5-4.7-1.1-8-4.9-8-9.5V6l8-3.5Z" stroke="#5CC8FF" stroke-width="1.8"/><path d="m8 12.2 2.6 2.6L16.2 9" stroke="#3FD69A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span><span class="up">up</span>traqr</span>
+    </a>
+    <button class="menu-btn" aria-label="Open menu" aria-expanded="false" onclick="const n=document.getElementById('nav');const o=n.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <nav class="nav" id="nav">
+      {% block nav %}
+      <a href="/#watch">What we watch</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/login">Log in</a>
+      <a href="/signup" class="btn btn-primary btn-sm">Start free</a>
+      {% endblock %}
+    </nav>
+  </div>
+</header>
+{% endblock %}
+<main>{% block content %}{% endblock %}</main>
+{% block footer %}
+<footer class="foot">
+  <div class="wrap">
+    <span>© 2026 Uptraq Technologies, Surrey, BC, Canada</span>
+    <a href="mailto:support@uptraqr.com">support@uptraqr.com</a>
+  </div>
+</footer>
+{% endblock %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

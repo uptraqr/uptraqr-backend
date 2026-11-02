@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.models import Monitor, CheckResult, User, Incident
+from app.models.models import Monitor, CheckResult, User, Incident, DefacementWatch, DefacementEvent
 import os
 import hmac
 
@@ -78,6 +78,8 @@ def admin_panel(request: Request, secret: str = "", db: Session = Depends(get_db
 def _delete_monitor_rows(db: Session, monitor: Monitor):
     db.query(CheckResult).filter(CheckResult.monitor_id == monitor.id).delete()
     db.query(Incident).filter(Incident.monitor_id == monitor.id).delete()
+    db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).delete()
+    db.query(DefacementEvent).filter(DefacementEvent.monitor_id == monitor.id).delete()
     db.delete(monitor)
 
 

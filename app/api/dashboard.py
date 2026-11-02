@@ -4,7 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_optional
-from app.models.models import Monitor, CheckResult, User
+from app.models.models import Monitor, CheckResult, User, DefacementWatch
+import json
 from app.services.ssl_checker import check_ssl
 
 router = APIRouter()
@@ -26,6 +27,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     sites_up = 0
     sites_down = 0
     ssl_warnings = 0
+    tamper_alerts = 0
 
     for monitor in monitors:
         latest = db.query(CheckResult).filter(
@@ -48,6 +50,11 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         if ssl_warning:
             ssl_warnings += 1
 
+        watch = db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).first()
+        tamper_status = "paused" if (watch and not watch.enabled) else (watch.status if watch else "learning")
+        if tamper_status in ("changed", "suspicious"):
+            tamper_alerts += 1
+
         monitor_data.append({
             "id": monitor.id,
             "name": monitor.name,
@@ -56,7 +63,9 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "response_time": response_time,
             "ssl_days": ssl_days,
             "ssl_warning": ssl_warning,
-            "last_checked": last_checked
+            "last_checked": last_checked,
+            "tamper_status": tamper_status,
+            "tamper_checked": watch.last_checked_at.strftime("%Y-%m-%dT%H:%M:%SZ") if watch and watch.last_checked_at else None,
         })
 
     response = templates.TemplateResponse("dashboard.html", {
@@ -66,6 +75,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "sites_up": sites_up,
         "sites_down": sites_down,
         "ssl_warnings": ssl_warnings,
+        "tamper_alerts": tamper_alerts,
         "user": current_user
     })
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"

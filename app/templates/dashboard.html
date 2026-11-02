@@ -1,241 +1,262 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard — Uptraqr</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
-        .header { background: #1e293b; padding: 20px 40px; border-bottom: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; }
-        .logo { font-size: 24px; font-weight: 700; color: #38bdf8; }
-        .logo span { color: #e2e8f0; }
-        .header-right { display: flex; align-items: center; gap: 20px; }
-        .user-name { font-size: 14px; color: #94a3b8; }
-        .user-name strong { color: #e2e8f0; }
-        .btn-upgrade { background: #7c3aed; color: white; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; }
-        .btn-upgrade:hover { background: #6d28d9; }
-        .btn-logout { background: transparent; color: #94a3b8; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; font-size: 14px; cursor: pointer; text-decoration: none; }
-        .btn-logout:hover { color: #ef4444; border-color: #ef4444; }
-        .container { max-width: 1200px; margin: 40px auto; padding: 0 40px; }
-        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
-        .stat-card { background: #1e293b; border-radius: 12px; padding: 24px; border: 1px solid #334155; }
-        .stat-card h3 { font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        .stat-card .value { font-size: 32px; font-weight: 700; }
-        .value.green { color: #22c55e; }
-        .value.red { color: #ef4444; }
-        .value.blue { color: #38bdf8; }
-        .value.yellow { color: #f59e0b; }
-        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .section-title { font-size: 18px; font-weight: 600; color: #f1f5f9; }
-        .btn-add { background: #38bdf8; color: #0f172a; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; text-decoration: none; }
-        .btn-add:hover { background: #7dd3fc; }
-        .monitors-grid { display: grid; gap: 16px; }
-        .monitor-card { background: #1e293b; border-radius: 12px; padding: 24px; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; }
-        .monitor-card.down { border-left: 4px solid #ef4444; }
-        .monitor-card.up { border-left: 4px solid #22c55e; }
-        .monitor-card.unknown { border-left: 4px solid #475569; }
-        .monitor-info h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-        .monitor-info p { font-size: 13px; color: #94a3b8; }
-        .monitor-stats { display: flex; gap: 32px; align-items: center; }
-        .stat { text-align: center; }
-        .stat .label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .stat .val { font-size: 16px; font-weight: 600; margin-top: 4px; }
-        .badge { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
-        .badge.up { background: #052e16; color: #22c55e; }
-        .badge.down { background: #2d0a0a; color: #ef4444; }
-        .badge.unknown { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-        .badge.warning { background: #2d1f00; color: #f59e0b; }
-        .btn-delete { background: transparent; color: #475569; border: 1px solid #334155; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
-        .btn-delete:hover { color: #ef4444; border-color: #ef4444; }
-        .empty-state { text-align: center; padding: 60px; background: #1e293b; border-radius: 12px; border: 1px solid #334155; }
-        .empty-state h3 { font-size: 20px; margin-bottom: 8px; }
-        .empty-state p { color: #94a3b8; margin-bottom: 24px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-card { background: #1e293b; border-radius: 16px; padding: 40px; width: 100%; max-width: 480px; border: 1px solid #334155; }
-        .modal-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 24px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: #cbd5e1; }
-        .form-group input { width: 100%; padding: 12px 16px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #e2e8f0; font-size: 15px; outline: none; }
-        .form-group input:focus { border-color: #38bdf8; }
-        .modal-buttons { display: flex; gap: 12px; }
-        .btn-cancel { background: transparent; color: #94a3b8; border: 1px solid #334155; padding: 10px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; }
-        .status-link { font-size: 13px; color: #38bdf8; text-decoration: none; }
-        .footer { text-align: center; padding: 40px; color: #475569; font-size: 13px; }
-        @media (max-width: 768px) {
-    /* HEADER */
-    .header { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
-    .header-right { flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
-    .user-name { font-size: 12px; }
+{% extends "base.html" %}
+{% block title %}Your websites · Uptraqr{% endblock %}
+{% block nav %}
+<a href="/status/{{ user.name }}" target="_blank" rel="noopener">My status page</a>
+<a href="/pricing">Plans</a>
+<a href="/logout">Log out</a>
+{% endblock %}
+{% block styles %}
+.dash{padding:36px 0 0}
+.dash-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.dash-head h1{font-size:clamp(26px,4vw,34px)}
+.dash-head .who{color:var(--muted);margin-top:6px;font-size:15px}
+.dash-head .who strong{color:var(--ink);font-weight:500}
 
-    /* STATS */
-    .stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .stat-card { padding: 16px; }
-    .stat-card .value { font-size: 24px; }
+/* One summary line, not a row of cards */
+.summary{display:flex;flex-wrap:wrap;gap:0;margin-top:24px;border:1px solid var(--rule);border-radius:var(--r-md);background:var(--console)}
+.summary div{flex:1 1 120px;padding:14px 18px;border-right:1px solid var(--rule)}
+.summary div:last-child{border-right:0}
+.summary b{display:block;font:600 26px/1.1 var(--display)}
+.summary span{color:var(--muted);font-size:14px}
+.summary .is-clear b{color:var(--clear)} .summary .is-breach b{color:var(--breach)} .summary .is-watch b{color:var(--watch)}
+@media (max-width:600px){.summary div{flex-basis:50%;border-right:0;border-bottom:1px solid var(--rule)}.summary div:nth-child(odd){border-right:1px solid var(--rule)}.summary div:nth-last-child(-n+1){border-bottom:0}}
 
-    /* CONTAINER */
-    .container { padding: 20px; margin: 20px auto; }
+.sites{margin-top:28px;display:grid;gap:14px}
+.site{background:var(--console);border:1px solid var(--rule);border-radius:var(--r-md);overflow:hidden}
+.site.down{border-color:rgba(255,92,112,.55)}
+.site.alarm{border-color:var(--breach);box-shadow:0 0 0 1px var(--breach) inset}
+.site-main{display:grid;grid-template-columns:1fr auto;gap:12px 20px;padding:18px 20px;align-items:center}
+.site-name{font:600 18px var(--display)}
+.site-url{color:var(--muted);font-size:14px;word-break:break-all}
+.site-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.site-meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 22px;color:var(--muted);font-size:14px}
+.site-meta strong{color:var(--ink);font-weight:500}
+.site-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:640px){.site-main{grid-template-columns:1fr}.site-pills{justify-content:flex-start}}
 
-    /* SECTION HEADER */
-    .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-    .btn-add { width: 100%; text-align: center; }
+/* Tamper watch drawer */
+.tw{border-top:1px solid var(--rule)}
+.tw summary{list-style:none;cursor:pointer;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:500}
+.tw summary::-webkit-details-marker{display:none}
+.tw summary .chev{transition:transform .2s;color:var(--muted)}
+.tw[open] summary .chev{transform:rotate(180deg)}
+.tw-body{padding:4px 20px 20px}
+.tw-body .state{color:#C3CDDD}
+.finding{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 0;border-top:1px solid var(--rule)}
+.finding:first-child{border-top:0}
+.finding .sev{font-size:13px;font-weight:600;padding-top:2px}
+.finding .sev.high{color:var(--breach)} .finding .sev.medium{color:var(--watch)} .finding .sev.low{color:var(--muted)}
+.finding .ev{grid-column:2;color:var(--muted);font-size:14px;word-break:break-word}
+.findings{margin:14px 0;padding:4px 16px;border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--night)}
+.tw-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.tw-note{color:var(--muted);font-size:14px;margin-top:10px}
+.history{margin-top:16px;font-size:14px;color:var(--muted)}
+.history li{margin:4px 0}
 
-    /* MONITOR CARDS */
-    .monitor-card { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .monitor-stats { flex-wrap: wrap; gap: 12px; width: 100%; }
-    .stat { text-align: left; }
+.empty{margin-top:28px;border:1px dashed var(--rule-strong);border-radius:var(--r-md);padding:40px 24px;text-align:center}
+.empty h2{font-size:22px}
+.empty p{color:var(--muted);margin:8px auto 20px;max-width:44ch}
 
-    /* MODAL */
-    .modal-card { padding: 24px; margin: 20px; }
+.texts{margin-top:36px;border-top:1px solid var(--rule);padding-top:24px;display:grid;grid-template-columns:1fr minmax(260px,380px);gap:20px;align-items:end}
+.texts h2{font-size:20px}
+.texts p{color:var(--muted);margin-top:6px;max-width:52ch}
+.texts form{display:flex;gap:8px}
+.texts .field{margin:0;flex:1}
+@media (max-width:720px){.texts{grid-template-columns:1fr}}
+
+dialog{background:var(--console);color:var(--ink);border:1px solid var(--rule-strong);border-radius:var(--r-lg);padding:28px;width:min(460px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(5,9,18,.75)}
+dialog h2{font-size:22px;margin-bottom:6px}
+dialog .sub{color:var(--muted);margin-bottom:20px}
+dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--console-2);border:1px solid var(--rule-strong);border-radius:var(--r-md);padding:12px 16px;font-size:15px;max-width:calc(100vw - 32px);z-index:100;display:none}
+.toast.show{display:block}
+{% endblock %}
+
+{% block content %}
+{% set tamper_label = {
+  "learning": ("idle", "Learning your page"),
+  "ok": ("clear", "No tampering"),
+  "changed": ("watch", "Changed: was this you?"),
+  "suspicious": ("breach", "Possible hack"),
+  "error": ("idle", "Couldn't check"),
+  "paused": ("idle", "Tamper watch paused"),
+} %}
+<section class="dash"><div class="wrap">
+  <div class="dash-head">
+    <div>
+      <h1>Your websites</h1>
+      <p class="who">{{ user.name or user.email }}, on the <strong>{{ (user.plan or 'free') | capitalize }} plan</strong></p>
+    </div>
+    <button class="btn btn-primary" onclick="openAdd()">Add a website</button>
+  </div>
+
+  <div class="summary" aria-label="Summary">
+    <div><b>{{ total_monitors }}</b><span>Websites</span></div>
+    <div class="is-clear"><b>{{ sites_up }}</b><span>Online</span></div>
+    <div class="{{ 'is-breach' if sites_down else '' }}"><b>{{ sites_down }}</b><span>Down</span></div>
+    <div class="{{ 'is-breach' if tamper_alerts else '' }}"><b>{{ tamper_alerts }}</b><span>Tamper alerts</span></div>
+    <div class="{{ 'is-watch' if ssl_warnings else '' }}"><b>{{ ssl_warnings }}</b><span>SSL expiring</span></div>
+  </div>
+
+  {% if monitors %}
+  <div class="sites">
+    {% for m in monitors %}
+    {% set tl = tamper_label.get(m.tamper_status, ("idle", m.tamper_status)) %}
+    <article class="site {{ 'down' if m.is_up == False else '' }} {{ 'alarm' if m.tamper_status == 'suspicious' else '' }}" data-id="{{ m.id }}">
+      <div class="site-main">
+        <div>
+          <div class="site-name">{{ m.name }}</div>
+          <div class="site-url">{{ m.url }}</div>
+        </div>
+        <div class="site-pills">
+          {% if m.is_up %}<span class="pill clear">Online</span>{% elif m.is_up == False %}<span class="pill breach">Down</span>{% else %}<span class="pill idle">Not checked yet</span>{% endif %}
+          <span class="pill {{ tl[0] }}">{{ tl[1] }}</span>
+          {% if m.ssl_warning %}<span class="pill watch">SSL ends in {{ m.ssl_days }} days</span>{% endif %}
+        </div>
+        <div class="site-meta">
+          <span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span>
+          <span>SSL <strong>{% if m.ssl_days != 'N/A' %}{{ m.ssl_days }} days left{% else %}not found{% endif %}</strong></span>
+          <span>Last check <strong>{{ m.last_checked }} UTC</strong></span>
+        </div>
+        <div class="site-actions">
+          <button class="btn btn-quiet btn-sm" onclick="checkNow({{ m.id }}, this)">Check now</button>
+          <button class="btn btn-danger btn-sm" onclick="removeSite({{ m.id }}, this)" data-name="{{ m.name }}">Remove</button>
+        </div>
+      </div>
+      <details class="tw" {% if m.tamper_status in ('changed','suspicious') %}open{% endif %} ontoggle="if(this.open) loadTamper({{ m.id }})">
+        <summary>Tamper watch <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="tw-body" id="tw-{{ m.id }}"><p class="state">Loading…</p></div>
+      </details>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <h2>Add your first website</h2>
+    <p>We'll start checking it right away and take a known-good snapshot for tamper watch within a few minutes.</p>
+    <button class="btn btn-primary" onclick="openAdd()">Add a website</button>
+  </div>
+  {% endif %}
+
+  <div class="texts">
+    <div>
+      <h2>Text message alerts</h2>
+      <p>Get a text when a site goes down or shows signs of a hack.{% if user.phone %} Texts go to <strong>{{ user.phone }}</strong>.{% endif %}</p>
+    </div>
+    <form onsubmit="savePhone(event)">
+      <div class="field"><label for="phone" class="sr">Mobile number</label><input id="phone" type="tel" placeholder="+1 604 555 0123" value="{{ user.phone or '' }}" autocomplete="tel" required></div>
+      <button class="btn btn-ghost" type="submit">Save</button>
+    </form>
+  </div>
+</div></section>
+
+<dialog id="addDialog">
+  <form onsubmit="addSite(event)">
+    <h2>Add a website</h2>
+    <p class="sub">We'll check it every 5 minutes and watch for tampering every 30.</p>
+    <div id="addError" class="notice error" role="alert" hidden></div>
+    <div class="field"><label for="siteName">Name</label><input id="siteName" placeholder="Rosewood Bakery" maxlength="100" required></div>
+    <div class="field"><label for="siteUrl">Website address</label><input id="siteUrl" placeholder="rosewoodbakery.ca" inputmode="url" autocomplete="url" required></div>
+    <div class="row">
+      <button type="button" class="btn btn-quiet" onclick="document.getElementById('addDialog').close()">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="addBtn">Add website</button>
+    </div>
+  </form>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SEV = {high: "Hacker sign", medium: "Change", low: "Minor change"};
+const STATE_TEXT = {
+  learning: "We're taking a known-good snapshot of this page. This happens within 30 minutes of adding a site.",
+  ok: "Your page matches its known-good version. Normal changes like dates and banners are ignored.",
+  changed: "Important parts of your page changed. If you or your web designer made this change, confirm it below and we'll use the new version from now on.",
+  suspicious: "We found signs that someone may have tampered with your website. Check your site now. If you didn't make these changes, contact your web designer or hosting company and restore a backup.",
+  error: "We couldn't check this page.",
+};
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),4000);}
+function el(tag, cls, text){const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e;}
+function ago(iso){ if(!iso) return "never"; const m=Math.round((Date.now()-new Date(iso))/60000); return m<1?"just now":m<60?m+" min ago":m<2880?Math.round(m/60)+" h ago":Math.round(m/1440)+" days ago"; }
+async function api(path, opts={}){
+  const r = await fetch(path, {headers:{'Content-Type':'application/json'}, ...opts});
+  let data={}; try{data=await r.json();}catch(e){}
+  if(!r.ok) throw new Error(data.detail || "Something went wrong. Try again.");
+  return data;
 }
-        .btn-check { background: transparent; color: #38bdf8; border: 1px solid #38bdf8; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
-.btn-check:hover { background: #38bdf8; color: #0f172a; }
-   </style>
-    <meta http-equiv="refresh" content="60">
-</head>
-<body>
-    <div class="header">
-        <a href="/" style="text-decoration:none;"><div class="logo">up<span>traqr</span></div></a>
-        <div class="header-right">
-            <div class="user-name">Welcome, <strong>{{ user.name or user.email }}</strong></div>
-            <div class="user-name">Plan: <strong style="color: #38bdf8;">{{ user.plan or 'Free Trial' }}</strong></div>
-            <a href="/status/{{ user.name }}" class="status-link" target="_blank">🌐 My Status Page</a>
-            <a href="/pricing" class="btn-upgrade">⚡ Upgrade Plan</a>
-            <a href="/logout" class="btn-logout">Logout</a>
-        </div>
-    </div>
 
-    <div class="container">
-        <div class="stats">
-            <div class="stat-card">
-                <h3>Total Monitors</h3>
-                <div class="value blue">{{ total_monitors }}</div>
-            </div>
-            <div class="stat-card">
-                <h3>Sites Up</h3>
-                <div class="value green">{{ sites_up }}</div>
-            </div>
-            <div class="stat-card">
-                <h3>Sites Down</h3>
-                <div class="value red">{{ sites_down }}</div>
-            </div>
-            <div class="stat-card">
-                <h3>SSL Warnings</h3>
-                <div class="value yellow">{{ ssl_warnings }}</div>
-            </div>
-        </div>
-
-        <div class="section-header">
-            <div class="section-title">My Monitors</div>
-            <button class="btn-add" onclick="document.getElementById('addModal').classList.add('active')">+ Add Monitor</button>
-        </div>
-
-        <div class="monitors-grid">
-            {% if monitors %}
-                {% for monitor in monitors %}
-                <div class="monitor-card {{ 'up' if monitor.is_up else 'down' if monitor.is_up == False else 'unknown' }}">
-                    <div class="monitor-info">
-                        <h3>{{ monitor.name }}</h3>
-                        <p>{{ monitor.url }}</p>
-                    </div>
-                    <div class="monitor-stats">
-                        <div class="stat">
-                            <div class="label">Response</div>
-                            <div class="val">{{ monitor.response_time }}s</div>
-                        </div>
-                        <div class="stat">
-                            <div class="label">SSL Days</div>
-                            <div class="val">{{ monitor.ssl_days }}</div>
-                        </div>
-                        <div class="stat">
-                            <div class="label">Checked</div>
-                            <div class="val">{{ monitor.last_checked }}</div>
-                        </div>
-                        <span class="badge {{ 'up' if monitor.is_up else 'down' if monitor.is_up == False else 'unknown' }}">
-                            {{ '🟢 UP' if monitor.is_up else '🔴 DOWN' if monitor.is_up == False else '⚪ Unknown' }}
-                        </span>
-                        {% if monitor.ssl_warning %}
-                        <span class="badge warning">⚠️ SSL</span>
-                        {% endif %}
-                        <button class="btn-check" onclick="checkNow({{ monitor.id }})">⚡ Check</button>
-<button class="btn-delete" onclick="deleteMonitor({{ monitor.id }})">🗑️</button>
-                       
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    <h3>No monitors yet</h3>
-                    <p>Add your first website to start monitoring</p>
-                    <button class="btn-add" onclick="document.getElementById('addModal').classList.add('active')">+ Add Your First Monitor</button>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Add Monitor Modal -->
-    <div class="modal" id="addModal">
-        <div class="modal-card">
-            <h2>Add Monitor</h2>
-            <div class="form-group">
-                <label>Site Name</label>
-                <input type="text" id="monitorName" placeholder="My Website" />
-            </div>
-            <div class="form-group">
-                <label>URL</label>
-                <input type="url" id="monitorUrl" placeholder="https://example.com" />
-            </div>
-            <div class="modal-buttons">
-                <button class="btn-cancel" onclick="document.getElementById('addModal').classList.remove('active')">Cancel</button>
-                <button class="btn-add" onclick="addMonitor()">Add Monitor</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="footer">Uptraqr — Uptime monitoring for local businesses</div>
-
-    <script>
-        async function addMonitor() {
-            const name = document.getElementById('monitorName').value;
-            const url = document.getElementById('monitorUrl').value;
-            if (!name || !url) { alert('Please fill in all fields'); return; }
-            const response = await fetch('/api/monitors', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, url })
-            });
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                const data = await response.json();
-                if (response.status === 403) {
-                    if (confirm('You have reached your plan limit. Upgrade now?')) {
-                        window.location.href = '/pricing';
-                    }
-                } else {
-                    alert(data.detail || 'Failed to add monitor');
-                }
-            }
-        }
-
-        async function deleteMonitor(id) {
-            if (!confirm('Delete this monitor?')) return;
-            const response = await fetch(`/api/monitors/${id}`, { method: 'DELETE' });
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                alert('Failed to delete monitor');
-            }
-        }
-        async function checkNow(id) {
-    const response = await fetch(`/api/monitors/${id}/check`, { method: 'POST' });
-    if (response.ok) {
-        window.location.reload();
-    } else {
-        alert('Check failed');
-    }
+function renderTamper(id, d){
+  const box=document.getElementById('tw-'+id); box.replaceChildren();
+  const status = d.enabled ? d.status : 'paused';
+  box.append(el('p','state', d.enabled ? (STATE_TEXT[status]||'') : "Tamper watch is paused for this website."));
+  if(d.last_error) box.append(el('p','tw-note', d.last_error));
+  const shown = (d.findings||[]).filter(f => status!=='ok' || f.severity!=='low');
+  if(d.enabled && shown.length && status!=='ok'){
+    const list=el('div','findings');
+    shown.forEach(f=>{const row=el('div','finding');row.append(el('span','sev '+f.severity,SEV[f.severity]||f.severity),el('span',null,f.message));if(f.evidence)row.append(el('span','ev',f.evidence));list.append(row);});
+    box.append(list);
+  }
+  const actions=el('div','tw-actions');
+  if(d.enabled){
+    const scan=el('button','btn btn-quiet btn-sm','Check for changes now'); scan.onclick=()=>act(id,'scan',scan); actions.append(scan);
+    if(status==='changed'||status==='suspicious'){const ok=el('button','btn btn-primary btn-sm','Yes, I made this change');ok.onclick=()=>act(id,'approve',ok);actions.prepend(ok);}
+    else if(status==='ok'){const re=el('button','btn btn-quiet btn-sm','Take a new snapshot');re.onclick=()=>act(id,'approve',re);actions.append(re);}
+  }
+  const tog=el('button','btn btn-quiet btn-sm', d.enabled?'Pause tamper watch':'Turn tamper watch back on');
+  tog.onclick=()=>act(id,'toggle',tog,{enabled:!d.enabled}); actions.append(tog);
+  box.append(actions);
+  box.append(el('p','tw-note', d.enabled ? `Last checked ${ago(d.last_checked_at)}. Snapshot taken ${ago(d.baseline_set_at)}.` : ''));
+  if(d.history && d.history.length){
+    const h=el('ul','history'); d.history.slice(0,5).forEach(e=>{
+      const when=new Date(e.detected_at).toLocaleString(); const what=e.status==='suspicious'?'Possible hack':'Change';
+      const res=e.resolution==='approved'?' · you confirmed it':e.resolution==='reverted'?' · went back to normal':' · not resolved';
+      h.append(el('li',null,`${when}: ${what}${res}`));
+    });
+    box.append(el('p','tw-note','Recent alerts')); box.append(h);
+  }
 }
-    </script>
-</body>
-</html>
+async function loadTamper(id){
+  try{ renderTamper(id, await api(`/api/monitors/${id}/defacement`)); }
+  catch(e){ document.getElementById('tw-'+id).replaceChildren(el('p','state',e.message)); }
+}
+async function act(id, action, btn, body){
+  btn.disabled=true; const old=btn.textContent; btn.textContent=action==='approve'?'Taking snapshot…':action==='scan'?'Checking…':'Saving…';
+  try{
+    const d=await api(`/api/monitors/${id}/defacement/${action}`,{method:'POST', body: JSON.stringify(body||{})});
+    renderTamper(id,d);
+    toast(action==='approve'?'Saved. This version is now your known-good page.':action==='scan'?'Check finished.':(d.enabled?'Tamper watch is on.':'Tamper watch paused.'));
+    if(action!=='scan') setTimeout(()=>location.reload(),900);
+  }catch(e){ toast(e.message); btn.disabled=false; btn.textContent=old; }
+}
+
+function openAdd(){const d=document.getElementById('addDialog');document.getElementById('addError').hidden=true;d.showModal();document.getElementById('siteName').focus();}
+async function addSite(ev){
+  ev.preventDefault(); const btn=document.getElementById('addBtn'), err=document.getElementById('addError');
+  btn.disabled=true; err.hidden=true;
+  try{
+    await api('/api/monitors',{method:'POST',body:JSON.stringify({name:document.getElementById('siteName').value,url:document.getElementById('siteUrl').value})});
+    location.reload();
+  }catch(e){ err.textContent=e.message; err.hidden=false; btn.disabled=false; if(/limit/i.test(e.message)){const a=el('a',null,' See plans');a.href='/pricing';err.append(a);} }
+}
+async function removeSite(id, btn){
+  if(!confirm(`Stop watching ${btn.dataset.name}? Its history will be deleted.`)) return;
+  try{ await api(`/api/monitors/${id}`,{method:'DELETE'}); location.reload(); }catch(e){ toast(e.message); }
+}
+async function checkNow(id, btn){
+  btn.disabled=true; btn.textContent='Checking…';
+  try{ const r=await api(`/api/monitors/${id}/check`,{method:'POST'}); toast(r.is_up?'Your site is online.':'Your site isn\'t answering.'); setTimeout(()=>location.reload(),900); }
+  catch(e){ toast(e.message); btn.disabled=false; btn.textContent='Check now'; }
+}
+async function savePhone(ev){
+  ev.preventDefault();
+  try{ await api('/api/auth/update-phone',{method:'POST',body:JSON.stringify({phone:document.getElementById('phone').value.trim()})}); toast('Saved. Text alerts will go to this number.'); }
+  catch(e){ toast(e.message); }
+}
+// Open drawers load their details; refresh the page every 2 minutes unless you're using it.
+document.querySelectorAll('details.tw[open]').forEach(d=>loadTamper(d.closest('.site').dataset.id));
+setInterval(()=>{ if(!document.querySelector('details.tw[open]') && !document.getElementById('addDialog').open && document.visibilityState==='visible') location.reload(); },120000);
+</script>
+{% endblock %}

@@ -1,5 +1,6 @@
 import resend
 import os
+from html import escape
 from datetime import datetime
 import pytz
 
@@ -40,6 +41,7 @@ def _send(params: dict):
     return resend.Emails.send({k: v for k, v in params.items() if v})
 
 def send_down_alert(monitor_name: str, url: str, to_email: str = None):
+    monitor_name, url = escape(monitor_name), escape(url)
     try:
         _send({
             "from": FROM_EMAIL,
@@ -76,6 +78,7 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None):
         print(f"Failed to send alert: {e}")
 
 def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
+    monitor_name, url = escape(monitor_name), escape(url)
     try:
         _send({
             "from": FROM_EMAIL,
@@ -112,6 +115,7 @@ def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
         print(f"Failed to send alert: {e}")
 
 def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = None):
+    monitor_name, url = escape(monitor_name), escape(url)
     try:
         _send({
             "from": FROM_EMAIL,
@@ -146,3 +150,68 @@ def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = 
         print(f"SSL alert sent for {monitor_name}")
     except Exception as e:
         print(f"Failed to send alert: {e}")
+
+
+SEVERITY_LABEL = {"high": "🚨 Hacker sign", "medium": "⚠️ Change", "low": "ℹ️ Minor change"}
+
+def send_defacement_alert(monitor_name: str, url: str, status: str, findings: list, to_email: str = None):
+    name, safe_url = escape(monitor_name), escape(url)
+    if status == "suspicious":
+        subject = f"🚨 Possible hack: {monitor_name} has signs of an attack"
+        colour, bg, heading = "#ef4444", "#2d0a0a", "🚨 Possible website hack detected"
+        lead = "We found signs that someone may have tampered with your website. Please check it now."
+    else:
+        subject = f"⚠️ {monitor_name} changed — was this you?"
+        colour, bg, heading = "#f59e0b", "#2d1f00", "⚠️ Your website changed"
+        lead = "Important parts of your page changed. If you or your web designer made this change, you can ignore this."
+    rows = "".join(
+        f'''<tr><td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#475569;width:30%">{SEVERITY_LABEL.get(f["severity"], "")}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#0f172a">{escape(f["message"])}
+        {f'<br><span style="color:#64748b;font-size:13px">{escape(f["evidence"])}</span>' if f.get("evidence") else ""}</td></tr>'''
+        for f in findings if f["severity"] in ("high", "medium")
+    )
+    try:
+        _send({
+            "from": FROM_EMAIL,
+            "to": to_email or ALERT_EMAIL,
+            "bcc": ALERT_EMAIL if to_email else None,
+            "subject": subject,
+            "html": f'''
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+              <div style="background:{bg};border-left:4px solid {colour};padding:20px;border-radius:8px;margin-bottom:20px;">
+                <h2 style="color:{colour};margin:0 0 12px 0;">{heading}</h2>
+                <p style="color:#e2e8f0;margin:0;"><strong>{name}</strong> — <a href="{safe_url}" style="color:#38bdf8;">{safe_url}</a></p>
+              </div>
+              <p style="color:#334155;">{lead}</p>
+              <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;">{rows}</table>
+              <p style="color:#475569;margin-top:20px;font-size:14px;"><strong>What to do:</strong><br>
+              • If you made this change: open your UpTraQR dashboard and press <em>"Yes, I made this change"</em>.<br>
+              • If you didn't: contact whoever runs your website or hosting right away, change your website passwords, and restore a backup.</p>
+              <p style="color:#94a3b8;font-size:13px;">Detected {get_vancouver_time()}</p>
+              {SIGNATURE}
+            </div>'''
+        })
+        print(f"Defacement alert sent for {monitor_name}")
+    except Exception as e:
+        print(f"Failed to send defacement alert: {e}")
+
+
+def send_defacement_cleared_alert(monitor_name: str, url: str, to_email: str = None):
+    name, safe_url = escape(monitor_name), escape(url)
+    try:
+        _send({
+            "from": FROM_EMAIL,
+            "to": to_email or ALERT_EMAIL,
+            "bcc": ALERT_EMAIL if to_email else None,
+            "subject": f"✅ {monitor_name} looks normal again",
+            "html": f'''
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+              <div style="background:#052e16;border-left:4px solid #22c55e;padding:20px;border-radius:8px;">
+                <h2 style="color:#22c55e;margin:0 0 12px 0;">✅ Back to normal</h2>
+                <p style="color:#e2e8f0;margin:0;"><strong>{name}</strong> (<a href="{safe_url}" style="color:#38bdf8;">{safe_url}</a>) matches its known-good version again.</p>
+              </div>
+              {SIGNATURE}
+            </div>'''
+        })
+    except Exception as e:
+        print(f"Failed to send defacement cleared alert: {e}")

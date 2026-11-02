@@ -5,6 +5,9 @@ from app.core.auth import get_current_user
 from app.models.models import Monitor, CheckResult, Incident, User
 from pydantic import BaseModel
 from typing import Optional
+import json
+from app.models.models import DefacementWatch, DefacementEvent
+from app.services.safe_fetch import check_url_is_safe, UnsafeURLError
 
 router = APIRouter()
 
@@ -45,9 +48,20 @@ def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db), curren
             detail=f"You've reached your plan limit of {limit} monitors. Please upgrade your plan."
         )
 
+    url = monitor.url.strip()
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    try:
+        check_url_is_safe(url)
+    except UnsafeURLError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    name = monitor.name.strip()[:100]
+    if not name:
+        raise HTTPException(status_code=400, detail="Please give this website a name.")
+
     new_monitor = Monitor(
-        name=monitor.name,
-        url=monitor.url,
+        name=name,
+        url=url,
         user_id=current_user.id
     )
     db.add(new_monitor)
@@ -63,6 +77,8 @@ def delete_monitor(monitor_id: int, db: Session = Depends(get_db), current_user:
     ).first()
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
+    db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).delete()
+    db.query(DefacementEvent).filter(DefacementEvent.monitor_id == monitor.id).delete()
     db.delete(monitor)
     db.commit()
     return {"message": "Monitor deleted"}
@@ -128,3 +144,85 @@ def check_now(monitor_id: int, db: Session = Depends(get_db), current_user: User
     db.add(check)
     db.commit()
     return {"status": "checked", "is_up": result["is_up"], "response_time": result["response_time"]}
+
+
+# ---------------- Defacement monitoring ----------------
+
+def _own_monitor(db, monitor_id, user):
+    monitor = db.query(Monitor).filter(Monitor.id == monitor_id, Monitor.user_id == user.id).first()
+    if not monitor:
+        raise HTTPException(status_code=404, detail="Monitor not found")
+    return monitor
+
+
+def _watch_view(db, monitor, watch):
+    events = db.query(DefacementEvent).filter(DefacementEvent.monitor_id == monitor.id) \
+        .order_by(DefacementEvent.detected_at.desc()).limit(10).all()
+    return {
+        "monitor_id": monitor.id,
+        "enabled": watch.enabled if watch else True,
+        "status": watch.status if watch else "learning",
+        "baseline_set_at": watch.baseline_set_at.isoformat() + "Z" if watch and watch.baseline_set_at else None,
+        "last_checked_at": watch.last_checked_at.isoformat() + "Z" if watch and watch.last_checked_at else None,
+        "last_error": watch.last_error if watch else None,
+        "findings": json.loads(watch.last_findings) if watch and watch.last_findings else [],
+        "history": [{
+            "detected_at": e.detected_at.isoformat() + "Z",
+            "status": e.status,
+            "resolution": e.resolution,
+            "findings": json.loads(e.findings or "[]"),
+        } for e in events],
+    }
+
+
+class DefacementToggle(BaseModel):
+    enabled: bool
+
+
+@router.get("/monitors/{monitor_id}/defacement")
+def defacement_status(monitor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    monitor = _own_monitor(db, monitor_id, current_user)
+    watch = db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).first()
+    return _watch_view(db, monitor, watch)
+
+
+@router.post("/monitors/{monitor_id}/defacement/scan")
+def defacement_scan_now(monitor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from app.services.defacement_runner import check_monitor
+    from datetime import datetime, timedelta
+    monitor = _own_monitor(db, monitor_id, current_user)
+    existing = db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).first()
+    # Small cooldown so the button can't be used to hammer a website.
+    if existing and existing.last_checked_at and datetime.utcnow() - existing.last_checked_at < timedelta(seconds=60):
+        return _watch_view(db, monitor, existing)
+    watch = check_monitor(db, monitor)
+    db.commit()
+    return _watch_view(db, monitor, watch)
+
+
+@router.post("/monitors/{monitor_id}/defacement/approve")
+def defacement_approve(monitor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """'Yes, I made this change' — the current page becomes the new known-good version."""
+    from app.services.defacement_runner import get_or_create_watch, learn, resolve_open_events
+    import requests as _rq
+    monitor = _own_monitor(db, monitor_id, current_user)
+    watch = get_or_create_watch(db, monitor)
+    try:
+        learn(db, monitor, watch)
+    except UnsafeURLError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except _rq.RequestException:
+        raise HTTPException(status_code=502, detail="We couldn't load your page right now. Try again in a minute.")
+    resolve_open_events(db, monitor.id, "approved")
+    db.commit()
+    return _watch_view(db, monitor, watch)
+
+
+@router.post("/monitors/{monitor_id}/defacement/toggle")
+def defacement_toggle(monitor_id: int, data: DefacementToggle, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from app.services.defacement_runner import get_or_create_watch
+    monitor = _own_monitor(db, monitor_id, current_user)
+    watch = get_or_create_watch(db, monitor)
+    watch.enabled = data.enabled
+    db.commit()
+    return _watch_view(db, monitor, watch)

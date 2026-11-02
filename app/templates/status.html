@@ -1,96 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ user_name }} — System Status</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
-        .header { text-align: center; padding: 60px 40px 40px; }
-        .status-badge { display: inline-flex; align-items: center; gap: 8px; background: #052e16; border: 1px solid #166534; color: #22c55e; padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 24px; }
-        .status-badge.issues { background: #2d0a0a; border-color: #991b1b; color: #ef4444; }
-        .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-        .header p { color: #94a3b8; font-size: 16px; }
-        .container { max-width: 800px; margin: 0 auto; padding: 0 40px 60px; }
-        .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; margin-bottom: 16px; }
-        .monitor-list { background: #1e293b; border-radius: 16px; border: 1px solid #334155; overflow: hidden; margin-bottom: 40px; }
-        .monitor-item { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #334155; }
-        .monitor-item:last-child { border-bottom: none; }
-        .monitor-left { display: flex; align-items: center; gap: 16px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .status-dot.up { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
-        .status-dot.down { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-        .status-dot.unknown { background: #94a3b8; }
-        .monitor-name { font-size: 16px; font-weight: 500; }
-        .monitor-url { font-size: 13px; color: #94a3b8; margin-top: 2px; }
-        .monitor-right { display: flex; align-items: center; gap: 24px; }
-        .monitor-stat { text-align: right; }
-        .monitor-stat .val { font-size: 14px; font-weight: 600; }
-        .monitor-stat .lbl { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
-        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .badge.up { background: #052e16; color: #22c55e; }
-        .badge.down { background: #2d0a0a; color: #ef4444; }
-        .badge.unknown { background: #1e293b; color: #94a3b8; }
-        .footer { text-align: center; padding: 40px; color: #475569; font-size: 13px; border-top: 1px solid #334155; }
-        .footer a { color: #38bdf8; text-decoration: none; }
-        .updated { text-align: center; color: #475569; font-size: 13px; margin-bottom: 32px; }
-
-        @media (max-width: 768px) {
-    .header { padding: 40px 20px 20px; }
-    .container { padding: 0 20px 40px; }
-    .monitor-item { flex-direction: column; align-items: flex-start; gap: 16px; padding: 16px; }
-    .monitor-right { flex-wrap: wrap; gap: 12px; width: 100%; }
-    .monitor-stat { text-align: left; }
-    .updated { font-size: 12px; }
-}
-
-    </style>
-</head>
-<body>
-    <div class="header">
-        {% if all_up %}
-        <div class="status-badge">✅ All Systems Operational</div>
-        {% else %}
-        <div class="status-badge issues">⚠️ Some Systems Are Down</div>
-        {% endif %}
-        <h1>{{ user_name }} Status</h1>
-        <p>Real-time status of all monitored services</p>
-    </div>
-
-    <div class="container">
-        <div class="updated">Last updated: {{ last_updated }}</div>
-        <div class="section-title">Monitored Services</div>
-        <div class="monitor-list">
-            {% for monitor in monitors %}
-            <div class="monitor-item">
-                <div class="monitor-left">
-                    <div class="status-dot {{ 'up' if monitor.is_up else 'down' if monitor.is_up == False else 'unknown' }}"></div>
-                    <div>
-                        <div class="monitor-name">{{ monitor.name }}</div>
-                        <div class="monitor-url">{{ monitor.url }}</div>
-                    </div>
-                </div>
-                <div class="monitor-right">
-                    <div class="monitor-stat">
-                        <div class="val">{{ monitor.response_time }}s</div>
-                        <div class="lbl">Response</div>
-                    </div>
-                    <div class="monitor-stat">
-                        <div class="val">{{ monitor.uptime }}%</div>
-                        <div class="lbl">Uptime</div>
-                    </div>
-                    <span class="badge {{ 'up' if monitor.is_up else 'down' if monitor.is_up == False else 'unknown' }}">
-                        {{ '🟢 Operational' if monitor.is_up else '🔴 Down' if monitor.is_up == False else '⚪ Unknown' }}
-                    </span>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <div class="footer">
-        Powered by <a href="https://www.uptraqr.com">Uptraqr</a> — Uptime monitoring for local businesses
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}{{ user_name }} status{% endblock %}
+{% block description %}Live status of {{ user_name }}'s websites, monitored by Uptraqr.{% endblock %}
+{% block topbar %}{% endblock %}
+{% block styles %}
+.status{padding-top:48px;max-width:760px}
+.status h1{font-size:clamp(28px,5vw,40px);margin-top:18px}
+.overall{display:flex;align-items:center;gap:14px;margin-top:22px;padding:18px 20px;border-radius:var(--r-md);border:1px solid}
+.overall.good{border-color:rgba(63,214,154,.45);background:var(--clear-bg)}
+.overall.bad{border-color:rgba(255,92,112,.5);background:var(--breach-bg)}
+.overall .big{width:14px;height:14px;border-radius:50%;flex:none}
+.overall.good .big{background:var(--clear);box-shadow:0 0 0 6px rgba(63,214,154,.18)}
+.overall.bad .big{background:var(--breach);box-shadow:0 0 0 6px rgba(255,92,112,.18)}
+.overall strong{font:600 19px var(--display)}
+.svc{list-style:none;margin:28px 0 0;padding:0;border-top:1px solid var(--rule)}
+.svc li{display:grid;grid-template-columns:1fr auto;gap:6px 16px;padding:18px 0;border-bottom:1px solid var(--rule);align-items:center}
+.svc .n{font-weight:600}
+.svc .u{color:var(--muted);font-size:14px;word-break:break-all}
+.svc .m{grid-column:1/-1;color:var(--muted);font-size:14px;display:flex;gap:20px;flex-wrap:wrap}
+.svc .m strong{color:var(--ink);font-weight:500}
+.updated{color:var(--faint);font-size:14px;margin-top:16px}
+.powered{margin-top:48px;color:var(--faint);font-size:14px}
+.powered a{color:var(--muted)}
+.foot{display:none}
+{% endblock %}
+{% block content %}
+<section class="wrap status">
+  <a href="https://www.uptraqr.com" class="brand" style="font-size:18px" aria-label="Uptraqr">
+    <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 20 6v6c0 4.6-3.3 8.4-8 9.5-4.7-1.1-8-4.9-8-9.5V6l8-3.5Z" stroke="#5CC8FF" stroke-width="1.8"/><path d="m8 12.2 2.6 2.6L16.2 9" stroke="#3FD69A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span><span class="up">up</span>traqr</span>
+  </a>
+  <h1>{{ user_name }} status</h1>
+  {% if all_up %}
+  <div class="overall good"><span class="big"></span><strong>Everything is working</strong></div>
+  {% else %}
+  <div class="overall bad"><span class="big"></span><strong>Some websites are having problems</strong></div>
+  {% endif %}
+  <ul class="svc">
+    {% for m in monitors %}
+    <li>
+      <div><div class="n">{{ m.name }}</div><div class="u">{{ m.url }}</div></div>
+      {% if m.is_up %}<span class="pill clear">Working</span>{% elif m.is_up == False %}<span class="pill breach">Down</span>{% else %}<span class="pill idle">Not checked yet</span>{% endif %}
+      <div class="m"><span>Uptime <strong>{{ m.uptime }}%</strong></span><span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span></div>
+    </li>
+    {% else %}
+    <li><div class="u">No websites are being monitored yet.</div></li>
+    {% endfor %}
+  </ul>
+  <p class="updated">Updated {{ last_updated }}</p>
+  <p class="powered">Monitored by <a href="https://www.uptraqr.com">Uptraqr</a></p>
+</section>
+{% endblock %}

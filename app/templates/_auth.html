@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block nav %}<a href="/">Home</a><a href="/#pricing">Pricing</a>{% endblock %}
+{% block styles %}
+.auth{display:grid;place-items:center;padding:48px var(--gutter) 24px}
+.auth-card{width:100%;max-width:420px;background:var(--console);border:1px solid var(--rule-strong);border-radius:var(--r-lg);padding:clamp(24px,5vw,36px)}
+.auth-card h1{font-size:28px}
+.auth-card .sub{color:var(--muted);margin:8px 0 24px}
+.auth-card .btn{width:100%;margin-top:4px}
+.auth-card .switch{margin-top:20px;color:var(--muted);font-size:15px;text-align:center}
+.foot{margin-top:32px}
+{% endblock %}

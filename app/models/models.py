@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -40,3 +40,29 @@ class Incident(Base):
     started_at = Column(DateTime, default=datetime.utcnow)
     resolved_at = Column(DateTime, nullable=True)
     is_resolved = Column(Boolean, default=False)
+
+class DefacementWatch(Base):
+    """Defacement monitoring settings and the 'known good' snapshot for one monitor."""
+    __tablename__ = "defacement_watches"
+    id = Column(Integer, primary_key=True)
+    monitor_id = Column(Integer, ForeignKey("monitors.id"), unique=True, nullable=False)
+    enabled = Column(Boolean, default=True)
+    status = Column(String, default="learning")   # learning | ok | changed | suspicious | error
+    baseline = Column(Text, nullable=True)         # JSON snapshot of the known-good page
+    baseline_set_at = Column(DateTime, nullable=True)
+    last_checked_at = Column(DateTime, nullable=True)
+    last_findings = Column(Text, nullable=True)    # JSON list of findings from the latest scan
+    last_error = Column(String, nullable=True)
+    last_alert_key = Column(String, nullable=True) # stops the same problem alerting twice
+
+
+class DefacementEvent(Base):
+    """A history entry each time the page was found changed or suspicious."""
+    __tablename__ = "defacement_events"
+    id = Column(Integer, primary_key=True)
+    monitor_id = Column(Integer, ForeignKey("monitors.id"), nullable=False)
+    detected_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String)                        # changed | suspicious
+    findings = Column(Text)                        # JSON list
+    resolved_at = Column(DateTime, nullable=True)
+    resolution = Column(String, nullable=True)     # approved | reverted

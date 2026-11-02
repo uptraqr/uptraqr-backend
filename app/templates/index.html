@@ -1,250 +1,247 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uptraqr — Uptime Monitoring for Local Businesses</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
-        
-        /* NAV */
-        nav { background: #1e293b; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 24px; font-weight: 700; color: #38bdf8; }
-        .logo span { color: #e2e8f0; }
-        .nav-links { display: flex; gap: 32px; align-items: center; }
-        .nav-links a { color: #94a3b8; text-decoration: none; font-size: 15px; }
-        .nav-links a:hover { color: #e2e8f0; }
-        .btn-primary { background: #38bdf8; color: #0f172a; padding: 10px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 15px; }
-        .btn-primary:hover { background: #7dd3fc; color: #0f172a !important; }
+{% extends "base.html" %}
+{% block title %}Uptraqr: know when your website goes down or gets hacked{% endblock %}
+{% block styles %}
+/* ---------- Hero ---------- */
+.hero{padding:56px 0 40px}
+.hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(34px,5.4vw,56px);max-width:13ch}
+.hero .lede{color:#C3CDDD;font-size:18px;max-width:46ch;margin-top:20px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.hero .fine{color:var(--muted);font-size:14px;margin-top:14px}
+@media (max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:36px}.hero{padding-top:36px}}
 
-        /* HERO */
-        .hero { text-align: center; padding: 100px 40px; max-width: 800px; margin: 0 auto; }
-        .hero-badge { display: inline-block; background: #1e293b; border: 1px solid #334155; color: #38bdf8; padding: 6px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 24px; }
-        .hero h1 { font-size: 56px; font-weight: 800; line-height: 1.1; margin-bottom: 24px; }
-        .hero h1 span { color: #38bdf8; }
-        .hero p { font-size: 20px; color: #94a3b8; margin-bottom: 40px; line-height: 1.6; }
-        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-        .btn-secondary { background: transparent; color: #e2e8f0; padding: 12px 28px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 16px; border: 1px solid #334155; }
-        .btn-large { padding: 14px 32px; font-size: 16px; }
-
-        /* STATS */
-        .stats { background: #1e293b; border-top: 1px solid #334155; border-bottom: 1px solid #334155; padding: 40px; display: flex; justify-content: center; gap: 80px; flex-wrap: wrap; }
-        .stat { text-align: center; }
-        .stat .number { font-size: 36px; font-weight: 800; color: #38bdf8; }
-        .stat .label { font-size: 14px; color: #94a3b8; margin-top: 4px; }
-
-        /* FEATURES */
-        .features { max-width: 1100px; margin: 80px auto; padding: 0 40px; }
-        .features h2 { text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 16px; }
-        .features .subtitle { text-align: center; color: #94a3b8; font-size: 18px; margin-bottom: 60px; }
-        .features-grid { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
-        .feature-card { flex: 1 1 calc(33% - 24px); min-width: 280px; max-width: 380px; }
-        .feature-card { background: #1e293b; border-radius: 16px; padding: 32px; border: 1px solid #334155; }
-        .feature-icon { font-size: 36px; margin-bottom: 16px; }
-        .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
-        .feature-card p { color: #94a3b8; font-size: 15px; line-height: 1.6; }
-
-        /* PRICING */
-        .pricing { max-width: 1100px; margin: 80px auto; padding: 0 40px; }
-        .pricing h2 { text-align: center; font-size: 36px; font-weight: 700; margin-bottom: 16px; }
-        .pricing .subtitle { text-align: center; color: #94a3b8; font-size: 18px; margin-bottom: 60px; }
-        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .pricing-card { background: #1e293b; border-radius: 16px; padding: 32px; border: 1px solid #334155; }
-        .pricing-card.popular { border: 2px solid #38bdf8; position: relative; }
-        .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #38bdf8; color: #0f172a; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-        .pricing-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-        .price { font-size: 48px; font-weight: 800; color: #38bdf8; margin: 16px 0; }
-        .price span { font-size: 18px; color: #94a3b8; font-weight: 400; }
-        .pricing-features { list-style: none; margin: 24px 0 32px; }
-        .pricing-features li { padding: 8px 0; color: #94a3b8; font-size: 15px; border-bottom: 1px solid #334155; }
-        .pricing-features li::before { content: "✅ "; }
-
-        /* CTA */
-        .cta { text-align: center; padding: 100px 40px; background: #1e293b; border-top: 1px solid #334155; }
-        .cta h2 { font-size: 40px; font-weight: 700; margin-bottom: 16px; }
-        .cta p { color: #94a3b8; font-size: 18px; margin-bottom: 40px; }
-
-        /* FOOTER */
-        footer { text-align: center; padding: 40px; color: #475569; font-size: 14px; border-top: 1px solid #334155; }
-        footer a { color: #475569; text-decoration: none; }
-
-        @media (max-width: 768px) {
-    /* NAV */
-    nav { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
-    .nav-links { gap: 12px; flex-wrap: wrap; justify-content: center; }
-    .nav-links a { font-size: 13px; }
-
-    /* HERO */
-    .hero { padding: 60px 20px; }
-    .hero h1 { font-size: 32px; }
-    .hero p { font-size: 16px; }
-    .hero-buttons { flex-direction: column; align-items: center; }
-    .btn-large { width: 100%; text-align: center; padding: 14px 20px; }
-
-    /* STATS */
-    .stats { gap: 24px; padding: 30px 20px; flex-wrap: wrap; }
-    .stat .number { font-size: 28px; }
-
-    /* FEATURES */
-    .features { padding: 40px 20px; }
-    .features h2 { font-size: 26px; }
-    .features-grid { flex-direction: column; }
-    .feature-card { min-width: unset; max-width: 100%; }
-
-    /* PRICING */
-    .pricing { padding: 40px 20px; }
-    .pricing h2 { font-size: 26px; }
-    .pricing-grid { grid-template-columns: 1fr; }
-    .pricing-card.popular { margin-top: 20px; }
-
-    /* CTA */
-    .cta { padding: 60px 20px; }
-    .cta h2 { font-size: 28px; }
-
-    /* FOOTER */
-    footer { padding: 24px 20px; font-size: 12px; }
+/* ---------- The watch panel demo (the one bold element) ---------- */
+.panel{position:relative;background:var(--console);border:1px solid var(--rule-strong);border-radius:var(--r-lg);padding:14px;box-shadow:0 30px 60px -30px rgba(0,0,0,.6);transition:border-color .4s}
+.panel.alerted{border-color:var(--breach)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 4px 12px}
+.panel-head .site{font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.browser{position:relative;border-radius:var(--r-md);overflow:hidden;background:#F7F3EC;color:#3B2A1E;min-height:250px}
+.browser .bar{display:flex;gap:6px;align-items:center;padding:9px 12px;background:#E9E2D6}
+.browser .bar i{width:9px;height:9px;border-radius:50%;background:#CDBFA9}
+.browser .bar span{margin-left:8px;font-size:12px;color:#7A6A58;background:#F7F3EC;border-radius:4px;padding:2px 8px}
+.shop{padding:22px 22px 26px;transition:opacity .25s}
+.shop h3{font-family:Georgia,serif;font-weight:700;font-size:22px;color:#5A3A22}
+.shop p{font-family:Georgia,serif;font-size:14px;line-height:1.5;margin-top:8px;color:#5E4A3A}
+.shop .loaf{display:flex;gap:8px;margin-top:16px}
+.shop .loaf b{flex:1;height:46px;border-radius:8px;background:#E3C9A3}
+.shop .loaf b:nth-child(2){background:#D9B184}.shop .loaf b:nth-child(3){background:#C99766}
+.defaced{position:absolute;inset:38px 0 0;display:grid;place-content:center;text-align:center;background:#000;color:#3CFF5A;font:700 22px/1.3 "Courier New",monospace;opacity:0;transition:opacity .2s;padding:20px}
+.defaced small{display:block;color:#9AF7A8;font-size:12px;font-weight:400;margin-top:8px}
+.panel.breached .defaced{opacity:1}
+.scan{position:absolute;left:0;right:0;top:38px;height:2px;background:var(--signal);box-shadow:0 0 14px 3px rgba(92,200,255,.55);opacity:0}
+.panel.scanning .scan{animation:sweep 1.4s ease-in-out forwards}
+@keyframes sweep{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(210px)}}
+.alert{position:absolute;left:18px;right:18px;bottom:-26px;background:#1B1420;border:1px solid var(--breach);border-radius:var(--r-md);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;opacity:0;transform:translateY(12px);transition:opacity .35s,transform .35s;box-shadow:0 18px 40px -12px rgba(255,92,112,.35)}
+.panel.alerted .alert{opacity:1;transform:none}
+.alert .ic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--breach-bg);display:grid;place-items:center;color:var(--breach)}
+.alert strong{display:block;font-size:14px}
+.alert span{display:block;font-size:13px;color:#C9B9C3;margin-top:2px}
+.replay{margin-top:44px;display:flex;justify-content:flex-end}
+@media (max-width:600px){
+  .alert{position:relative;left:auto;right:auto;bottom:auto;margin-top:12px}
+  .replay{margin-top:12px}
+  .hero .ctas .btn{flex:1 1 100%}
 }
-    </style>
-</head>
-<body>
 
-    <nav>
-        <a href="/" style="text-decoration:none;"><div class="logo">up<span>traqr</span></div></a>
-        <div class="nav-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/login" class="nav-links" style="color:#94a3b8;">Login</a>
-            <a href="/signup" class="btn-primary">Get Started</a>
-        </div>
-    </nav>
+/* ---------- Sections ---------- */
+.section{padding:72px 0 0}
+.section h2{font-size:clamp(26px,3.6vw,36px);max-width:22ch}
+.section .intro{color:var(--muted);max-width:60ch;margin-top:12px;font-size:17px}
 
-    <div class="hero">
-        <div class="hero-badge">🚀 Now monitoring local businesses across Canada</div>
-        <h1>Know when your website goes down <span>before your customers do</span></h1>
-        <p>Uptraqr monitors your website 24/7 and alerts you instantly when something goes wrong. Never lose a customer to downtime again.</p>
-        <div class="hero-buttons">
-            <a href="/signup" class="btn-primary btn-large">Start Free Trial</a>
-            <a href="#features" class="btn-secondary btn-large">See How It Works</a>
-        </div>
+.watchlist{margin-top:36px;border-top:1px solid var(--rule)}
+.watch-row{display:grid;grid-template-columns:minmax(220px,1fr) 2fr;gap:24px;padding:28px 0;border-bottom:1px solid var(--rule)}
+.watch-row h3{font-size:21px;display:flex;align-items:center;gap:12px}
+.watch-row h3 .dot{width:12px;height:12px;border-radius:50%;flex:none}
+.watch-row p{color:#C3CDDD;max-width:62ch}
+.watch-row ul{margin:12px 0 0;padding-left:20px;color:#C3CDDD}
+.watch-row li{margin:4px 0}
+.watch-row .new{font:600 12px var(--body);color:var(--signal);border:1px solid rgba(92,200,255,.4);border-radius:999px;padding:2px 8px}
+@media (max-width:720px){.watch-row{grid-template-columns:1fr;gap:10px}}
+
+.steps{list-style:none;margin:36px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;counter-reset:step}
+.steps li{position:relative;padding:0 20px 0 0;counter-increment:step}
+.steps li::before{content:counter(step);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--rule-strong);font:600 15px var(--display);color:var(--signal);margin-bottom:14px;background:var(--night);position:relative;z-index:1}
+.steps li::after{content:"";position:absolute;top:17px;left:34px;right:0;height:1px;background:var(--rule)}
+.steps li:last-child::after{display:none}
+.steps h3{font-size:18px}
+.steps p{color:var(--muted);font-size:15px;margin-top:6px;max-width:30ch}
+@media (max-width:860px){
+  .steps{grid-template-columns:1fr;gap:22px}
+  .steps li{padding:0 0 0 52px}
+  .steps li::before{position:absolute;left:0;top:0;margin:0}
+  .steps li::after{left:17px;top:34px;bottom:-22px;right:auto;width:1px;height:auto}
+}
+
+{% include "_plans_css.html" %}
+
+.closing{margin-top:80px;border:1px solid var(--rule-strong);border-radius:var(--r-lg);padding:clamp(28px,5vw,48px);background:linear-gradient(160deg,var(--console-2),var(--console))}
+.closing h2{font-size:clamp(26px,3.6vw,34px);max-width:20ch}
+.closing p{color:#C3CDDD;margin:12px 0 24px;max-width:52ch}
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Know the moment your website goes down or gets hacked.</h1>
+      <p class="lede">Uptraqr checks your site every 5 minutes, looks for signs of tampering every 30, and tells you in plain English by email and text when something is wrong.</p>
+      <div class="ctas">
+        <a href="/signup" class="btn btn-primary btn-lg">Watch my website free</a>
+        <a href="#pricing" class="btn btn-ghost btn-lg">See pricing</a>
+      </div>
+      <p class="fine">Free for one website. No credit card. Built in Surrey, BC.</p>
     </div>
 
-    <div class="stats">
-        <div class="stat">
-            <div class="number">24/7</div>
-            <div class="label">Continuous Monitoring</div>
+    <div>
+      <div class="panel" id="demo" aria-label="Example: Uptraqr spotting a hacked website">
+        <div class="panel-head">
+          <span class="site">rosewoodbakery.ca</span>
+          <span class="pill clear" id="demo-pill">Looks normal</span>
         </div>
-        <div class="stat">
-            <div class="number">5min</div>
-            <div class="label">Check Interval</div>
+        <div class="browser" aria-hidden="true">
+          <div class="bar"><i></i><i></i><i></i><span>rosewoodbakery.ca</span></div>
+          <div class="shop">
+            <h3>Rosewood Bakery</h3>
+            <p>Sourdough, cinnamon buns and birthday cakes, baked fresh every morning on 72nd Avenue.</p>
+            <div class="loaf"><b></b><b></b><b></b></div>
+          </div>
+          <div class="defaced">HACKED BY 0xGHOST<small>your security is an illusion</small></div>
+          <div class="scan"></div>
         </div>
-        <div class="stat">
-            <div class="number">&lt;1min</div>
-            <div class="label">Alert Response Time</div>
+        <div class="alert" role="status">
+          <div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div><strong>Possible hack on rosewoodbakery.ca</strong><span>"Hacked by" text appeared and most of your page was replaced. Texted to Maria at 2:14 am.</span></div>
         </div>
-        <div class="stat">
-            <div class="number">$10</div>
-            <div class="label">Starting Per Month</div>
+      </div>
+      <div class="replay"><button class="btn btn-quiet btn-sm" id="replay" type="button">Play the example again</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="watch">
+  <div class="wrap">
+    <h2>What Uptraqr watches for you</h2>
+    <p class="intro">Three things that quietly cost small businesses customers. We check them around the clock so you don't have to.</p>
+    <div class="watchlist">
+      <div class="watch-row">
+        <h3><span class="dot" style="background:var(--clear)"></span>Is it online?</h3>
+        <div>
+          <p>We open your website every 5 minutes, just like a customer would. If it stops answering, you get an email and a text right away, and another when it's back.</p>
         </div>
+      </div>
+      <div class="watch-row">
+        <h3><span class="dot" style="background:var(--breach)"></span>Has someone tampered with it? <span class="new">New</span></h3>
+        <div>
+          <p>Every 30 minutes we compare your page with its known-good version and look for the things attackers actually do:</p>
+          <ul>
+            <li>"Hacked by…" messages or your page being replaced</li>
+            <li>New code from unknown websites that can steal card details</li>
+            <li>Contact or payment forms that now send to someone else</li>
+            <li>Hidden casino, pharmacy or adult spam links</li>
+            <li>Visitors being sent to a different website</li>
+          </ul>
+          <p style="margin-top:12px">Normal changes like today's date or a rotating banner are ignored. If you updated the page yourself, one tap tells us it was you.</p>
+        </div>
+      </div>
+      <div class="watch-row">
+        <h3><span class="dot" style="background:var(--watch)"></span>Is the padlock about to expire?</h3>
+        <div>
+          <p>When your security certificate (SSL) runs out, browsers show visitors a big "Not secure" warning. We remind you 30 days before it happens.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <h2>How tamper watch works</h2>
+    <ol class="steps">
+      <li><h3>We learn your page</h3><p>When you add your site, we take a snapshot of how it normally looks, and note which parts change on their own.</p></li>
+      <li><h3>We check every 30 minutes</h3><p>Each check compares your page with that snapshot and looks for attack signs.</p></li>
+      <li><h3>You hear about real problems</h3><p>Hacker signs trigger an email and a text. Smaller edits get an email asking if it was you.</p></li>
+      <li><h3>You confirm or fix</h3><p>Made the change yourself? Tap "Yes, I made this change." If not, our email tells you what to do next.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section" id="pricing">
+  <div class="wrap">
+    <h2>Simple pricing in Canadian dollars</h2>
+    <p class="intro">Start free with one website. Upgrade when you need more. Cancel any time.</p>
+    <div class="plans">
+      <div class="plan">
+        <h3>Starter</h3>
+        <div class="price">$10<small> /month</small></div>
+        <ul>
+          <li>3 websites</li>
+          <li>Checks every 5 minutes</li>
+          <li class="hl">Tamper watch</li>
+          <li>Email alerts</li>
+          <li>SSL reminders</li>
+          <li>30 days of history</li>
+        </ul>
+        <a href="/signup" class="btn btn-ghost">Start free</a>
+      </div>
+      <div class="plan featured">
+        <span class="tag">Most popular</span>
+        <h3>Pro</h3>
+        <div class="price">$25<small> /month</small></div>
+        <ul>
+          <li>10 websites</li>
+          <li>Checks every minute</li>
+          <li class="hl">Tamper watch</li>
+          <li>Email and text alerts</li>
+          <li>SSL reminders</li>
+          <li>90 days of history</li>
+        </ul>
+        <a href="/signup" class="btn btn-primary">Start free</a>
+      </div>
+      <div class="plan">
+        <h3>Agency</h3>
+        <div class="price">$65<small> /month</small></div>
+        <ul>
+          <li>Unlimited websites</li>
+          <li>Checks every minute</li>
+          <li class="hl">Tamper watch</li>
+          <li>Email and text alerts</li>
+          <li>SSL reminders</li>
+          <li>1 year of history</li>
+        </ul>
+        <a href="/signup" class="btn btn-ghost">Start free</a>
+      </div>
     </div>
 
-    <div class="features" id="features">
-        <h2>Everything you need to stay online</h2>
-        <p class="subtitle">Simple, powerful monitoring built for local businesses</p>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🟢</div>
-                <h3>Uptime Monitoring</h3>
-                <p>We check your website every 5 minutes, 24/7. The moment it goes down you get an instant alert via email.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>SSL Certificate Alerts</h3>
-                <p>We warn you 30 days before your SSL certificate expires. No more scary "Not Secure" warnings scaring away customers.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Response Time Tracking</h3>
-                <p>Track how fast your website loads. Slow websites lose customers — we help you catch performance issues early.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Incident History</h3>
-                <p>A full log of every outage — when it happened, how long it lasted. Perfect for holding your hosting provider accountable.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📧</div>
-                <h3>Instant Email Alerts</h3>
-                <p>Get notified the moment your site goes down and when it recovers. No more finding out from an angry customer.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🌐</div>
-                <h3>Status Dashboard</h3>
-                <p>A clean dashboard showing all your sites, their current status, response times and SSL expiry dates in one place.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>SMS Alerts</h3>
-                <p>Get instant text messages when your site goes down. Know within seconds, not hours — directly on your phone.</p>
-</div>
-            </div>
-        </div>
+    <div class="closing">
+      <h2>Find out before your customers do.</h2>
+      <p>Add your website in under a minute. We'll take its known-good snapshot and start watching right away.</p>
+      <a href="/signup" class="btn btn-primary btn-lg">Watch my website free</a>
     </div>
+  </div>
+</section>
+{% endblock %}
 
-    <div class="pricing" id="pricing">
-        <h2>Simple, honest pricing</h2>
-        <p class="subtitle">No hidden fees. Cancel anytime.</p>
-        <div class="pricing-grid">
-            <div class="pricing-card">
-                <h3>Starter</h3>
-                <div class="price">$10<span>/mo</span></div>
-                <ul class="pricing-features">
-                    <li>3 websites monitored</li>
-                    <li>5 minute checks</li>
-                    <li>Email alerts</li>
-                    <li>SSL monitoring</li>
-                    <li>30 day history</li>
-                </ul>
-                <a href="/signup"  class="btn-primary" style="display:block; text-align:center;">Get Started</a>
-            </div>
-            <div class="pricing-card popular">
-                <div class="popular-badge">MOST POPULAR</div>
-                <h3>Pro</h3>
-                <div class="price">$25<span>/mo</span></div>
-                <ul class="pricing-features">
-                    <li>10 websites monitored</li>
-                    <li>1 minute checks</li>
-                    <li>Email + SMS alerts</li>
-                    <li>SSL monitoring</li>
-                    <li>90 day history</li>
-                </ul>
-                <a href="/signup" class="btn-primary" style="display:block; text-align:center;">Get Started Free</a>
-            </div>
-            <div class="pricing-card">
-                <h3>Agency</h3>
-                <div class="price">$65<span>/mo</span></div>
-                <ul class="pricing-features">
-                    <li>Unlimited websites</li>
-                    <li>1 minute checks</li>
-                    <li>Email + SMS alerts</li>
-                    <li>SSL monitoring</li>
-                    <li>1 year history</li>
-                </ul>
-                <a href="/signup" class="btn-primary" style="display:block; text-align:center;">Get Started Free</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="cta">
-        <h2>Ready to never miss downtime again?</h2>
-        <p>Join local businesses across Canada who trust Uptraqr to watch their websites 24/7.</p>
-        <a href="/signup" class="btn-primary btn-large">Start Your Free Trial</a>
-    </div>
-
-    <footer>
-        <p>© 2026 Uptraq Technologies — <a href="mailto:support@uptraqr.com">support@uptraqr.com</a> — Surrey, BC, Canada</p>
-    </footer>
-
-</body>
-</html>
+{% block scripts %}
+<script>
+(function(){
+  const panel=document.getElementById('demo'), pill=document.getElementById('demo-pill');
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timers=[];
+  function set(state){
+    pill.className='pill '+(state==='breach'?'breach':state==='scan'?'idle':'clear');
+    pill.textContent=state==='breach'?'Possible hack':state==='scan'?'Checking…':'Looks normal';
+  }
+  function play(){
+    timers.forEach(clearTimeout); timers=[];
+    panel.classList.remove('scanning','breached','alerted'); set('clear');
+    if(reduce){panel.classList.add('breached','alerted');set('breach');return;}
+    // 1) the page gets defaced, 2) our scan sweeps over it, 3) the alert lands
+    timers.push(setTimeout(()=>{panel.classList.add('breached')},1200));
+    timers.push(setTimeout(()=>{panel.classList.add('scanning');set('scan')},2000));
+    timers.push(setTimeout(()=>{panel.classList.add('alerted');set('breach')},3400));
+  }
+  document.getElementById('replay').addEventListener('click',()=>{void panel.offsetWidth;play()});
+  play();
+})();
+</script>
+{% endblock %}

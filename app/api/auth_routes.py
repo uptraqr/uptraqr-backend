@@ -25,9 +25,12 @@ def signup(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
+    email = email.strip()
+    if len(password) < 8:
+        return RedirectResponse(url="/signup?error=short", status_code=303)
     existing = db.query(User).filter(User.email == email).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        return RedirectResponse(url="/signup?error=exists", status_code=303)
     new_user = User(
         email=email,
         password=hash_password(password),
@@ -37,7 +40,7 @@ def signup(
     db.commit()
     db.refresh(new_user)
     token = create_access_token({"sub": new_user.email})
-    response = RedirectResponse(url="/dashboard", status_code=302)
+    response = RedirectResponse(url="/dashboard", status_code=303)
     response.set_cookie(
         key="access_token",
         value=token,
@@ -54,11 +57,11 @@ def login(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(User.email == email.strip()).first()
     if not user or not verify_password(password, user.password):
-        raise HTTPException(status_code=401, detail="Incorrect email or password")
+        return RedirectResponse(url="/login?error=invalid", status_code=303)
     token = create_access_token({"sub": user.email})
-    response = RedirectResponse(url="/dashboard", status_code=302)
+    response = RedirectResponse(url="/dashboard", status_code=303)
     response.set_cookie(
         key="access_token",
         value=token,
@@ -88,6 +91,10 @@ def update_phone(
     current_user = get_current_user_optional(request, db)
     if not current_user:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    current_user.phone = data.phone
+    import re
+    phone = data.phone.strip()
+    if not re.fullmatch(r"\+?[0-9 ()\-.]{7,20}", phone):
+        raise HTTPException(status_code=400, detail="That doesn't look like a phone number. Use a format like +1 604 555 0123.")
+    current_user.phone = phone
     db.commit()
     return {"message": "Phone updated successfully"}

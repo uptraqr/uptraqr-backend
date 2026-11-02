@@ -37,3 +37,8 @@ def send_recovery_sms(monitor_name: str, url: str, to_number: str):
 def send_ssl_sms(monitor_name: str, url: str, days_left: int, to_number: str):
     message = f"⚠️ SSL WARNING: {monitor_name} SSL expires in {days_left} days!\nURL: {url}\nPlease renew your SSL certificate."
     return send_sms(to_number, message)
+
+def send_defacement_sms(monitor_name: str, url: str, to_number: str):
+    message = (f"🚨 UPTRAQR: {monitor_name} shows signs of a possible hack.\nURL: {url}\n"
+               "Check your email or dashboard for details.")
+    return send_sms(to_number, message)

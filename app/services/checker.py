@@ -1,4 +1,5 @@
 import requests
+from app.services.safe_fetch import check_url_is_safe, UnsafeURLError, USER_AGENT
 from datetime import datetime
 from app.core.database import SessionLocal
 from app.models.models import Monitor, CheckResult, Incident, User
@@ -7,13 +8,16 @@ from app.services.sms_alerts import send_down_sms, send_recovery_sms
 
 def check_url(url: str):
     try:
-        response = requests.get(url, timeout=10)
+        # Refuse private/internal addresses, and don't follow redirects blindly,
+        # so a monitor can't be used to probe UpTraQR's own network (SSRF).
+        check_url_is_safe(url)
+        response = requests.get(url, timeout=10, allow_redirects=False, headers={"User-Agent": USER_AGENT})
         return {
             "is_up": True,
             "status_code": response.status_code,
             "response_time": response.elapsed.total_seconds()
         }
-    except requests.exceptions.RequestException:
+    except (requests.exceptions.RequestException, UnsafeURLError):
         return {
             "is_up": False,
             "status_code": None,

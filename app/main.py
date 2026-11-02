@@ -3,7 +3,7 @@ load_dotenv()
 
 import os
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.database import init_db
@@ -29,6 +29,10 @@ templates = Jinja2Templates(directory="app/templates")
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # API calls (from the dashboard's JavaScript) need a JSON error message,
+    # not the 404 web page, so the dashboard can show what went wrong.
+    if request.url.path.startswith("/api/"):
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
     if exc.status_code == 404:
         return templates.TemplateResponse(
             "404.html", 
@@ -43,6 +47,9 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
+    print(f"Unhandled error on {request.url.path}: {exc!r}")
+    if request.url.path.startswith("/api/"):
+        return JSONResponse({"detail": "Something went wrong on our side."}, status_code=500)
     return templates.TemplateResponse(
         "404.html",
         {"request": request},
