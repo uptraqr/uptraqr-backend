@@ -15,11 +15,14 @@ load_dotenv()
 # The key that signs every login. It must come from a hidden setting
 # (environment variable), never from the code, or anyone reading the
 # code could create fake logins.
-SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY or len(SECRET_KEY) < 32:
+SECRET_KEY = (os.getenv("SECRET_KEY") or "").strip()
+if len(SECRET_KEY) < 32:
+    # Never print the key itself, only what's wrong with it.
+    reason = "is not set at all" if not SECRET_KEY else f"is only {len(SECRET_KEY)} characters long (needs 32 or more)"
+    others = sorted(k for k in os.environ if "SECRET" in k.upper())
     raise RuntimeError(
-        "SECRET_KEY is missing or too short. Set a long random SECRET_KEY "
-        "environment variable before starting UpTraQR."
+        f"SECRET_KEY {reason}. Add it under this service's Variables tab. "
+        f"Secret-like variable names this app can see: {others}"
     )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
