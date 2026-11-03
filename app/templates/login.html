@@ -9,6 +9,9 @@
     {% if request.query_params.get('sent') %}
     <div class="notice info" role="status">If that email has an Uptraqr account, a login link is on its way. It works for 30 minutes.</div>
     {% endif %}
+    {% if request.query_params.get('error') == 'captcha' %}
+    <div class="notice error" role="alert">We couldn't confirm you're a person. Please wait for the check to finish, then ask for the login link again.</div>
+    {% endif %}
     {% if request.query_params.get('error') == 'invalid' %}
     <div class="notice error" role="alert">That email and password don't match. Check for typos and try again.</div>
     {% endif %}
@@ -21,9 +24,11 @@
     <form method="POST" action="/api/auth/login-link">
       <div class="field"><label for="link-email">Log in without a password</label><input id="link-email" type="email" name="email" autocomplete="email" placeholder="you@yourbusiness.ca" required>
         <span class="hint">We'll email you a link that logs you in.</span></div>
+      {% if turnstile_site_key %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="light" data-size="flexible"></div>{% endif %}
       <button type="submit" class="btn btn-ghost btn-lg">Email me a login link</button>
     </form>
     <p class="switch">New to Uptraqr? <a href="/signup">Create a free account</a></p>
   </div>
 </section>
 {% endblock %}
+{% block scripts %}{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer nonce="{{ request.state.csp_nonce }}"></script>{% endif %}{% endblock %}

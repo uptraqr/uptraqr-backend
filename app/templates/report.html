@@ -95,6 +95,7 @@
         <label for="qs-email" class="sr">Email</label>
         <input id="qs-email" type="email" name="email" placeholder="you@yourbusiness.ca" autocomplete="email" required>
         <button class="btn btn-primary btn-lg" type="submit" data-busy="Sending…">Email me the report</button>
+        {% if turnstile_site_key %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="light" data-size="flexible"></div>{% endif %}
       </form>
       <p class="fine">We only use your email for this report and your website alerts. Unsubscribe any time.</p>
     </div>
@@ -120,6 +121,7 @@
 </section>
 {% endblock %}
 {% block scripts %}
+{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer nonce="{{ request.state.csp_nonce }}"></script>{% endif %}
 <script nonce="{{ request.state.csp_nonce }}">
 document.querySelectorAll('form').forEach(f=>f.addEventListener('submit',()=>{const b=f.querySelector('[data-busy]'); if(b){b.disabled=true; b.textContent=b.dataset.busy;}}));
 </script>

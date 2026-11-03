@@ -1,5 +1,6 @@
 {% extends "_auth.html" %}
 {% block robots %}noindex, follow{% endblock %}
+{% block scripts %}{% if turnstile_site_key %}<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer nonce="{{ request.state.csp_nonce }}"></script>{% endif %}{% endblock %}
 {% block title %}Create your account · Uptraqr{% endblock %}
 {% block content %}
 <section class="auth">
@@ -13,6 +14,8 @@
     <div class="notice error" role="alert">Temporary email addresses can't be used. Please use an email you check regularly, since that's where your alerts go.</div>
     {% elif err == 'limit' %}
     <div class="notice error" role="alert">Too many accounts have been created from your connection today. Try again tomorrow, or email {{ support_email }} if you need help.</div>
+    {% elif err == 'captcha' %}
+    <div class="notice error" role="alert">We couldn't confirm you're a person. Please wait for the check above the button to finish, then try again.</div>
     {% elif err == 'short' %}
     <div class="notice error" role="alert">Your password needs at least 8 characters.</div>
     {% endif %}
@@ -23,6 +26,7 @@
         <span class="hint">We send alerts here.</span></div>
       <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" autocomplete="new-password" minlength="8" required>
         <span class="hint">At least 8 characters.</span></div>
+      {% if turnstile_site_key %}<div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="light" data-size="flexible"></div>{% endif %}
       <button type="submit" class="btn btn-primary btn-lg">Create account</button>
     </form>
     <p class="switch">Already have an account? <a href="/login">Log in</a></p>

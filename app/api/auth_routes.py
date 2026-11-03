@@ -19,6 +19,8 @@ from app.models.models import User
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
+from app.core import turnstile as _turnstile
+_turnstile.template_globals(templates.env)
 templates.env.globals["site_url"] = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
 SITE_URL = templates.env.globals["site_url"]
 # Safety switch: set REQUIRE_EMAIL_VERIFICATION=false in Railway if emails ever stop sending,
@@ -54,8 +56,11 @@ def signup(
     name: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    captcha: str = Form("", alias="cf-turnstile-response"),
     db: Session = Depends(get_db)
 ):
+    if not _turnstile.verify(captcha, client_ip(request)):
+        return RedirectResponse(url="/signup?error=captcha", status_code=303)
     email = email.strip()
     if len(password) < 8:
         return RedirectResponse(url="/signup?error=short", status_code=303)
@@ -161,8 +166,11 @@ def _inbox_page(request, email=None, error=None, status_code=200):
 
 
 @router.post("/api/quickstart", response_class=HTMLResponse)
-def quickstart(request: Request, email: str = Form(...), url: str = Form(...), db: Session = Depends(get_db)):
+def quickstart(request: Request, email: str = Form(...), url: str = Form(...),
+               captcha: str = Form("", alias="cf-turnstile-response"), db: Session = Depends(get_db)):
     """Email the health report; the email's button creates a free account (or logs in) and adds the site."""
+    if not _turnstile.verify(captcha, client_ip(request)):
+        return _inbox_page(request, error="We couldn't confirm you're a person. Please go back, wait for the check under the email box to finish, and try again.", status_code=400)
     from app.api.report import get_report
     from app.services.report import normalise_url
     from app.services.safe_fetch import UnsafeURLError
@@ -227,7 +235,10 @@ def quickstart_confirm(request: Request, token: str = "", db: Session = Depends(
 
 # ---------------- Passwordless login links ----------------
 @router.post("/api/auth/login-link")
-def request_login_link(request: Request, email: str = Form(...), db: Session = Depends(get_db)):
+def request_login_link(request: Request, email: str = Form(...),
+                       captcha: str = Form("", alias="cf-turnstile-response"), db: Session = Depends(get_db)):
+    if not _turnstile.verify(captcha, client_ip(request)):
+        return RedirectResponse(url="/login?error=captcha", status_code=303)
     email = email.strip()
     canon = canonical_email(email)
     if EMAIL_RE.match(email) and quickstart_ip_limiter.allow(client_ip(request)) and email_send_limiter.allow(canon):

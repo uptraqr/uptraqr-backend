@@ -13,6 +13,8 @@ from app.services.safe_fetch import UnsafeURLError
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
+from app.core import turnstile as _turnstile
+_turnstile.template_globals(templates.env)
 templates.env.globals["site_url"] = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
 
 report_limiter = RateLimiter(limit=5, window=3600)   # 5 new reports per connection per hour

@@ -37,6 +37,8 @@ SITE_HOST = urlparse(SITE_URL).hostname
 templates.env.globals["site_url"] = SITE_URL
 from app.core.plans import PLANS as _PLANS
 templates.env.globals["PLANS"] = _PLANS
+from app.core import turnstile as _turnstile
+_turnstile.template_globals(templates.env)
 
 
 # ---------------- Security headers ----------------
@@ -52,7 +54,8 @@ async def security_headers(request: Request, call_next):
     if not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
         h["Content-Security-Policy"] = (
             "default-src 'self'; "
-            f"script-src 'self' 'nonce-{nonce}'; "
+            f"script-src 'self' 'nonce-{nonce}' https://challenges.cloudflare.com; "
+            "frame-src https://challenges.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "img-src 'self' data:; "
