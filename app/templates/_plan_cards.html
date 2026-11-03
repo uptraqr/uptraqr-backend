@@ -17,6 +17,7 @@
       {% if feats[key].tamper %}<li class="hl">{{ feats[key].tamper }}</li>{% else %}<li class="no">No tamper watch</li>{% endif %}
       <li>Email alerts</li>
       <li>SSL expiry reminders</li>
+      {% if key == 'free' %}<li>Website health check</li>{% else %}<li class="hl">Monthly health report email</li>{% endif %}
       {% if feats[key].hist %}<li>{{ feats[key].hist }}</li>{% else %}<li class="no">No history</li>{% endif %}
     </ul>
     {% if checkout and key != 'free' %}

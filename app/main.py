@@ -120,7 +120,7 @@ def root(request: Request):
 
 PUBLIC_PAGES = ["/", "/pricing", "/features/website-defacement-monitoring",
                 "/features/uptime-monitoring", "/features/ssl-certificate-monitoring",
-                "/privacy", "/terms"]
+                "/features/website-health-check", "/privacy", "/terms"]
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
 def robots():
@@ -145,6 +145,7 @@ FEATURE_PAGES = {
     "website-defacement-monitoring": "feature_defacement.html",
     "uptime-monitoring": "feature_uptime.html",
     "ssl-certificate-monitoring": "feature_ssl.html",
+    "website-health-check": "feature_health.html",
 }
 
 @app.get("/features/{slug}", response_class=HTMLResponse)

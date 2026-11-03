@@ -1,0 +1,41 @@
+{% extends "_feature.html" %}
+{% block title %}Free website health check: security, speed and SEO report | Uptraqr{% endblock %}
+{% block description %}Check your website free in about 10 seconds. Uptraqr grades your security settings, signs of hacking, speed, Google basics and email protection from A to F, with plain-English fixes. No sign-up needed.{% endblock %}
+{% block crumb %}Website health check{% endblock %}
+{% block h1 %}A free report card for your website{% endblock %}
+{% block lede %}Type your website address and in about 10 seconds you'll see how it scores on security, signs of hacking, speed, Google basics and email protection, graded A to F, with plain-English steps to fix anything that needs it. No sign-up needed.{% endblock %}
+{% block body %}
+<h2>What the health check looks at</h2>
+<ul>
+  <li><strong>Security settings:</strong> whether your padlock (SSL certificate) is valid, visitors are always sent to the secure version, and your site uses the protective settings browsers understand.</li>
+  <li><strong>Signs of hacking:</strong> "hacked by" messages, hidden spam links, disguised code, and pages that send visitors to other websites.</li>
+  <li><strong>Speed:</strong> whether your homepage loads quickly and isn't too heavy for phones.</li>
+  <li><strong>Google basics:</strong> page title, search description, main heading, works on phones, a sitemap, and whether Google is allowed to list your site.</li>
+  <li><strong>Email protection:</strong> whether your domain has SPF and DMARC records, which stop scammers sending fake emails that look like they came from you.</li>
+</ul>
+
+<h2>How you get it</h2>
+<ol class="steps">
+  <li><strong>See it on screen straight away.</strong> Type your website address on our homepage. No email, no account.</li>
+  <li><strong>Get it by email if you like.</strong> Enter just your email and we'll send you the full report, with one button to start watching that website for free.</li>
+  <li><strong>Every month on paid plans.</strong> Starter, Pro and Agency customers get a short health report for each of their websites on the 1st of every month, so new problems don't go unnoticed.</li>
+</ol>
+
+<div class="callout">The health check only looks at the public parts of your website, the same things any visitor or search engine can see. It doesn't log in, change anything or try to break in.</div>
+
+<h2>What to do with your results</h2>
+<p>Start with the "Top things to fix" list. Each item says what's wrong in plain English and what to do about it. Many fixes take a few minutes in your website builder or hosting control panel. If someone else built your site, forward them the report: it lists exactly what to change.</p>
+{% endblock %}
+{% block faq %}
+<div class="faq prose">
+  <h2>Common questions</h2>
+  <details><summary>Is it really free?</summary><p>Yes. You can check any website on screen without signing up. You only need an email if you want the report sent to you.</p></details>
+  <details><summary>Can I check a website that isn't mine?</summary><p>Yes, for example a competitor's or a client's. It only looks at what's public. To turn on monitoring and alerts, though, the website should be yours or one you look after.</p></details>
+  <details><summary>Why did my site get a low grade?</summary><p>Usually a few missing settings that are quick to add. The report lists them in order of importance, so fix the top ones first and check again.</p></details>
+</div>
+{% endblock %}
+{% block related %}
+<a href="/features/uptime-monitoring">Uptime monitoring<span>Know within minutes when your site goes down.</span></a>
+<a href="/features/website-defacement-monitoring">Hack and defacement monitoring<span>Spot tampering, skimmers and spam links.</span></a>
+<a href="/features/ssl-certificate-monitoring">SSL certificate alerts<span>Reminders before your padlock expires.</span></a>
+{% endblock %}

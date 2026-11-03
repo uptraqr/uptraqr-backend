@@ -105,7 +105,7 @@
 .section h2{font-size:clamp(28px,3.8vw,38px);max-width:22ch}
 .section .intro{color:var(--muted);max-width:58ch;margin-top:10px;font-size:18px}
 
-.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
+.checks{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:32px}
 .checkitem{background:var(--console);border:1px solid var(--rule);border-radius:var(--r-lg);padding:24px;display:flex;flex-direction:column}
 .checkitem .head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .checkitem .icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center}
@@ -204,7 +204,7 @@
 <section class="section" id="watch">
   <div class="wrap">
     <h2>What Uptraqr checks for you</h2>
-    <p class="intro">The three problems that quietly cost small businesses customers. You don't need to be technical; every alert tells you what happened and what to do.</p>
+    <p class="intro">The problems that quietly cost small businesses customers. You don't need to be technical; every alert tells you what happened and what to do.</p>
     <div class="checks">
       <article class="checkitem">
         <div class="head">
@@ -238,6 +238,21 @@
         <h3>Is the padlock valid?</h3>
         <p>When your security certificate runs out, browsers warn visitors your site is "Not secure". We email you 30 days before, so it never happens.</p>
         <a class="more" href="/features/ssl-certificate-monitoring">How SSL reminders work</a>
+      </article>
+      <article class="checkitem">
+        <div class="head">
+          <span class="icon" style="background:var(--signal-soft);color:var(--signal)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5" stroke="currentColor" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <span class="tag free">Free, no sign-up</span>
+        </div>
+        <h3>How healthy is it?</h3>
+        <p>A free report card for your website in about 10 seconds, graded A to F, with plain-English fixes for:</p>
+        <ul>
+          <li>Security settings</li>
+          <li>Signs of hacking</li>
+          <li>Speed and Google basics</li>
+          <li>Protection against fake emails</li>
+        </ul>
+        <a class="more" href="/features/website-health-check">What the health check covers</a>
       </article>
     </div>
   </div>
