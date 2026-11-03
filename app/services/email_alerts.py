@@ -12,10 +12,17 @@ load_dotenv()
 
 resend.api_key = os.getenv("RESEND_API_KEY")
 
-FROM_EMAIL = "alerts@uptraqr.com"
-ALERT_EMAIL = "support@uptraqr.com"
+# Who alerts come from (must be on a domain verified in Resend).
+FROM_EMAIL = os.getenv("FROM_EMAIL", "UpTraQR Alerts <alerts@uptraqr.com>")
+# The contact address shown to customers.
+SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
+# Optional: where UpTraQR sends you a hidden copy of every customer alert.
+# Leave unset to send no copies.
+ADMIN_COPY_EMAIL = os.getenv("ADMIN_COPY_EMAIL") or None
+# Used only when an alert has no customer address (shouldn't normally happen).
+ALERT_EMAIL = ADMIN_COPY_EMAIL or SUPPORT_EMAIL
 
-SIGNATURE = """
+SIGNATURE = f"""
 <br><br>
 <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
 <table style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; border-collapse: collapse;">
@@ -26,7 +33,7 @@ SIGNATURE = """
   </tr>
   <tr>
     <td style="border-top: 3px solid #38bdf8; padding-top: 12px;">
-      <a href="mailto:support@uptraqr.com" style="font-size: 13px; color: #38bdf8; text-decoration: none; font-weight: 600;">support@uptraqr.com</a>
+      <a href="mailto:{SUPPORT_EMAIL}" style="font-size: 13px; color: #38bdf8; text-decoration: none; font-weight: 600;">{SUPPORT_EMAIL}</a>
       <br>
       <a href="https://www.uptraqr.com" style="font-size: 13px; color: #0f172a; text-decoration: none; font-weight: 600;">www.uptraqr.com</a>
       <br><br>
@@ -46,7 +53,8 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None):
         _send({
             "from": FROM_EMAIL,
             "to": to_email or ALERT_EMAIL,
-            "bcc": ALERT_EMAIL if to_email else None,
+            "reply_to": SUPPORT_EMAIL,
+            "bcc": ADMIN_COPY_EMAIL if to_email else None,
             "subject": f"🔴 ALERT: {monitor_name} is DOWN",
             "html": f"""
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -83,7 +91,8 @@ def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
         _send({
             "from": FROM_EMAIL,
             "to": to_email or ALERT_EMAIL,
-            "bcc": ALERT_EMAIL if to_email else None,
+            "reply_to": SUPPORT_EMAIL,
+            "bcc": ADMIN_COPY_EMAIL if to_email else None,
             "subject": f"✅ RESOLVED: {monitor_name} is back UP",
             "html": f"""
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -120,7 +129,8 @@ def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = 
         _send({
             "from": FROM_EMAIL,
             "to": to_email or ALERT_EMAIL,
-            "bcc": ALERT_EMAIL if to_email else None,
+            "reply_to": SUPPORT_EMAIL,
+            "bcc": ADMIN_COPY_EMAIL if to_email else None,
             "subject": f"⚠️ SSL Warning: {monitor_name} expires in {days_left} days",
             "html": f"""
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -174,7 +184,8 @@ def send_defacement_alert(monitor_name: str, url: str, status: str, findings: li
         _send({
             "from": FROM_EMAIL,
             "to": to_email or ALERT_EMAIL,
-            "bcc": ALERT_EMAIL if to_email else None,
+            "reply_to": SUPPORT_EMAIL,
+            "bcc": ADMIN_COPY_EMAIL if to_email else None,
             "subject": subject,
             "html": f'''
             <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:20px;">
@@ -202,7 +213,8 @@ def send_defacement_cleared_alert(monitor_name: str, url: str, to_email: str = N
         _send({
             "from": FROM_EMAIL,
             "to": to_email or ALERT_EMAIL,
-            "bcc": ALERT_EMAIL if to_email else None,
+            "reply_to": SUPPORT_EMAIL,
+            "bcc": ADMIN_COPY_EMAIL if to_email else None,
             "subject": f"✅ {monitor_name} looks normal again",
             "html": f'''
             <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:20px;">

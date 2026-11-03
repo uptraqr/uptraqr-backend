@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -8,6 +9,7 @@ from datetime import datetime
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
 
 @router.get("/status/{username}", response_class=HTMLResponse)
 def public_status(username: str, request: Request, db: Session = Depends(get_db)):

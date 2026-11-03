@@ -25,6 +25,7 @@ app = FastAPI(
 )
 
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
 
 
 @app.exception_handler(StarletteHTTPException)
