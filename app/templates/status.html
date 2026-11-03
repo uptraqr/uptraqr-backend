@@ -7,11 +7,11 @@
 .status{padding-top:48px;max-width:760px}
 .status h1{font-size:clamp(28px,5vw,40px);margin-top:18px}
 .overall{display:flex;align-items:center;gap:14px;margin-top:22px;padding:18px 20px;border-radius:var(--r-md);border:1px solid}
-.overall.good{border-color:rgba(63,214,154,.45);background:var(--clear-bg)}
-.overall.bad{border-color:rgba(255,92,112,.5);background:var(--breach-bg)}
+.overall.good{border-color:var(--clear-line);background:var(--clear-bg)}
+.overall.bad{border-color:var(--breach-line);background:var(--breach-bg)}
 .overall .big{width:14px;height:14px;border-radius:50%;flex:none}
-.overall.good .big{background:var(--clear);box-shadow:0 0 0 6px rgba(63,214,154,.18)}
-.overall.bad .big{background:var(--breach);box-shadow:0 0 0 6px rgba(255,92,112,.18)}
+.overall.good .big{background:var(--clear);box-shadow:0 0 0 6px var(--clear-bg)}
+.overall.bad .big{background:var(--breach);box-shadow:0 0 0 6px var(--breach-bg)}
 .overall strong{font:600 19px var(--display)}
 .svc{list-style:none;margin:28px 0 0;padding:0;border-top:1px solid var(--rule)}
 .svc li{display:grid;grid-template-columns:1fr auto;gap:6px 16px;padding:18px 0;border-bottom:1px solid var(--rule);align-items:center}
@@ -27,7 +27,7 @@
 {% block content %}
 <section class="wrap status">
   <a href="https://www.uptraqr.com" class="brand" style="font-size:18px" aria-label="Uptraqr">
-    <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 20 6v6c0 4.6-3.3 8.4-8 9.5-4.7-1.1-8-4.9-8-9.5V6l8-3.5Z" stroke="#5CC8FF" stroke-width="1.8"/><path d="m8 12.2 2.6 2.6L16.2 9" stroke="#3FD69A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 20 6v6c0 4.6-3.3 8.4-8 9.5-4.7-1.1-8-4.9-8-9.5V6l8-3.5Z" stroke="#0B63CE" stroke-width="1.8"/><path d="m8 12.2 2.6 2.6L16.2 9" stroke="#0B7A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span><span class="up">up</span>traqr</span>
   </a>
   <h1>{{ user_name }} status</h1>

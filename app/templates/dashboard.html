@@ -10,6 +10,16 @@
 .dash{padding:36px 0 0}
 .dash-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
 .flash{margin:20px 0 0}
+.status-banner{display:flex;gap:16px;align-items:center;margin-top:22px;padding:18px 20px;border-radius:var(--r-lg);border:1px solid}
+.status-banner strong{display:block;font-size:19px;color:var(--ink)}
+.status-banner span{display:block;margin-top:2px}
+.status-banner.good{background:var(--clear-bg);border-color:var(--clear-line)}
+.status-banner.warn{background:var(--watch-bg);border-color:var(--watch-line)}
+.status-banner.bad{background:var(--breach-bg);border-color:var(--breach-line)}
+.big-lamp{width:18px;height:18px;border-radius:50%;flex:none}
+.good .big-lamp{background:var(--clear);box-shadow:0 0 0 6px rgba(11,122,82,.15)}
+.warn .big-lamp{background:var(--watch);box-shadow:0 0 0 6px rgba(154,88,0,.15)}
+.bad .big-lamp{background:var(--breach);box-shadow:0 0 0 6px rgba(191,36,51,.15)}
 .dash-head h1{font-size:clamp(26px,4vw,34px)}
 .dash-head .who{color:var(--muted);margin-top:6px;font-size:15px}
 .dash-head .who strong{color:var(--ink);font-weight:500}
@@ -24,9 +34,10 @@
 @media (max-width:600px){.summary div{flex-basis:50%;border-right:0;border-bottom:1px solid var(--rule)}.summary div:nth-child(odd){border-right:1px solid var(--rule)}.summary div:nth-last-child(-n+1){border-bottom:0}}
 
 .sites{margin-top:28px;display:grid;gap:14px}
-.site{background:var(--console);border:1px solid var(--rule);border-radius:var(--r-md);overflow:hidden}
-.site.down{border-color:rgba(255,92,112,.55)}
-.site.alarm{border-color:var(--breach);box-shadow:0 0 0 1px var(--breach) inset}
+.site{background:var(--console);border:1px solid var(--rule);border-left:6px solid var(--clear);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow)}
+.site.unknown{border-left-color:var(--rule-strong)}
+.site.warn{border-left-color:var(--watch)}
+.site.down,.site.alarm{border-left-color:var(--breach)}
 .site-main{display:grid;grid-template-columns:1fr auto;gap:12px 20px;padding:18px 20px;align-items:center}
 .site-name{font:600 18px var(--display)}
 .site-url{color:var(--muted);font-size:14px;word-break:break-all}
@@ -43,8 +54,8 @@
 .tw summary .chev{transition:transform .2s;color:var(--muted)}
 .tw[open] summary .chev{transform:rotate(180deg)}
 .tw-body{padding:4px 20px 20px}
-.tw-body .state{color:#C3CDDD}
-.locked{border:1px dashed var(--rule-strong);border-radius:var(--r-md);padding:16px;color:#C3CDDD}
+.tw-body .state{color:var(--text)}
+.locked{border:1px dashed var(--rule-strong);border-radius:var(--r-md);padding:16px;color:var(--text)}
 .locked p{margin:0 0 10px}
 .locked strong{color:var(--ink)}
 .hist-up{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted);font-size:14px;margin-bottom:14px}
@@ -53,7 +64,7 @@
 .bars i{flex:1;min-width:3px;height:100%;border-radius:2px;background:var(--rule)}
 .bars i.ok{background:var(--clear)} .bars i.meh{background:var(--watch)} .bars i.bad{background:var(--breach)}
 .bars-cap{display:flex;justify-content:space-between;color:var(--faint);font-size:12px;margin-top:6px}
-.outages{list-style:none;padding:0;margin:14px 0 0;font-size:14px;color:#C3CDDD}
+.outages{list-style:none;padding:0;margin:14px 0 0;font-size:14px;color:var(--text)}
 .outages li{padding:8px 0;border-top:1px solid var(--rule)}
 .finding{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 0;border-top:1px solid var(--rule)}
 .finding:first-child{border-top:0}
@@ -78,7 +89,7 @@
 @media (max-width:720px){.texts{grid-template-columns:1fr}}
 
 dialog{background:var(--console);color:var(--ink);border:1px solid var(--rule-strong);border-radius:var(--r-lg);padding:28px;width:min(460px,calc(100vw - 32px))}
-dialog::backdrop{background:rgba(5,9,18,.75)}
+dialog::backdrop{background:rgba(15,27,45,.45)}
 dialog h2{font-size:22px;margin-bottom:6px}
 dialog .sub{color:var(--muted);margin-bottom:20px}
 dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
@@ -111,6 +122,21 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
   {% elif note == 'limit' %}<div class="notice info flash" role="status">You're logged in, but your plan has no room for another website. <a href="/pricing">See plans</a></div>
   {% elif note == 'taken' %}<div class="notice info flash" role="status">You're logged in, but that website is already watched on another free account. <a href="/pricing">Upgrade</a> to watch it here.</div>
   {% endif %}
+  {% if monitors %}
+  {% set urgent = sites_down or (monitors | selectattr('tamper_status','equalto','suspicious') | list) %}
+  <div class="status-banner {{ 'bad' if urgent else ('warn' if needs_attention else 'good') }}" role="status">
+    <span class="big-lamp" aria-hidden="true"></span>
+    <div>
+      {% if needs_attention %}
+        <strong>{{ needs_attention }} website{{ 's need' if needs_attention != 1 else ' needs' }} your attention</strong>
+        <span>{% if sites_down %}{{ sites_down }} down. {% endif %}{% if tamper_alerts %}{{ tamper_alerts }} with a tamper alert. {% endif %}{% if ssl_warnings %}{{ ssl_warnings }} with an expiring padlock. {% endif %}Details are on the website{{ 's' if needs_attention != 1 }} below.</span>
+      {% else %}
+        <strong>All good. {{ 'Your website is' if monitors|length == 1 else 'All ' ~ (monitors|length) ~ ' websites are' }} working normally.</strong>
+        <span>We're checking every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }} and will email you if anything changes.</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
   <div class="summary" aria-label="Summary">
     <div><b>{{ total_monitors }}</b><span>Websites</span></div>
     <div class="is-clear"><b>{{ sites_up }}</b><span>Online</span></div>
@@ -123,7 +149,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
   <div class="sites">
     {% for m in monitors %}
     {% set tl = tamper_label.get(m.tamper_status, ("idle", m.tamper_status)) %}
-    <article class="site {{ 'down' if m.is_up == False else '' }} {{ 'alarm' if m.tamper_status == 'suspicious' else '' }}" data-id="{{ m.id }}">
+    <article class="site {{ 'down' if m.is_up == False else '' }} {{ 'alarm' if m.tamper_status == 'suspicious' else '' }} {{ 'warn' if m.tamper_status == 'changed' or m.ssl_warning else '' }} {{ 'unknown' if m.is_up is none else '' }}" data-id="{{ m.id }}">
       <div class="site-main">
         <div>
           <div class="site-name">{{ m.name }}</div>

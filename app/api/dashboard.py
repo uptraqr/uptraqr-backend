@@ -82,7 +82,17 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "tamper_checked": watch.last_checked_at.strftime("%Y-%m-%dT%H:%M:%SZ") if watch and watch.last_checked_at else None,
         })
 
+    # Problems first: down sites, then possible hacks, then changes, then expiring SSL.
+    def urgency(m):
+        if m["is_up"] is False: return 0
+        if m["tamper_status"] == "suspicious": return 1
+        if m["tamper_status"] == "changed": return 2
+        if m["ssl_warning"]: return 3
+        return 4
+    monitor_data.sort(key=urgency)
+    needs_attention = sum(1 for m in monitor_data if urgency(m) < 4)
     response = templates.TemplateResponse("dashboard.html", {
+        "needs_attention": needs_attention,
         "request": request,
         "monitors": monitor_data,
         "total_monitors": len(monitors),
