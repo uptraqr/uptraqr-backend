@@ -131,7 +131,8 @@ def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = 
             "to": to_email or ALERT_EMAIL,
             "reply_to": SUPPORT_EMAIL,
             "bcc": ADMIN_COPY_EMAIL if to_email else None,
-            "subject": f"⚠️ SSL Warning: {monitor_name} expires in {days_left} days",
+            "subject": (f"🔴 SSL certificate for {monitor_name} expires today" if days_left <= 0
+                        else f"⚠️ SSL certificate for {monitor_name} expires in {days_left} day{'s' if days_left != 1 else ''}"),
             "html": f"""
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="background: #2d1f00; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 20px;">

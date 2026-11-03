@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
 {% block title %}{{ user_name }} status{% endblock %}
 {% block description %}Live status of {{ user_name }}'s websites, monitored by Uptraqr.{% endblock %}
 {% block topbar %}{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "_feature.html" %}
+{% block title %}SSL certificate expiry alerts for your website | Uptraqr{% endblock %}
+{% block description %}Uptraqr checks your website's SSL certificate every day and emails you 30, 14, 7, 3 and 1 day before it expires, so visitors never see a "Not secure" warning. Free for one site.{% endblock %}
+{% block crumb %}SSL certificate alerts{% endblock %}
+{% block h1 %}Never let your padlock expire{% endblock %}
+{% block lede %}When your SSL certificate runs out, browsers warn visitors that your site is "Not secure" and many leave straight away. Uptraqr checks it every day and emails you well before that happens.{% endblock %}
+{% block body %}
+<h2>What is an SSL certificate?</h2>
+<p>It's what puts the padlock next to your website address and lets your site use https. It keeps information people type, like passwords and card details, private on the way to your website.</p>
+<p>Certificates only last a set time, usually somewhere between three months and a year. Most renew automatically, but automatic renewal fails more often than people expect: a changed hosting plan, an expired card on file, or a DNS change can all stop it quietly.</p>
+
+<h2>What you get</h2>
+<ul>
+  <li><strong>A daily certificate check</strong> for every website you monitor.</li>
+  <li><strong>Reminder emails</strong> 30, 14, 7, 3 and 1 day before expiry, and on the day it expires.</li>
+  <li><strong>Days left shown on your dashboard</strong> for every site.</li>
+</ul>
+
+<h2>What to do when you get a reminder</h2>
+<ol class="steps">
+  <li><strong>Check who provides your certificate.</strong> It's usually your web host (for example in cPanel), your website builder, or a service like Cloudflare.</li>
+  <li><strong>Renew it or fix automatic renewal.</strong> Many hosts have a one-click "renew" or "reissue" button.</li>
+  <li><strong>Not sure?</strong> Forward the reminder to whoever built or hosts your website. It says exactly which site and how many days are left.</li>
+</ol>
+{% endblock %}
+{% block related %}
+<a href="/features/uptime-monitoring">Uptime monitoring<span>Know within minutes when your site goes down.</span></a>
+<a href="/features/website-defacement-monitoring">Hack and defacement monitoring<span>Spot tampering, skimmers and spam links.</span></a>
+{% endblock %}

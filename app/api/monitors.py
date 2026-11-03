@@ -6,7 +6,7 @@ from app.models.models import Monitor, CheckResult, Incident, User
 from pydantic import BaseModel
 from typing import Optional
 import json
-from app.models.models import DefacementWatch, DefacementEvent
+from app.models.models import DefacementWatch, DefacementEvent, SslAlertState
 from app.services.safe_fetch import check_url_is_safe, UnsafeURLError
 
 router = APIRouter()
@@ -79,6 +79,7 @@ def delete_monitor(monitor_id: int, db: Session = Depends(get_db), current_user:
         raise HTTPException(status_code=404, detail="Monitor not found")
     db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).delete()
     db.query(DefacementEvent).filter(DefacementEvent.monitor_id == monitor.id).delete()
+    db.query(SslAlertState).filter(SslAlertState.monitor_id == monitor.id).delete()
     db.delete(monitor)
     db.commit()
     return {"message": "Monitor deleted"}

@@ -3,13 +3,14 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.models import Monitor, CheckResult, User, Incident, DefacementWatch, DefacementEvent
+from app.models.models import Monitor, CheckResult, User, Incident, DefacementWatch, DefacementEvent, SslAlertState
 import os
 import hmac
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
+templates.env.globals["site_url"] = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
 
 # No fallback: if ADMIN_SECRET isn't set, the admin page stays locked.
 ADMIN_SECRET = os.getenv("ADMIN_SECRET")
@@ -81,6 +82,7 @@ def _delete_monitor_rows(db: Session, monitor: Monitor):
     db.query(Incident).filter(Incident.monitor_id == monitor.id).delete()
     db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).delete()
     db.query(DefacementEvent).filter(DefacementEvent.monitor_id == monitor.id).delete()
+    db.query(SslAlertState).filter(SslAlertState.monitor_id == monitor.id).delete()
     db.delete(monitor)
 
 

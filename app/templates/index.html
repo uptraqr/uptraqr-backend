@@ -1,5 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Uptraqr: know when your website goes down or gets hacked{% endblock %}
+{% block title %}Uptraqr: website downtime and hack alerts for small businesses{% endblock %}
+{% block head_extra %}
+<script type="application/ld+json" nonce="{{ request.state.csp_nonce }}">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"Organization","name":"Uptraqr","url":"{{ site_url }}","logo":"{{ site_url }}/static/apple-touch-icon.png","email":"{{ support_email }}",
+  "address":{"@type":"PostalAddress","addressLocality":"Surrey","addressRegion":"BC","addressCountry":"CA"}},
+ {"@type":"SoftwareApplication","name":"Uptraqr","applicationCategory":"BusinessApplication","operatingSystem":"Web",
+  "url":"{{ site_url }}","description":"Website uptime monitoring, hack and defacement detection, and SSL certificate alerts for small businesses.",
+  "offers":[
+   {"@type":"Offer","name":"Free","price":"0","priceCurrency":"CAD"},
+   {"@type":"Offer","name":"Starter","price":"10","priceCurrency":"CAD"},
+   {"@type":"Offer","name":"Pro","price":"25","priceCurrency":"CAD"},
+   {"@type":"Offer","name":"Agency","price":"65","priceCurrency":"CAD"}]}
+]}
+</script>
+{% endblock %}
 {% block styles %}
 /* ---------- Hero ---------- */
 .hero{padding:56px 0 40px}
@@ -140,7 +155,7 @@
             <li>Hidden casino, pharmacy or adult spam links</li>
             <li>Visitors being sent to a different website</li>
           </ul>
-          <p style="margin-top:12px">Normal changes like today's date or a rotating banner are ignored. If you updated the page yourself, one tap tells us it was you.</p>
+          <p style="margin-top:12px">Normal changes like today's date or a rotating banner are ignored. If you updated the page yourself, one tap tells us it was you. <a href="/features/website-defacement-monitoring">How tamper watch works</a></p>
         </div>
       </div>
       <div class="watch-row">

@@ -4,7 +4,9 @@ load_dotenv()
 import os
 import secrets
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
+from fastapi.staticfiles import StaticFiles
+from urllib.parse import urlparse
 from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.database import init_db
@@ -27,6 +29,11 @@ app = FastAPI(
 
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
+# The one official address of the site. Used for canonical links, the sitemap
+# and share previews, so Google never treats the Railway address as a copy.
+SITE_URL = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+SITE_HOST = urlparse(SITE_URL).hostname
+templates.env.globals["site_url"] = SITE_URL
 
 
 # ---------------- Security headers ----------------
@@ -49,6 +56,10 @@ async def security_headers(request: Request, call_next):
             "connect-src 'self'; "
             "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         )
+    # Any address other than the official one (e.g. the *.up.railway.app address)
+    # tells search engines not to list it, so it can't compete with www.uptraqr.com.
+    if request.url.hostname != SITE_HOST:
+        h["X-Robots-Tag"] = "noindex"
     h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     h["X-Content-Type-Options"] = "nosniff"
     h["X-Frame-Options"] = "DENY"
@@ -99,6 +110,39 @@ def shutdown():
 def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+PUBLIC_PAGES = ["/", "/pricing", "/features/website-defacement-monitoring",
+                "/features/uptime-monitoring", "/features/ssl-certificate-monitoring"]
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+def robots():
+    return (
+        "User-agent: *\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /admin\n"
+        "Disallow: /api/\n"
+        "Disallow: /logout\n"
+        f"\nSitemap: {SITE_URL}/sitemap.xml\n"
+    )
+
+@app.get("/sitemap.xml")
+def sitemap():
+    urls = "".join(f"<url><loc>{SITE_URL}{p}</loc></url>" for p in PUBLIC_PAGES)
+    xml = f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
+    return Response(xml, media_type="application/xml")
+
+FEATURE_PAGES = {
+    "website-defacement-monitoring": "feature_defacement.html",
+    "uptime-monitoring": "feature_uptime.html",
+    "ssl-certificate-monitoring": "feature_ssl.html",
+}
+
+@app.get("/features/{slug}", response_class=HTMLResponse)
+def feature_page(slug: str, request: Request):
+    page = FEATURE_PAGES.get(slug)
+    if not page:
+        raise StarletteHTTPException(status_code=404)
+    return templates.TemplateResponse(page, {"request": request})
+
 @app.get("/health")
 def health():
     return {"status": "healthy"}
@@ -107,6 +151,7 @@ def health():
 def pricing(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
 
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(monitors_router, prefix="/api")
 app.include_router(dashboard_router)
 app.include_router(auth_router, prefix="/api")

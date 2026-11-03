@@ -4,8 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0D1524">
-<title>{% block title %}Uptraqr{% endblock %}</title>
-<meta name="description" content="{% block description %}Uptraqr watches your website day and night: downtime, hacked pages and expiring security certificates. Plain-English alerts for Canadian small businesses.{% endblock %}">
+{% set canonical = site_url ~ request.url.path %}
+<title>{% block title %}Uptraqr: website downtime and hack alerts for small businesses{% endblock %}</title>
+<meta name="description" content="{% block description %}Uptraqr watches your website day and night for downtime, hacked pages and expiring security certificates, with plain-English alerts for Canadian small businesses.{% endblock %}">
+<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+<link rel="canonical" href="{{ canonical }}">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/static/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Uptraqr">
+<meta property="og:title" content="{{ self.title() | trim }}">
+<meta property="og:description" content="{{ self.description() | trim }}">
+<meta property="og:url" content="{{ canonical }}">
+<meta property="og:image" content="{{ site_url }}/static/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_CA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ self.title() | trim }}">
+<meta name="twitter:description" content="{{ self.description() | trim }}">
+<meta name="twitter:image" content="{{ site_url }}/static/og-image.png">
+{% block head_extra %}{% endblock %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -92,6 +112,11 @@ main{flex:1}
 .foot{border-top:1px solid var(--rule);margin-top:72px}
 .foot .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:28px;padding-bottom:28px;color:var(--faint);font-size:14px}
 .foot a{color:var(--muted)}
+.foot .wrap{flex-direction:column}
+.foot-links{display:flex;flex-wrap:wrap;gap:8px 22px}
+.foot-links a{text-decoration:none;font-size:15px}
+.foot-links a:hover{color:var(--ink)}
+.foot-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 {% block styles %}{% endblock %}
@@ -110,7 +135,7 @@ main{flex:1}
     </button>
     <nav class="nav" id="nav">
       {% block nav %}
-      <a href="/#watch">What we watch</a>
+      <a href="/features/website-defacement-monitoring">Tamper watch</a>
       <a href="/#pricing">Pricing</a>
       <a href="/login">Log in</a>
       <a href="/signup" class="btn btn-primary btn-sm">Start free</a>
@@ -123,8 +148,16 @@ main{flex:1}
 {% block footer %}
 <footer class="foot">
   <div class="wrap">
-    <span>© 2026 Uptraq Technologies, Surrey, BC, Canada</span>
-    <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+    <nav class="foot-links" aria-label="Features">
+      <a href="/features/website-defacement-monitoring">Hack and defacement monitoring</a>
+      <a href="/features/uptime-monitoring">Uptime monitoring</a>
+      <a href="/features/ssl-certificate-monitoring">SSL certificate alerts</a>
+      <a href="/pricing">Pricing</a>
+    </nav>
+    <div class="foot-meta">
+      <span>© 2026 Uptraq Technologies, Surrey, BC, Canada</span>
+      <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+    </div>
   </div>
 </footer>
 {% endblock %}

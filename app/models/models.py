@@ -66,3 +66,13 @@ class DefacementEvent(Base):
     findings = Column(Text)                        # JSON list
     resolved_at = Column(DateTime, nullable=True)
     resolution = Column(String, nullable=True)     # approved | reverted
+
+
+class SslAlertState(Base):
+    """Remembers which SSL reminder was last sent for a monitor, so each one is sent once."""
+    __tablename__ = "ssl_alert_states"
+    id = Column(Integer, primary_key=True)
+    monitor_id = Column(Integer, ForeignKey("monitors.id"), unique=True, nullable=False)
+    expiry_date = Column(String, nullable=True)       # certificate expiry the reminders refer to
+    last_threshold = Column(Integer, nullable=True)   # e.g. 30, 14, 7, 3, 1, 0
+    last_checked_at = Column(DateTime, nullable=True)
