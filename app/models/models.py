@@ -14,6 +14,7 @@ class User(Base):
     plan = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    email_verified = Column(Boolean, default=False, nullable=False)
 
 class Monitor(Base):
     __tablename__ = "monitors"

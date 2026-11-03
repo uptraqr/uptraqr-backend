@@ -26,6 +26,8 @@ def get_monitors(db: Session = Depends(get_db), current_user: User = Depends(get
 
 @router.post("/monitors")
 def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not current_user.email_verified:
+        raise HTTPException(status_code=403, detail="Please confirm your email address first. Check your inbox for our link.")
     
     # Check plan limits
     monitor_count = db.query(Monitor).filter(

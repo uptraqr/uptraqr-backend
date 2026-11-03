@@ -46,7 +46,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        if email is None:
+        # Email-confirmation links are signed with the same key; never accept one as a login.
+        if email is None or payload.get("purpose"):
             raise HTTPException(status_code=401, detail="Not authenticated")
     except JWTError:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -60,3 +61,20 @@ def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
         return get_current_user(request, db)
     except:
         return None
+
+VERIFY_HOURS = 24
+
+def create_verify_token(email: str) -> str:
+    """A link token that can only confirm an email address, valid for 24 hours."""
+    exp = datetime.utcnow() + timedelta(hours=VERIFY_HOURS)
+    return jwt.encode({"sub": email, "purpose": "verify-email", "exp": exp}, SECRET_KEY, algorithm=ALGORITHM)
+
+def read_verify_token(token: str):
+    """Return the email address in a valid confirmation token, or None."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return None
+    if payload.get("purpose") != "verify-email":
+        return None
+    return payload.get("sub")

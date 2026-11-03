@@ -1,0 +1,40 @@
+{% extends "_auth.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}Confirm your email · Uptraqr{% endblock %}
+{% block nav %}{% if state == 'pending' %}<a href="/logout">Log out</a>{% else %}<a href="/">Home</a><a href="/login">Log in</a>{% endif %}{% endblock %}
+{% block content %}
+<section class="auth">
+  <div class="auth-card">
+    {% if state == 'pending' %}
+      <h1>Check your email</h1>
+      <p class="sub">We sent a confirmation link to <strong style="color:var(--ink)">{{ user.email }}</strong>. Tap it to start watching your websites.</p>
+      <div class="notice info">The email comes from alerts@uptraqr.com. If you don't see it within a few minutes, check your spam or promotions folder.</div>
+      <div id="resendMsg" class="notice" role="status" hidden></div>
+      <button type="button" class="btn btn-primary btn-lg" id="resendBtn">Send the email again</button>
+      <p class="switch">Wrong email address? <a href="/logout">Log out</a> and sign up again.</p>
+    {% elif state == 'done' %}
+      <h1>Email confirmed</h1>
+      <p class="sub">Thanks, you're all set. Add your first website and we'll start watching it right away.</p>
+      <a href="/dashboard" class="btn btn-primary btn-lg">Open my dashboard</a>
+    {% else %}
+      <h1>That link didn't work</h1>
+      <p class="sub">Confirmation links expire after 24 hours and only work once you've copied the whole address. Log in and we'll send you a fresh one.</p>
+      <a href="/login" class="btn btn-primary btn-lg">Log in</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+{% if state == 'pending' %}
+<script nonce="{{ request.state.csp_nonce }}">
+document.getElementById('resendBtn').addEventListener('click', async function(){
+  const btn=this, msg=document.getElementById('resendMsg');
+  btn.disabled=true; btn.textContent='Sending…';
+  let data={}; let ok=false;
+  try{ const r=await fetch('/api/auth/resend-verification',{method:'POST'}); ok=r.ok; data=await r.json(); }catch(e){ data={detail:"Couldn't reach Uptraqr. Check your connection."}; }
+  msg.hidden=false; msg.className='notice '+(ok?'info':'error'); msg.textContent=data.message||data.detail;
+  btn.textContent='Send the email again'; setTimeout(()=>{btn.disabled=false},ok?60000:3000);
+});
+</script>
+{% endif %}
+{% endblock %}

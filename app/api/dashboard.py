@@ -21,6 +21,11 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     if not current_user:
         return RedirectResponse(url="/login", status_code=302)
 
+    if not current_user.email_verified:
+        response = templates.TemplateResponse("verify_email.html", {"request": request, "state": "pending", "user": current_user})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
     monitors = db.query(Monitor).filter(
         Monitor.user_id == current_user.id,
         Monitor.is_active == True

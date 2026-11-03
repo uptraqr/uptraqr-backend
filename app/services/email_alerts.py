@@ -228,3 +228,28 @@ def send_defacement_cleared_alert(monitor_name: str, url: str, to_email: str = N
         })
     except Exception as e:
         print(f"Failed to send defacement cleared alert: {e}")
+
+
+def send_verification_email(to_email: str, name: str, link: str) -> bool:
+    """The 'confirm your email' message sent after signup. Returns True if handed to Resend."""
+    safe_name, safe_link = escape(name or "there"), escape(link)
+    try:
+        _send({
+            "from": FROM_EMAIL,
+            "to": to_email,
+            "reply_to": SUPPORT_EMAIL,
+            "subject": "Confirm your email to start using UpTraQR",
+            "html": f'''
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a;">
+              <h2 style="margin:0 0 12px 0;">Confirm your email</h2>
+              <p style="color:#334155;">Hi {safe_name}, thanks for signing up. Tap the button below to confirm this is your email address. This is where we'll send your website alerts.</p>
+              <p style="margin:28px 0;"><a href="{safe_link}" style="background:#5CC8FF;color:#06213A;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;">Confirm my email</a></p>
+              <p style="color:#64748b;font-size:14px;">The link works for 24 hours. If the button doesn't work, copy this address into your browser:<br><span style="word-break:break-all;">{safe_link}</span></p>
+              <p style="color:#64748b;font-size:14px;">Didn't sign up? You can ignore this email and no account will be activated.</p>
+              {SIGNATURE}
+            </div>'''
+        })
+        return True
+    except Exception as e:
+        print(f"Failed to send verification email: {e}")
+        return False
