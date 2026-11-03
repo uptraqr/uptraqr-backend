@@ -15,6 +15,9 @@
     {% if request.query_params.get('error') == 'invalid' %}
     <div class="notice error" role="alert">That email and password don't match. Check for typos and try again.</div>
     {% endif %}
+    {% if request.query_params.get('error') == 'slow' %}
+    <div class="notice error" role="alert">Too many login attempts. Please wait 15 minutes, or use "Email me a login link" below.</div>
+    {% endif %}
     <form method="POST" action="/api/auth/login">
       <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" required></div>
       <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>

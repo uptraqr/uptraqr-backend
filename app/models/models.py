@@ -16,6 +16,12 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     email_verified = Column(Boolean, default=False, nullable=False)
     email_canonical = Column(String, nullable=True, index=True)  # used to spot duplicate inboxes
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True)
+    password_set = Column(Boolean, default=True, nullable=False)   # False for email-only sign-ups
+    email_alerts = Column(Boolean, default=True, nullable=False)   # down/up, hack and SSL emails
+    monthly_reports = Column(Boolean, default=True, nullable=False)
+    status_slug = Column(String, nullable=True, unique=True, index=True)   # hard-to-guess public status page address
 
 class Monitor(Base):
     __tablename__ = "monitors"

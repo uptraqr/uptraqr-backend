@@ -18,14 +18,16 @@ from app.api.status import router as status_router
 from app.api.admin import router as admin_router
 from app.api.payments import router as payments_router
 from app.api.report import router as report_router
+from app.api.account import router as account_router
 
 app = FastAPI(
     title="Uptraqr",
     description="Uptime monitoring platform for local businesses",
     version="0.1.0",
-    docs_url="/docs" if os.getenv("ENVIRONMENT") != "production" else None,
-    redoc_url="/redoc" if os.getenv("ENVIRONMENT") != "production" else None,
-    openapi_url="/openapi.json" if os.getenv("ENVIRONMENT") != "production" else None
+    # The API docs pages are only switched on for local development, never on the live site.
+    docs_url="/docs" if os.getenv("ENVIRONMENT") == "development" else None,
+    redoc_url="/redoc" if os.getenv("ENVIRONMENT") == "development" else None,
+    openapi_url="/openapi.json" if os.getenv("ENVIRONMENT") == "development" else None
 )
 
 templates = Jinja2Templates(directory="app/templates")
@@ -117,7 +119,8 @@ def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 PUBLIC_PAGES = ["/", "/pricing", "/features/website-defacement-monitoring",
-                "/features/uptime-monitoring", "/features/ssl-certificate-monitoring"]
+                "/features/uptime-monitoring", "/features/ssl-certificate-monitoring",
+                "/privacy", "/terms"]
 
 @app.get("/robots.txt", response_class=PlainTextResponse)
 def robots():
@@ -127,6 +130,8 @@ def robots():
         "Disallow: /admin\n"
         "Disallow: /api/\n"
         "Disallow: /logout\n"
+        "Disallow: /account\n"
+        "Disallow: /unsubscribe\n"
         f"\nSitemap: {SITE_URL}/sitemap.xml\n"
     )
 
@@ -149,6 +154,14 @@ def feature_page(slug: str, request: Request):
         raise StarletteHTTPException(status_code=404)
     return templates.TemplateResponse(page, {"request": request})
 
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy(request: Request):
+    return templates.TemplateResponse("privacy.html", {"request": request})
+
+@app.get("/terms", response_class=HTMLResponse)
+def terms(request: Request):
+    return templates.TemplateResponse("terms.html", {"request": request})
+
 @app.get("/health")
 def health():
     return {"status": "healthy"}
@@ -165,6 +178,7 @@ app.include_router(auth_router)
 app.include_router(status_router)
 app.include_router(admin_router)
 app.include_router(report_router)
+app.include_router(account_router)
 app.include_router(payments_router, prefix="/api")
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])

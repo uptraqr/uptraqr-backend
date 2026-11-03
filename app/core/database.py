@@ -58,6 +58,19 @@ def _add_missing_columns():
         if "email_canonical" not in cols:
             cx.execute(text("ALTER TABLE users ADD COLUMN email_canonical VARCHAR"))
         cx.execute(text("CREATE INDEX IF NOT EXISTS ix_users_email_canonical ON users (email_canonical)"))
+        new_cols = {
+            "stripe_customer_id": "VARCHAR",
+            "stripe_subscription_id": "VARCHAR",
+            "password_set": "BOOLEAN NOT NULL DEFAULT TRUE",
+            "email_alerts": "BOOLEAN NOT NULL DEFAULT TRUE",
+            "monthly_reports": "BOOLEAN NOT NULL DEFAULT TRUE",
+            "status_slug": "VARCHAR",
+        }
+        for col, kind in new_cols.items():
+            if col not in cols:
+                cx.execute(text(f"ALTER TABLE users ADD COLUMN {col} {kind}"))
+        cx.execute(text("CREATE INDEX IF NOT EXISTS ix_users_stripe_customer ON users (stripe_customer_id)"))
+        cx.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_status_slug ON users (status_slug)"))
         # Fill it in for accounts that don't have it yet
         from app.core.abuse import canonical_email
         for uid, email in cx.execute(text("SELECT id, email FROM users WHERE email_canonical IS NULL")).fetchall():

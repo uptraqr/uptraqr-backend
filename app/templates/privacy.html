@@ -1,0 +1,65 @@
+{% extends "_legal.html" %}
+{% block title %}Privacy policy · Uptraqr{% endblock %}
+{% block description %}How Uptraqr collects, uses and protects your information.{% endblock %}
+{% block h1 %}Privacy policy{% endblock %}
+{% block body %}
+<p>Uptraqr is run by Uptraq Technologies in Surrey, British Columbia, Canada. This page explains, in plain words, what we collect, why, and the choices you have. We follow Canada's privacy law (PIPEDA) and British Columbia's Personal Information Protection Act.</p>
+
+<h2>What we collect</h2>
+<ul>
+  <li><strong>Your account:</strong> your email address and a name. If you set a password, we store it scrambled (hashed) so nobody, including us, can read it.</li>
+  <li><strong>Your websites:</strong> the web addresses you ask us to watch and the results of our checks: whether each site was online, how fast it answered, its security certificate dates, and snapshots of the page used to spot tampering.</li>
+  <li><strong>Payments:</strong> handled by Stripe. We never see or store your card number. We keep only the Stripe customer and subscription IDs so we know which plan you're on.</li>
+  <li><strong>Technical details:</strong> your internet (IP) address, kept briefly in memory to stop abuse such as mass sign-ups, and standard server logs kept by our hosting provider.</li>
+  <li><strong>Free website check:</strong> if you check a website without an account, we look at that website's public pages. We don't need anything about you unless you ask us to email you the report.</li>
+</ul>
+
+<h2>Why we use it</h2>
+<ul>
+  <li>To watch your websites and email you when something is wrong.</li>
+  <li>To run your account, take payment and send receipts.</li>
+  <li>To send a monthly report if you're on a paid plan (you can turn this off).</li>
+  <li>To keep the service safe and stop misuse.</li>
+</ul>
+<p>We don't sell your information, we don't show ads, and we don't use tracking or advertising cookies.</p>
+
+<h2>Who helps us run Uptraqr</h2>
+<p>We use a few trusted providers. They only get what they need to do their job:</p>
+<ul>
+  <li><strong>Railway</strong> hosts the app and its database.</li>
+  <li><strong>Cloudflare</strong> protects the website, handles our domain and runs the "are you a person" check on sign-up forms.</li>
+  <li><strong>Resend</strong> sends our emails.</li>
+  <li><strong>Stripe</strong> takes payments.</li>
+</ul>
+<p>Some of these providers store data outside Canada, including in the United States, where it may be accessed by authorities under local law.</p>
+
+<h2>How long we keep it</h2>
+<ul>
+  <li>Individual check results are kept for 7 days (24 hours on the Free plan). Daily summaries are kept for as long as your plan's history: 30 days on Starter, 90 days on Pro and one year on Agency.</li>
+  <li>Your account and websites are kept until you delete them. When you delete your account, we remove your account, websites and their history straight away. Backups roll over and are gone within about 30 days.</li>
+  <li>Stripe keeps payment records as tax law requires.</li>
+</ul>
+
+<h2>Cookies</h2>
+<p>We use one cookie to keep you logged in (it lasts 24 hours). Cloudflare may set cookies needed for security and the "are you a person" check. That's it: no analytics or advertising cookies.</p>
+
+<h2>Your choices and rights</h2>
+<ul>
+  <li>Turn alert or report emails on or off in <a href="/account">your account</a>, or with the link at the bottom of any of our emails.</li>
+  <li>Delete your account and everything in it from <a href="/account">your account</a> page at any time.</li>
+  <li>Ask us for a copy of the information we hold about you, or to correct it, by emailing <a href="mailto:{{ support_email }}">{{ support_email }}</a>. We'll reply within 30 days.</li>
+  <li>If you're not happy with how we've handled your information, you can contact the Office of the Privacy Commissioner of Canada or the Office of the Information and Privacy Commissioner for British Columbia.</li>
+</ul>
+
+<h2>Keeping it safe</h2>
+<p>Everything is sent over encrypted connections, passwords are hashed, and access to our systems is limited. No system is perfect, so if we ever find a breach that could harm you, we'll tell you and the Privacy Commissioner as the law requires.</p>
+
+<h2>Children</h2>
+<p>Uptraqr is a service for businesses and isn't meant for anyone under 18.</p>
+
+<h2>Changes</h2>
+<p>If we change this policy in a way that matters, we'll update the date above and email account holders before the change takes effect.</p>
+
+<h2>Contact</h2>
+<p>Questions about privacy? Email <a href="mailto:{{ support_email }}">{{ support_email }}</a>. Uptraq Technologies, Surrey, British Columbia, Canada.</p>
+{% endblock %}

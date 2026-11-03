@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block styles %}
+.legal{padding:40px 0 0;max-width:72ch}
+.legal h1{font-size:clamp(30px,5vw,42px)}
+.legal .updated{color:var(--muted);margin:8px 0 28px}
+.legal h2{font-size:clamp(20px,3vw,24px);margin:36px 0 10px}
+.legal p,.legal li{color:var(--text)}
+.legal p{margin:0 0 14px}
+.legal ul{padding-left:22px;margin:0 0 14px}
+.legal li{margin:6px 0}
+.legal li strong{color:var(--ink)}
+{% endblock %}
+{% block content %}
+<article class="wrap"><div class="legal">
+  <h1>{% block h1 %}{% endblock %}</h1>
+  <p class="updated">Last updated November 3, 2026</p>
+  {% block body %}{% endblock %}
+</div></article>
+{% endblock %}

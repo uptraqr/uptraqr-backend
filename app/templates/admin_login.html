@@ -1,0 +1,18 @@
+{% extends "_auth.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}Admin login · Uptraqr{% endblock %}
+{% block content %}
+<section class="auth">
+  <div class="auth-card">
+    <h1>Admin</h1>
+    <p class="sub">Enter the admin secret from Railway.</p>
+    {% if error == 'wrong' %}<div class="notice error" role="alert">That secret isn't right.</div>{% endif %}
+    {% if error == 'slow' %}<div class="notice error" role="alert">Too many tries. Please wait 15 minutes.</div>{% endif %}
+    <form method="POST" action="/admin/login">
+      <input type="text" name="username" value="admin" autocomplete="username" hidden>
+      <div class="field"><label for="secret">Admin secret</label><input id="secret" type="password" name="secret" autocomplete="current-password" required></div>
+      <button type="submit" class="btn btn-primary btn-lg">Log in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

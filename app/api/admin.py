@@ -1,11 +1,16 @@
-from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Request, Depends, HTTPException, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
+from jose import jwt, JWTError
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.models import Monitor, CheckResult, User, Incident, DefacementWatch, DefacementEvent, SslAlertState
 import os
 import hmac
+from app.core.auth import SECRET_KEY, ALGORITHM
+from app.core.abuse import RateLimiter, client_ip
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -15,13 +20,58 @@ templates.env.globals["site_url"] = os.getenv("SITE_URL", "https://www.uptraqr.c
 # No fallback: if ADMIN_SECRET isn't set, the admin page stays locked.
 ADMIN_SECRET = os.getenv("ADMIN_SECRET")
 
-def _check_secret(secret: str):
-    if not ADMIN_SECRET or not hmac.compare_digest(secret.encode(), ADMIN_SECRET.encode()):
+ADMIN_COOKIE = "uptraqr_admin"
+ADMIN_HOURS = 8
+admin_login_limiter = RateLimiter(5, 15 * 60)   # 5 tries per connection per 15 minutes
+
+
+def _is_admin(request: Request) -> bool:
+    """True if the browser holds a valid admin session cookie."""
+    token = request.cookies.get(ADMIN_COOKIE)
+    if not ADMIN_SECRET or not token:
+        return False
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return False
+    return data.get("purpose") == "admin"
+
+
+def _require_admin(request: Request):
+    if not _is_admin(request):
         raise HTTPException(status_code=403, detail="Access denied")
 
+
+@router.get("/admin/login", response_class=HTMLResponse)
+def admin_login_page(request: Request, error: str = ""):
+    return templates.TemplateResponse("admin_login.html", {"request": request, "error": error})
+
+
+@router.post("/admin/login")
+def admin_login(request: Request, secret: str = Form("")):
+    if not admin_login_limiter.allow(client_ip(request)):
+        return RedirectResponse("/admin/login?error=slow", status_code=303)
+    if not ADMIN_SECRET or not hmac.compare_digest(secret.encode(), ADMIN_SECRET.encode()):
+        return RedirectResponse("/admin/login?error=wrong", status_code=303)
+    token = jwt.encode({"sub": "admin", "purpose": "admin",
+                        "exp": datetime.utcnow() + timedelta(hours=ADMIN_HOURS)}, SECRET_KEY, algorithm=ALGORITHM)
+    response = RedirectResponse("/admin", status_code=303)
+    response.set_cookie(ADMIN_COOKIE, token, httponly=True, secure=True, samesite="strict",
+                        max_age=ADMIN_HOURS * 3600, path="/admin")
+    return response
+
+
+@router.post("/admin/logout")
+def admin_logout():
+    response = RedirectResponse("/admin/login", status_code=303)
+    response.delete_cookie(ADMIN_COOKIE, path="/admin")
+    return response
+
+
 @router.get("/admin", response_class=HTMLResponse)
-def admin_panel(request: Request, secret: str = "", db: Session = Depends(get_db)):
-    _check_secret(secret)
+def admin_panel(request: Request, db: Session = Depends(get_db)):
+    if not _is_admin(request):
+        return RedirectResponse("/admin/login", status_code=303)
 
     users = db.query(User).all()
     monitors = db.query(Monitor).all()
@@ -32,6 +82,7 @@ def admin_panel(request: Request, secret: str = "", db: Session = Depends(get_db
         user_data.append({
             "id": user.id,
             "name": user.name,
+            "status_slug": user.status_slug,
             "email": user.email,
             "monitor_count": monitor_count,
             "created_at": user.created_at.strftime("%Y-%m-%d") if user.created_at else "N/A"
@@ -77,18 +128,12 @@ def admin_panel(request: Request, secret: str = "", db: Session = Depends(get_db
     })
 
 
-def _delete_monitor_rows(db: Session, monitor: Monitor):
-    db.query(CheckResult).filter(CheckResult.monitor_id == monitor.id).delete()
-    db.query(Incident).filter(Incident.monitor_id == monitor.id).delete()
-    db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).delete()
-    db.query(DefacementEvent).filter(DefacementEvent.monitor_id == monitor.id).delete()
-    db.query(SslAlertState).filter(SslAlertState.monitor_id == monitor.id).delete()
-    db.delete(monitor)
+from app.services.cleanup import delete_monitor_rows as _delete_monitor_rows, delete_user_everything
 
 
 @router.delete("/admin/monitors/{monitor_id}")
-def admin_delete_monitor(monitor_id: int, secret: str = "", db: Session = Depends(get_db)):
-    _check_secret(secret)
+def admin_delete_monitor(monitor_id: int, request: Request, db: Session = Depends(get_db)):
+    _require_admin(request)
     monitor = db.query(Monitor).filter(Monitor.id == monitor_id).first()
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
@@ -98,13 +143,11 @@ def admin_delete_monitor(monitor_id: int, secret: str = "", db: Session = Depend
 
 
 @router.delete("/admin/users/{user_id}")
-def admin_delete_user(user_id: int, secret: str = "", db: Session = Depends(get_db)):
-    _check_secret(secret)
+def admin_delete_user(user_id: int, request: Request, db: Session = Depends(get_db)):
+    _require_admin(request)
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    for monitor in db.query(Monitor).filter(Monitor.user_id == user.id).all():
-        _delete_monitor_rows(db, monitor)
-    db.delete(user)
+    delete_user_everything(db, user)
     db.commit()
     return {"deleted": user_id}

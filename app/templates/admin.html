@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block robots %}noindex, nofollow{% endblock %}
 {% block title %}Admin · Uptraqr{% endblock %}
-{% block nav %}<a href="/">Site</a>{% endblock %}
+{% block nav %}<a href="/">Site</a><form method="POST" action="/admin/logout" style="margin:0"><button type="submit" class="btn btn-ghost btn-sm">Log out</button></form>{% endblock %}
 {% block styles %}
 .admin{padding:36px 0 0}
 .admin h1{font-size:30px}
@@ -44,7 +44,7 @@
       <td data-l="Email">{{ user.email }}</td>
       <td data-l="Websites">{{ user.monitor_count }}</td>
       <td data-l="Joined">{{ user.created_at }}</td>
-      <td data-l=""><a class="btn btn-quiet btn-sm" href="/status/{{ user.name }}" target="_blank" rel="noopener">Status page</a>
+      <td data-l="">{% if user.status_slug %}<a class="btn btn-quiet btn-sm" href="/status/{{ user.status_slug }}" target="_blank" rel="noopener">Status page</a>{% endif %}
         <button class="btn btn-danger btn-sm" data-del="users" data-id="{{ user.id }}" data-q="Delete this user and all their websites?">Delete</button></td>
     </tr>
     {% else %}<tr><td>No users yet.</td></tr>{% endfor %}
@@ -73,11 +73,10 @@
 {% endblock %}
 {% block scripts %}
 <script nonce="{{ request.state.csp_nonce }}">
-const secret = new URLSearchParams(window.location.search).get('secret') || '';
 document.addEventListener('click', e => { const b=e.target.closest('[data-del]'); if(b) del(b.dataset.del, b.dataset.id, b.dataset.q); });
 async function del(kind, id, question){
   if(!confirm(question)) return;
-  const r = await fetch(`/admin/${kind}/${id}?secret=${encodeURIComponent(secret)}`, {method:'DELETE'});
+  const r = await fetch(`/admin/${kind}/${id}`, {method:'DELETE', credentials:'same-origin'});
   if(r.ok) location.reload(); else alert('Delete failed.');
 }
 </script>

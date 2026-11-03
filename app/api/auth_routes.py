@@ -86,13 +86,20 @@ def signup(
         _send_confirmation(new_user)
     return _login_response(new_user)
 
+login_ip_limiter = RateLimiter(limit=20, window=15 * 60)      # login attempts per connection
+login_email_limiter = RateLimiter(limit=10, window=15 * 60)   # login attempts per account
+
 @router.post("/api/auth/login")
 def login(
+    request: Request,
     email: str = Form(...),
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.email == email.strip()).first()
+    email = email.strip()[:254]
+    if not login_ip_limiter.allow(client_ip(request)) or not login_email_limiter.allow(canonical_email(email)):
+        return RedirectResponse(url="/login?error=slow", status_code=303)
+    user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(password, user.password):
         return RedirectResponse(url="/login?error=invalid", status_code=303)
     return _login_response(user)
@@ -201,6 +208,7 @@ def quickstart(request: Request, email: str = Form(...), url: str = Form(...),
             name=email.split("@")[0][:100],
             email_verified=False,
             email_canonical=canon,
+            password_set=False,
         )
         db.add(user)
         db.commit()

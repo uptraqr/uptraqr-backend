@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}Your account · Uptraqr{% endblock %}
+{% block nav %}
+<a href="/dashboard">Dashboard</a>
+<a href="/pricing">Plans</a>
+<a href="/logout">Log out</a>
+{% endblock %}
+{% block styles %}
+.acct{padding:36px 0 0;max-width:680px}
+.acct h1{font-size:clamp(28px,4vw,36px)}
+.acct .sub{color:var(--muted);margin:6px 0 0}
+.box{background:var(--console);border:1px solid var(--rule-strong);border-radius:var(--r-lg);padding:clamp(20px,4vw,28px);margin-top:20px}
+.box h2{font-size:21px;margin:0 0 6px}
+.box > p{color:var(--text);margin:0 0 16px}
+.box .btn{min-width:200px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.planline{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.planline strong{font-size:20px;color:var(--ink)}
+.check{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--rule);cursor:pointer}
+.check:first-of-type{border-top:0}
+.check input{width:22px;height:22px;margin-top:2px;accent-color:var(--signal);flex:none}
+.check b{display:block;color:var(--ink)}
+.check span{color:var(--muted);font-size:15px}
+.notice.ok{background:var(--clear-bg);color:#065F3F;border:1px solid var(--clear-line)}
+.danger{border-color:var(--breach-line)}
+@media (max-width:560px){.box .btn{width:100%}}
+{% endblock %}
+{% block content %}
+<section class="wrap"><div class="acct">
+  <h1>Your account</h1>
+  <p class="sub">{{ user.email }}</p>
+  {% if message %}<div class="notice {{ message[0] }}" role="{{ 'status' if message[0]=='ok' else 'alert' }}" style="margin-top:18px">{{ message[1] }}</div>{% endif %}
+
+  <div class="box">
+    <h2>Your plan</h2>
+    <div class="planline"><strong>{{ plan.label }}</strong>
+      <span class="pill {{ 'clear' if plan_key != 'free' else '' }}">{{ site_count }} of {{ plan.sites }} website{{ '' if plan.sites == 1 else 's' }} used</span></div>
+    {% if user.stripe_customer_id %}
+      <p>Change your plan, update your card, see invoices or cancel any time.</p>
+      <a href="/api/payments/manage" class="btn btn-ghost">Manage billing</a>
+    {% elif plan_key != 'free' %}
+      <p>To change this plan, email <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+    {% else %}
+      <p>Paid plans add tamper watch, faster checks and history, from $10 a month.</p>
+      <a href="/pricing" class="btn btn-primary">See plans</a>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>Emails we send you</h2>
+    <form method="POST" action="/account/emails">
+      <label class="check"><input type="checkbox" name="email_alerts" {{ 'checked' if user.email_alerts }}>
+        <div><b>Website alerts</b><span>When a website goes down or comes back, looks hacked, or its SSL certificate is running out. We strongly suggest keeping these on.</span></div></label>
+      <label class="check"><input type="checkbox" name="monthly_reports" {{ 'checked' if user.monthly_reports }}>
+        <div><b>Monthly health report</b><span>A short summary of each website on the 1st of every month. Paid plans only.</span></div></label>
+      <button type="submit" class="btn btn-primary" style="margin-top:8px">Save email choices</button>
+    </form>
+  </div>
+
+  <div class="box">
+    <h2>{{ 'Change your password' if user.password_set else 'Set a password' }}</h2>
+    <p>{% if user.password_set %}Type your current password, then your new one.{% else %}You've been logging in with emailed links. Add a password if you'd like to log in without checking your email.{% endif %}</p>
+    <form method="POST" action="/account/password">
+      <input type="text" name="username" value="{{ user.email }}" autocomplete="username" hidden>
+      {% if user.password_set %}
+      <div class="field"><label for="cur">Current password</label><input id="cur" type="password" name="current_password" autocomplete="current-password" required></div>
+      {% endif %}
+      <div class="field"><label for="np">New password</label><input id="np" type="password" name="new_password" autocomplete="new-password" minlength="8" maxlength="128" required><span class="hint">At least 8 characters.</span></div>
+      <div class="field"><label for="cp">Type it again</label><input id="cp" type="password" name="confirm_password" autocomplete="new-password" minlength="8" maxlength="128" required></div>
+      <button type="submit" class="btn btn-primary">Save password</button>
+    </form>
+  </div>
+
+  <div class="box danger">
+    <h2>Delete your account</h2>
+    <p>This removes your account, your websites and all their history for good. It can't be undone.{% if user.stripe_subscription_id and plan_key != 'free' %} Please cancel your paid plan in Manage billing first.{% endif %}</p>
+    <form method="POST" action="/account/delete">
+      <div class="field"><label for="del">Type DELETE to confirm</label><input id="del" type="text" name="confirm" autocomplete="off" autocapitalize="characters" required></div>
+      <button type="submit" class="btn btn-danger">Delete my account</button>
+    </form>
+  </div>
+</div></section>
+{% endblock %}

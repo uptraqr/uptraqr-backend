@@ -28,33 +28,32 @@ PLANS = {
     }
 }
 
-def create_checkout_session(plan: str, user_email: str, success_url: str, cancel_url: str):
+def create_checkout_session(plan: str, user, success_url: str, cancel_url: str):
     stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-    
     plan_data = PLANS.get(plan)
     if not plan_data:
         raise ValueError(f"Invalid plan: {plan}")
-
-    session = stripe.checkout.Session.create(
+    who = {"customer": user.stripe_customer_id} if user.stripe_customer_id else {"customer_email": user.email}
+    return stripe.checkout.Session.create(
+        **who,
         payment_method_types=["card"],
         line_items=[{
             "price_data": {
                 "currency": plan_data["currency"],
                 "product_data": {
                     "name": f"Uptraqr {plan_data['name']} Plan",
-                    "description": f"Up to {plan_data['monitors']} websites"
+                    "description": f"Up to {plan_data['monitors']} websites",
                 },
                 "unit_amount": plan_data["price"],
-                "recurring": {
-                    "interval": plan_data["interval"]
-                }
+                "recurring": {"interval": plan_data["interval"]},
             },
-            "quantity": 1
+            "quantity": 1,
         }],
         mode="subscription",
-        customer_email=user_email,
+        client_reference_id=str(user.id),            # who paid, even if they change their email later
         success_url=success_url,
         cancel_url=cancel_url,
-        metadata={"plan": plan, "email": user_email}
+        metadata={"plan": plan},
+        subscription_data={"metadata": {"plan": plan, "user_id": str(user.id)}},
+        allow_promotion_codes=True,
     )
-    return session
