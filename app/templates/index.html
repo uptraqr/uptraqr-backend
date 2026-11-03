@@ -48,16 +48,16 @@
 .panel.alerted{border-color:var(--breach-line);box-shadow:0 0 0 4px var(--breach-bg),var(--shadow)}
 .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 4px 12px}
 .panel-head .site{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.browser{position:relative;border-radius:var(--r-md);overflow:hidden;background:#F2F6F3;color:#1E2B24;min-height:240px;border:1px solid var(--rule)}
-.browser .bar{display:flex;gap:6px;align-items:center;padding:9px 12px;background:#DFE7E2}
-.browser .bar i{width:9px;height:9px;border-radius:50%;background:#B7C4BC}
-.browser .bar span{margin-left:8px;font-size:12px;color:#55665C;background:#F2F6F3;border-radius:4px;padding:2px 8px}
+.browser{position:relative;border-radius:var(--r-md);overflow:hidden;background:#F3F4F8;color:#1F2433;min-height:240px;border:1px solid var(--rule)}
+.browser .bar{display:flex;gap:6px;align-items:center;padding:9px 12px;background:#E2E5EE}
+.browser .bar i{width:9px;height:9px;border-radius:50%;background:#BCC2D2}
+.browser .bar span{margin-left:8px;font-size:12px;color:#59617A;background:#F3F4F8;border-radius:4px;padding:2px 8px}
 .shop{padding:22px 22px 26px}
-.shop h3{font:800 22px/1.2 var(--body);color:#1F4D3A;letter-spacing:-.01em}
-.shop p{font-size:14px;line-height:1.5;margin-top:8px;color:#3F5248}
+.shop h3{font:800 22px/1.2 var(--body);color:#33406B;letter-spacing:-.01em}
+.shop p{font-size:14px;line-height:1.5;margin-top:8px;color:#454D66}
 .shop .tiles{display:flex;gap:8px;margin-top:16px}
-.shop .tiles b{flex:1;height:46px;border-radius:8px;background:#CFE0D6}
-.shop .tiles b:nth-child(2){background:#A9C9B6}.shop .tiles b:nth-child(3){background:#2F6B4F}
+.shop .tiles b{flex:1;height:46px;border-radius:8px;background:#D9DDEB;border-radius:50% 50% 8px 8px}
+.shop .tiles b:nth-child(2){background:#9FA9C9}.shop .tiles b:nth-child(3){background:#4A5A8C}
 .defaced{position:absolute;inset:36px 0 0;display:grid;place-content:center;text-align:center;background:#000;color:#3CFF5A;font:700 22px/1.3 "Courier New",monospace;opacity:0;transition:opacity .2s;padding:20px}
 .defaced small{display:block;color:#9AF7A8;font-size:12px;font-weight:400;margin-top:8px}
 .panel.breached .defaced{opacity:1}
@@ -138,14 +138,14 @@
     <div>
       <div class="panel" id="demo" aria-label="Example: Uptraqr spotting a hacked website">
         <div class="panel-head">
-          <span class="site">kestrelcycles.ca</span>
+          <span class="site">quillfernpottery.ca</span>
           <span class="pill clear" id="demo-pill">Looks normal</span>
         </div>
         <div class="browser" aria-hidden="true">
-          <div class="bar"><i></i><i></i><i></i><span>kestrelcycles.ca</span></div>
+          <div class="bar"><i></i><i></i><i></i><span>quillfernpottery.ca</span></div>
           <div class="shop">
-            <h3>Kestrel Cycle Works</h3>
-            <p>Bike tune-ups, repairs and e-bike servicing. Book online and ride away the same day.</p>
+            <h3>Quillfern Pottery</h3>
+            <p>Handmade mugs, planters and weekend wheel-throwing classes. Book your spot online.</p>
             <div class="tiles"><b></b><b></b><b></b></div>
           </div>
           <div class="defaced">HACKED BY 0xGHOST<small>your security is an illusion</small></div>
@@ -153,7 +153,7 @@
         </div>
         <div class="alert" role="status">
           <div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-          <div><strong>Possible hack on kestrelcycles.ca</strong><span>"Hacked by" text appeared and most of the page was replaced. Emailed to Sam at 2:14 am.</span></div>
+          <div><strong>Possible hack on quillfernpottery.ca</strong><span>"Hacked by" text appeared and most of the page was replaced. Emailed to Sam at 2:14 am.</span></div>
         </div>
       </div>
       <div class="replay"><button class="btn btn-quiet btn-sm" id="replay" type="button">Play the example again</button></div>
