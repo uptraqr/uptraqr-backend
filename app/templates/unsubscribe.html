@@ -1,0 +1,28 @@
+{% extends "_auth.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}Email choices · Uptraqr{% endblock %}
+{% block content %}
+<section class="auth">
+  <div class="auth-card">
+    {% if not valid %}
+      <h1>This link doesn't work</h1>
+      <p class="sub">It may be old or copied wrongly. Log in to change which emails you get.</p>
+      <a href="/account" class="btn btn-primary btn-lg">Go to my account</a>
+    {% elif done %}
+      <h1>You're unsubscribed</h1>
+      <p class="sub">We won't send <strong style="color:var(--ink)">{{ what }}</strong> to {{ email }} any more.</p>
+      <div class="notice info">Changed your mind? You can turn them back on any time in your account.</div>
+      <a href="/account" class="btn btn-ghost btn-lg">Go to my account</a>
+    {% else %}
+      <h1>Turn off these emails?</h1>
+      <p class="sub">We'll stop sending <strong style="color:var(--ink)">{{ what }}</strong> to {{ email }}.</p>
+      {% if what == 'website alert emails' %}<div class="notice info">You won't hear from us if your website goes down or looks hacked. You can still see everything on your dashboard.</div>{% endif %}
+      <form method="POST" action="/unsubscribe">
+        <input type="hidden" name="token" value="{{ token }}">
+        <button type="submit" class="btn btn-primary btn-lg">Yes, turn them off</button>
+      </form>
+      <p class="switch"><a href="/dashboard">Keep getting them</a></p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

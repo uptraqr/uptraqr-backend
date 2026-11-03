@@ -1,0 +1,49 @@
+{% extends "_legal.html" %}
+{% block title %}Terms of service · Uptraqr{% endblock %}
+{% block description %}The terms for using Uptraqr website monitoring.{% endblock %}
+{% block h1 %}Terms of service{% endblock %}
+{% block body %}
+<p>These terms are the agreement between you and Uptraq Technologies ("we", "us") of Surrey, British Columbia, Canada, for using Uptraqr. By creating an account or using the service, you agree to them.</p>
+
+<h2>What Uptraqr does</h2>
+<p>Uptraqr checks websites from the outside: whether they're online, whether their security certificate is about to run out, whether their pages have been changed in a way that looks like hacking, and general health checks. We alert you by email when we spot a problem.</p>
+<p>Monitoring helps you find problems sooner. It can't stop a website going down or being hacked, and no check catches everything. We aim for every alert to arrive quickly, but emails can be delayed or filtered by your email provider.</p>
+
+<h2>Your account</h2>
+<ul>
+  <li>You must be at least 18 and able to agree to these terms, for yourself or for your business.</li>
+  <li>Use an email address you check, since that's where your alerts go. Keep your login safe; you're responsible for what happens in your account.</li>
+  <li>One free account per person or business. Making extra free accounts to get around plan limits isn't allowed, and we may close them.</li>
+</ul>
+
+<h2>Fair use</h2>
+<p>Only monitor websites you own or have permission to monitor. Don't use Uptraqr to attack, overload or probe other people's systems, to get around our limits, or for anything illegal. We may pause or close accounts that do, without a refund.</p>
+
+<h2>Plans, payment and cancelling</h2>
+<ul>
+  <li>Paid plans are billed monthly in Canadian dollars, in advance, through Stripe. Prices are shown on the <a href="/pricing">pricing page</a>; taxes may be added where they apply.</li>
+  <li>Your plan renews each month until you cancel. Cancel any time from <a href="/account">your account</a> (Manage billing). You keep your paid features until the end of the month you've paid for, then move to the Free plan.</li>
+  <li>We don't give refunds for part-months, except where the law requires it or we decide to in a particular case.</li>
+  <li>If a payment fails and isn't fixed, your account moves to the Free plan. Websites over the Free limit are paused, not deleted.</li>
+  <li>We may change prices. We'll email you at least 30 days before a change affects you, and you can cancel before it starts.</li>
+</ul>
+
+<h2>Changes to the service</h2>
+<p>We keep improving Uptraqr and may add, change or remove features. If we ever shut the service down, we'll give paid customers at least 30 days' notice and refund any time paid for but not used.</p>
+
+<h2>Our responsibility</h2>
+<p>Uptraqr is provided "as is". As far as the law allows, we aren't responsible for lost income, lost data or other indirect losses caused by a website problem, a missed or late alert, or the service being unavailable. Our total responsibility for any claim is limited to what you paid us in the 3 months before it. Nothing here takes away rights you have under consumer protection law that can't be excluded.</p>
+
+<h2>Ending the agreement</h2>
+<p>You can delete your account at any time from <a href="/account">your account</a>. We may close an account that breaks these terms. If we close your account without you breaking these terms, we'll refund any time paid for but not used.</p>
+
+<h2>Law</h2>
+<p>These terms are governed by the laws of British Columbia and of Canada that apply there. Any dispute will be handled in the courts of British Columbia.</p>
+
+<h2>Changes to these terms</h2>
+<p>If we change these terms in a way that matters, we'll update the date above and email account holders before the change takes effect. Using Uptraqr after that means you accept the new terms.</p>
+
+<h2>Contact</h2>
+<p>Questions? Email <a href="mailto:{{ support_email }}">{{ support_email }}</a>. Uptraq Technologies, Surrey, British Columbia, Canada.</p>
+<p>See also our <a href="/privacy">privacy policy</a>.</p>
+{% endblock %}

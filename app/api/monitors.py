@@ -12,6 +12,15 @@ from app.core.plans import plan_for
 
 router = APIRouter()
 
+from app.core.abuse import RateLimiter
+# "Check now" style buttons make real requests to the website, so they're limited per account.
+live_check_limiter = RateLimiter(limit=10, window=60)
+
+
+def _limit_live_checks(user):
+    if not live_check_limiter.allow(f"u:{user.id}"):
+        raise HTTPException(status_code=429, detail="That's a lot of checks in a short time. Please wait a minute and try again.")
+
 class MonitorCreate(BaseModel):
     name: str
     url: str
@@ -31,7 +40,9 @@ def add_monitor_for(db, user, raw_url: str, name: str) -> Monitor:
     if not user.email_verified:
         raise HTTPException(status_code=403, detail="Please confirm your email address first. Check your inbox for our link.")
     plan = plan_for(user)
-    url = raw_url.strip()
+    url = (raw_url or "").strip()
+    if not url or len(url) > 2000:
+        raise HTTPException(status_code=400, detail="Please enter a website address, like yourbusiness.ca")
     if not url.startswith(("http://", "https://")):
         url = "https://" + url
     try:
@@ -75,10 +86,8 @@ def delete_monitor(monitor_id: int, db: Session = Depends(get_db), current_user:
     ).first()
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
-    db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).delete()
-    db.query(DefacementEvent).filter(DefacementEvent.monitor_id == monitor.id).delete()
-    db.query(SslAlertState).filter(SslAlertState.monitor_id == monitor.id).delete()
-    db.delete(monitor)
+    from app.services.cleanup import delete_monitor_rows
+    delete_monitor_rows(db, monitor)
     db.commit()
     return {"message": "Monitor deleted"}
 
@@ -115,6 +124,7 @@ def check_ssl_status(monitor_id: int, db: Session = Depends(get_db), current_use
     ).first()
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
+    _limit_live_checks(current_user)
     hostname = monitor.url.replace("https://", "").replace("http://", "").split("/")[0]
     result = check_ssl(hostname)
     return {"monitor": monitor.name, "url": monitor.url, **result}
@@ -132,6 +142,7 @@ def check_now(monitor_id: int, db: Session = Depends(get_db), current_user: User
     if not monitor:
         raise HTTPException(status_code=404, detail="Monitor not found")
     
+    _limit_live_checks(current_user)
     result = check_url(monitor.url)
     check = CheckResult(
         monitor_id=monitor.id,

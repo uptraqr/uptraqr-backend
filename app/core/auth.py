@@ -28,10 +28,14 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
 
 def hash_password(password: str):
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    # bcrypt only uses the first 72 bytes (newer versions refuse longer ones), so trim first.
+    return bcrypt.hashpw(password.encode("utf-8")[:72], bcrypt.gensalt()).decode("utf-8")
 
 def verify_password(plain: str, hashed: str):
-    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    try:
+        return bcrypt.checkpw((plain or "").encode("utf-8")[:72], (hashed or "").encode("utf-8"))
+    except ValueError:
+        return False
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -92,3 +96,12 @@ def read_link_token(token: str, purpose: str):
     except JWTError:
         return None
     return payload if payload.get("purpose") == purpose and payload.get("sub") else None
+
+
+def status_slug_for(db, user) -> str:
+    """The user's public status page address, made the first time it's needed."""
+    import secrets
+    if not user.status_slug:
+        user.status_slug = secrets.token_urlsafe(9)
+        db.commit()
+    return user.status_slug

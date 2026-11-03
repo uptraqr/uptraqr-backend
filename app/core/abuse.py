@@ -46,11 +46,44 @@ def is_disposable(email: str) -> bool:
     return domain in DISPOSABLE_DOMAINS or any(domain.endswith("." + d) for d in DISPOSABLE_DOMAINS)
 
 
+# Cloudflare's published address ranges (cloudflare.com/ips). Only a request that really
+# came through Cloudflare may tell us the visitor's address in CF-Connecting-IP; anyone
+# else could fake that header to dodge the limits.
+import ipaddress as _ip
+_CLOUDFLARE = [_ip.ip_network(n) for n in (
+    "173.245.48.0/20", "103.21.244.0/22", "103.22.200.0/22", "103.31.4.0/22", "141.101.64.0/18",
+    "108.162.192.0/18", "190.93.240.0/20", "188.114.96.0/20", "197.234.240.0/22", "198.41.128.0/17",
+    "162.158.0.0/15", "104.16.0.0/13", "104.24.0.0/14", "172.64.0.0/13", "131.0.72.0/22",
+    "2400:cb00::/32", "2606:4700::/32", "2803:f800::/32", "2405:b500::/32", "2405:8100::/32",
+    "2a06:98c0::/29", "2c0f:f248::/32")]
+
+
+def _from_cloudflare(addr: str) -> bool:
+    try:
+        a = _ip.ip_address(addr)
+    except ValueError:
+        return False
+    return any(a in n for n in _CLOUDFLARE)
+
+
 def client_ip(request) -> str:
-    """The visitor's real address. Cloudflare passes it in CF-Connecting-IP."""
+    """The visitor's real address, in a way that can't be faked with a header."""
     h = request.headers
-    ip = h.get("cf-connecting-ip") or (h.get("x-forwarded-for") or "").split(",")[0].strip()
-    return ip or (request.client.host if request.client else "unknown")
+    # Railway's front door adds the address that connected to it as the last X-Forwarded-For entry.
+    forwarded = [p.strip() for p in (h.get("x-forwarded-for") or "").split(",") if p.strip()]
+    peer = h.get("x-real-ip") or (forwarded[-1] if forwarded else None) or (request.client.host if request.client else "unknown")
+    cf = h.get("cf-connecting-ip")
+    if cf and _from_cloudflare(peer):
+        return cf
+    try:
+        internal = _ip.ip_address(peer).is_private
+    except ValueError:
+        internal = True
+    if internal:
+        # We can't see past the hosting proxy here; fall back to what it passed on,
+        # so everyone isn't lumped together under one address.
+        return cf or (forwarded[0] if forwarded else peer)
+    return peer
 
 
 class RateLimiter:

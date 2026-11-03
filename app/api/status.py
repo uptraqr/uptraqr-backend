@@ -13,9 +13,10 @@ templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
 templates.env.globals["site_url"] = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
 
-@router.get("/status/{username}", response_class=HTMLResponse)
-def public_status(username: str, request: Request, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.name == username).first()
+@router.get("/status/{slug}", response_class=HTMLResponse)
+def public_status(slug: str, request: Request, db: Session = Depends(get_db)):
+    # Found by a random code rather than the account name, so nobody can guess someone else's page.
+    user = db.query(User).filter(User.status_slug == slug).first() if len(slug) >= 10 else None
     if not user:
         raise HTTPException(status_code=404, detail="Status page not found")
 

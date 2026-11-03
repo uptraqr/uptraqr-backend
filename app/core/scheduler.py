@@ -4,6 +4,7 @@ from app.services.checker import run_checks
 from app.services.defacement_runner import run_defacement_checks
 from app.services.ssl_runner import run_ssl_checks
 from app.services.history import tidy_up
+from app.services.monthly_report import send_monthly_reports
 
 scheduler = BackgroundScheduler()
 
@@ -19,6 +20,8 @@ def start_scheduler():
                       next_run_time=datetime.now() + timedelta(minutes=5))
     # Nightly at 03:15 UTC: summarise yesterday and delete data each plan no longer keeps.
     scheduler.add_job(tidy_up, "cron", hour=3, minute=15, max_instances=1, coalesce=True)
+    # 1st of each month at 15:20 UTC (morning in Canada): monthly report for paid plans.
+    scheduler.add_job(send_monthly_reports, "cron", day=1, hour=15, minute=20, max_instances=1, coalesce=True)
     scheduler.start()
 
 def stop_scheduler():

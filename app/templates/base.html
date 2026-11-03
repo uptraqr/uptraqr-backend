@@ -126,7 +126,8 @@ main{flex:1}
 .foot-links{display:flex;flex-wrap:wrap;gap:8px 22px}
 .foot-links a{text-decoration:none;font-size:15px}
 .foot-links a:hover{color:var(--ink)}
-.foot-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+.foot-meta{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px}
+.foot-meta span{margin-right:auto}
 
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 {% block styles %}{% endblock %}
@@ -167,6 +168,8 @@ main{flex:1}
     </nav>
     <div class="foot-meta">
       <span>© 2026 Uptraq Technologies, Surrey, BC, Canada</span>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
       <a href="mailto:{{ support_email }}">{{ support_email }}</a>
     </div>
   </div>

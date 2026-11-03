@@ -43,7 +43,31 @@ SIGNATURE = f"""
 </table>
 """
 
-def _send(params: dict):
+def unsubscribe_link(email: str, kind: str) -> str:
+    """A signed link that turns off one kind of email ('alerts' or 'reports') for this address."""
+    from app.core.auth import create_link_token
+    site = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+    return f"{site}/unsubscribe?token={create_link_token(email, 'unsubscribe', 60 * 24 * 365, kind=kind)}"
+
+
+_UNSUB_TEXT = {
+    "alerts": "You're getting this because you asked Uptraqr to watch this website.",
+    "reports": "You're getting this monthly report as part of your Uptraqr plan.",
+}
+
+
+def _send(params: dict, unsubscribe: str = None):
+    """
+    Send through Resend. For alerts and reports, add a visible unsubscribe link
+    and the standard one-click unsubscribe headers that Gmail and Outlook show.
+    """
+    to = params.get("to")
+    if unsubscribe and to and to != ALERT_EMAIL:
+        link = unsubscribe_link(to, unsubscribe)
+        params["html"] = (params.get("html") or "") + (
+            f'''<p style="font-family:-apple-system,'Segoe UI',sans-serif;color:#94a3b8;font-size:12px;max-width:600px;margin:12px auto 0;padding:0 20px">
+            {_UNSUB_TEXT[unsubscribe]} <a href="{escape(link)}" style="color:#64748b">Turn off these emails</a>.</p>''')
+        params["headers"] = {"List-Unsubscribe": f"<{link}>", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"}
     # Drop empty fields (e.g. no bcc) so the email service doesn't reject them
     return resend.Emails.send({k: v for k, v in params.items() if v})
 
@@ -80,7 +104,7 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None):
                 {SIGNATURE}
             </div>
             """
-        })
+        }, unsubscribe="alerts")
         print(f"Down alert sent for {monitor_name}")
     except Exception as e:
         print(f"Failed to send alert: {e}")
@@ -118,7 +142,7 @@ def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
                 {SIGNATURE}
             </div>
             """
-        })
+        }, unsubscribe="alerts")
         print(f"Recovery alert sent for {monitor_name}")
     except Exception as e:
         print(f"Failed to send alert: {e}")
@@ -157,7 +181,7 @@ def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = 
                 {SIGNATURE}
             </div>
             """
-        })
+        }, unsubscribe="alerts")
         print(f"SSL alert sent for {monitor_name}")
     except Exception as e:
         print(f"Failed to send alert: {e}")
@@ -202,7 +226,7 @@ def send_defacement_alert(monitor_name: str, url: str, status: str, findings: li
               <p style="color:#94a3b8;font-size:13px;">Detected {get_vancouver_time()}</p>
               {SIGNATURE}
             </div>'''
-        })
+        }, unsubscribe="alerts")
         print(f"Defacement alert sent for {monitor_name}")
     except Exception as e:
         print(f"Failed to send defacement alert: {e}")
@@ -225,7 +249,7 @@ def send_defacement_cleared_alert(monitor_name: str, url: str, to_email: str = N
               </div>
               {SIGNATURE}
             </div>'''
-        })
+        }, unsubscribe="alerts")
     except Exception as e:
         print(f"Failed to send defacement cleared alert: {e}")
 
@@ -319,4 +343,50 @@ def send_login_link_email(to_email: str, link: str) -> bool:
         return True
     except Exception as e:
         print(f"Failed to send login link: {e}")
+        return False
+
+
+def send_monthly_report_email(to_email: str, month_label: str, sites: list) -> bool:
+    """
+    Monthly summary for paid plans. Each site: name, url, uptime (float or None),
+    incidents (int), grade (str or None), tamper (str), ssl_days (int or None).
+    """
+    rows = ""
+    for s in sites:
+        up = "No data" if s["uptime"] is None else f'{s["uptime"]:.2f}%'
+        up_colour = "#64748b" if s["uptime"] is None else ("#0B7A52" if s["uptime"] >= 99.5 else "#9A5800" if s["uptime"] >= 98 else "#BF2433")
+        outages = "No outages" if not s["incidents"] else f'{s["incidents"]} outage{"s" if s["incidents"] != 1 else ""}'
+        ssl = ("No SSL" if s["ssl_days"] is None else "SSL expired" if s["ssl_days"] < 0
+               else f'SSL renews in {s["ssl_days"]} days')
+        grade_txt = s["grade"] or "?"
+        rows += f'''
+        <tr><td style="padding:14px;border-bottom:1px solid #e2e8f0">
+          <strong style="color:#0f172a">{escape(s["name"])}</strong><br>
+          <span style="color:#64748b;font-size:13px">{escape(s["url"])}</span><br>
+          <span style="font-size:14px;color:#334155">Online <strong style="color:{up_colour}">{up}</strong> · {outages} · {escape(s["tamper"])} · {ssl}</span>
+        </td><td style="padding:14px;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top">
+          <span style="font-size:13px;color:#64748b">Health</span><br>
+          <strong style="font-size:22px;color:{_GRADE_COLOURS.get(grade_txt, "#64748b")}">{grade_txt}</strong>
+        </td></tr>'''
+    site = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+    try:
+        _send({
+            "from": FROM_EMAIL,
+            "to": to_email,
+            "reply_to": SUPPORT_EMAIL,
+            "subject": f"Your websites in {month_label}",
+            "html": f'''
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#0f172a;">
+              <h2 style="margin:0 0 6px 0;">Your monthly website report</h2>
+              <p style="margin:0 0 18px 0;color:#475569;">How your websites did in {escape(month_label)}.</p>
+              <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;margin-bottom:20px">{rows}</table>
+              <p style="color:#334155">The health grade covers security settings, signs of hacking, speed, Google basics and email setup.
+              Open your dashboard to see the details and how to fix anything.</p>
+              <p style="margin:24px 0"><a href="{site}/dashboard" style="background:#0F1B2D;color:#FFFFFF;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">Open my dashboard</a></p>
+              {SIGNATURE}
+            </div>'''
+        }, unsubscribe="reports")
+        return True
+    except Exception as e:
+        print(f"Failed to send monthly report: {e}")
         return False

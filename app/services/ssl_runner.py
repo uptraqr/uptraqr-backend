@@ -18,19 +18,20 @@ def threshold_for(days_left: int):
 
 
 def check_monitor_ssl(db, monitor: Monitor, send=send_ssl_alert):
+    state = db.query(SslAlertState).filter(SslAlertState.monitor_id == monitor.id).first()
+    if not state:
+        state = SslAlertState(monitor_id=monitor.id)
+        db.add(state)
+    state.last_checked_at = datetime.utcnow()   # recorded even when there's nothing to check
     parsed = urlparse(monitor.url)
     if parsed.scheme != "https" or not parsed.hostname:
+        state.expiry_date = None
         return None
     try:
         check_url_is_safe(monitor.url)
     except UnsafeURLError:
         return None
     result = check_ssl(parsed.hostname)
-    state = db.query(SslAlertState).filter(SslAlertState.monitor_id == monitor.id).first()
-    if not state:
-        state = SslAlertState(monitor_id=monitor.id)
-        db.add(state)
-    state.last_checked_at = datetime.utcnow()
     if not result.get("valid"):
         return result
     # A renewed certificate has a new expiry date: start the reminder steps again.
@@ -40,7 +41,8 @@ def check_monitor_ssl(db, monitor: Monitor, send=send_ssl_alert):
     step = threshold_for(result["days_left"])
     if step is not None and (state.last_threshold is None or step < state.last_threshold):
         user = db.query(User).filter(User.id == monitor.user_id).first()
-        send(monitor.name, monitor.url, max(result["days_left"], 0), user.email if user else None)
+        if user and user.email_alerts:
+            send(monitor.name, monitor.url, max(result["days_left"], 0), user.email)
         state.last_threshold = step
     return result
 

@@ -2,8 +2,9 @@
 {% block robots %}noindex, nofollow{% endblock %}
 {% block title %}Your websites · Uptraqr{% endblock %}
 {% block nav %}
-<a href="/status/{{ user.name }}" target="_blank" rel="noopener">My status page</a>
+<a href="/status/{{ status_slug }}" target="_blank" rel="noopener">My status page</a>
 <a href="/pricing">Plans</a>
+<a href="/account">Account</a>
 <a href="/logout">Log out</a>
 {% endblock %}
 {% block styles %}
@@ -77,6 +78,12 @@
 .history{margin-top:16px;font-size:14px;color:var(--muted)}
 .history li{margin:4px 0}
 
+.paused{margin-top:28px;background:var(--console);border:1px dashed var(--rule-strong);border-radius:var(--r-md);padding:18px 20px}
+.paused h2{font-size:19px}
+.paused p{color:var(--muted);margin:6px 0 10px}
+.paused ul{list-style:none;margin:0;padding:0}
+.paused li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--rule)}
+.paused small{color:var(--muted);word-break:break-all}
 .empty{margin-top:28px;border:1px dashed var(--rule-strong);border-radius:var(--r-md);padding:40px 24px;text-align:center}
 .empty h2{font-size:22px}
 .empty p{color:var(--muted);margin:8px auto 20px;max-width:44ch}
@@ -158,11 +165,11 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
         <div class="site-pills">
           {% if m.is_up %}<span class="pill clear">Online</span>{% elif m.is_up == False %}<span class="pill breach">Down</span>{% else %}<span class="pill idle">Not checked yet</span>{% endif %}
           <span class="pill {{ tl[0] }}">{{ tl[1] }}</span>
-          {% if m.ssl_warning %}<span class="pill watch">SSL ends in {{ m.ssl_days }} days</span>{% endif %}
+          {% if m.ssl_warning %}{% if m.ssl_days < 0 %}<span class="pill breach">SSL expired</span>{% else %}<span class="pill watch">SSL ends in {{ m.ssl_days }} days</span>{% endif %}{% endif %}
         </div>
         <div class="site-meta">
           <span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span>
-          <span>SSL <strong>{% if m.ssl_days != 'N/A' %}{{ m.ssl_days }} days left{% else %}not found{% endif %}</strong></span>
+          <span>SSL <strong>{% if m.ssl_days == 'N/A' %}not found{% elif m.ssl_days < 0 %}expired{% else %}{{ m.ssl_days }} days left{% endif %}</strong></span>
           {% if m.uptime_30 is not none %}<span>Uptime, 30 days <strong>{{ m.uptime_30 }}%</strong></span>{% endif %}
           <span>Last check <strong>{{ m.last_checked }} UTC</strong></span>
         </div>
@@ -204,7 +211,20 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
     </article>
     {% endfor %}
   </div>
-  {% else %}
+  {% endif %}
+  {% if paused_monitors %}
+  <div class="paused">
+    <h2>Paused websites</h2>
+    <p>These are over your plan's limit, so we've stopped checking them. <a href="/pricing">Upgrade</a> to switch them back on, or remove one you no longer need.</p>
+    <ul>
+      {% for p in paused_monitors %}
+      <li><span><strong>{{ p.name }}</strong><br><small>{{ p.url }}</small></span>
+        <button class="btn btn-danger btn-sm" data-action="remove" data-id="{{ p.id }}" data-name="{{ p.name }}">Remove</button></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if not monitors and not paused_monitors %}
   <div class="empty">
     <h2>Add your first website</h2>
     <p>We'll start checking it right away and take a known-good snapshot for tamper watch within a few minutes.</p>

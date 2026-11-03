@@ -67,8 +67,8 @@ def check_monitor(db, monitor: Monitor, send_alerts: bool = True) -> DefacementW
         if watch.status in ("changed", "suspicious") and key != watch.last_alert_key:
             db.add(DefacementEvent(monitor_id=monitor.id, status=watch.status, findings=watch.last_findings))
             watch.last_alert_key = key
-            if send_alerts:
-                user = db.query(User).filter(User.id == monitor.user_id).first()
+            user = db.query(User).filter(User.id == monitor.user_id).first()
+            if send_alerts and user and user.email_alerts:
                 send_defacement_alert(monitor.name, monitor.url, watch.status, findings,
                                       user.email if user else None)
                 if user and user.phone and watch.status == "suspicious":
@@ -77,8 +77,8 @@ def check_monitor(db, monitor: Monitor, send_alerts: bool = True) -> DefacementW
             # The page went back to normal on its own (e.g. the owner restored a backup).
             resolve_open_events(db, monitor.id, "reverted")
             watch.last_alert_key = None
-            if send_alerts:
-                user = db.query(User).filter(User.id == monitor.user_id).first()
+            user = db.query(User).filter(User.id == monitor.user_id).first()
+            if send_alerts and user and user.email_alerts:
                 send_defacement_cleared_alert(monitor.name, monitor.url, user.email if user else None)
     except UnsafeURLError as e:
         watch.status = "error"

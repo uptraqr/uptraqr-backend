@@ -1,67 +1,117 @@
+import os
+
+import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+
+from app.core.auth import get_current_user_optional
 from app.core.database import get_db
-from app.core.auth import get_current_user
-from app.models.models import User
+from app.core.plans import PLANS, plan_for
+from app.models.models import User, Monitor
 from app.services.stripe_service import create_checkout_session
-import stripe
-import os
 
 router = APIRouter()
+SITE_URL = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+ENDED = {"canceled", "unpaid", "incomplete_expired"}
+
+
+def apply_plan(db, user: User, plan_key):
+    """Set the plan and pause/resume websites so the user is never over their limit."""
+    user.plan = plan_key if plan_key in PLANS and plan_key != "free" else None
+    limit = plan_for(user)["sites"]
+    monitors = db.query(Monitor).filter(Monitor.user_id == user.id).order_by(Monitor.created_at.asc(), Monitor.id.asc()).all()
+    for i, m in enumerate(monitors):
+        m.is_active = i < limit   # oldest websites stay on; the rest pause until they upgrade again
+
 
 @router.get("/payments/checkout/{plan}")
 def checkout(plan: str, request: Request, db: Session = Depends(get_db)):
-    from app.core.auth import get_current_user_optional
-    current_user = get_current_user_optional(request, db)
-    if not current_user:
+    user = get_current_user_optional(request, db)
+    if not user:
         return RedirectResponse(url="/login", status_code=302)
+    if plan not in PLANS or plan == "free":
+        raise HTTPException(status_code=404, detail="That plan doesn't exist.")
+    # Already paying? Send them to manage their subscription instead of starting a second one.
+    if user.stripe_subscription_id and user.plan:
+        return RedirectResponse(url="/api/payments/manage", status_code=302)
     try:
         session = create_checkout_session(
-            plan=plan,
-            user_email=current_user.email,
-            success_url="https://www.uptraqr.com/dashboard?payment=success",
-            cancel_url="https://www.uptraqr.com/pricing"
+            plan=plan, user=user,
+            success_url=f"{SITE_URL}/dashboard?payment=success",
+            cancel_url=f"{SITE_URL}/pricing",
         )
-        return RedirectResponse(url=session.url, status_code=302)
+        return RedirectResponse(url=session.url, status_code=303)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"Checkout failed for user {user.id}: {e!r}")
+        raise HTTPException(status_code=502, detail="We couldn't open the payment page. Please try again in a minute.")
+
+
+@router.get("/payments/manage")
+def manage_billing(request: Request, db: Session = Depends(get_db)):
+    """Stripe's own page to change card, see invoices, switch or cancel the plan."""
+    user = get_current_user_optional(request, db)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    if not user.stripe_customer_id:
+        return RedirectResponse(url="/pricing", status_code=302)
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+    try:
+        portal = stripe.billing_portal.Session.create(customer=user.stripe_customer_id, return_url=f"{SITE_URL}/account")
+        return RedirectResponse(url=portal.url, status_code=303)
+    except Exception as e:
+        print(f"Billing portal failed for user {user.id}: {e!r}")
+        raise HTTPException(status_code=502, detail="We couldn't open billing right now. Please email support and we'll help.")
+
 
 @router.post("/stripe/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
-
+    secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+    if not secret:
+        print("STRIPE_WEBHOOK_SECRET is not set; refusing webhook")
+        raise HTTPException(status_code=500, detail="Webhook not configured")
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, webhook_secret
-        )
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        # Proves the message really came from Stripe, so nobody can fake an upgrade.
+        event = stripe.Webhook.construct_event(payload, request.headers.get("stripe-signature"), secret)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid signature")
 
-    if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        email = session.get("customer_email")
-        plan = session.get("metadata", {}).get("plan")
+    obj = event["data"]["object"]
+    kind = event["type"]
 
-        user = db.query(User).filter(User.email == email).first()
-        if user:
-            user.plan = plan
-            user.is_active = True
+    if kind == "checkout.session.completed":
+        user = None
+        ref = obj.get("client_reference_id")
+        if ref and str(ref).isdigit():
+            user = db.query(User).filter(User.id == int(ref)).first()
+        paid_email = obj.get("customer_email") or (obj.get("customer_details") or {}).get("email")
+        if not user and paid_email:
+            user = db.query(User).filter(User.email == paid_email).first()
+        plan = (obj.get("metadata") or {}).get("plan")
+        if user and plan in PLANS:
+            user.stripe_customer_id = obj.get("customer") or user.stripe_customer_id
+            user.stripe_subscription_id = obj.get("subscription") or user.stripe_subscription_id
+            apply_plan(db, user, plan)
             db.commit()
-            print(f"✅ Payment successful for {email} - Plan: {plan}")
+            print(f"Payment successful for user {user.id}: {plan}")
 
-    elif event["type"] == "customer.subscription.deleted":
-        email = event["data"]["object"].get("customer_email")
-        user = db.query(User).filter(User.email == email).first()
+    elif kind in ("customer.subscription.updated", "customer.subscription.deleted"):
+        user = db.query(User).filter(User.stripe_customer_id == obj.get("customer")).first()
         if user:
-            user.plan = None
+            if kind == "customer.subscription.deleted" or obj.get("status") in ENDED:
+                if not user.stripe_subscription_id or user.stripe_subscription_id == obj.get("id"):
+                    user.stripe_subscription_id = None
+                    apply_plan(db, user, None)
+                    print(f"Subscription ended for user {user.id}; moved to Free")
+            else:
+                plan = (obj.get("metadata") or {}).get("plan")
+                if plan in PLANS:
+                    apply_plan(db, user, plan)
             db.commit()
-            print(f"❌ Subscription cancelled for {email}")
 
-    elif event["type"] == "invoice.payment_failed":
-        email = event["data"]["object"].get("customer_email")
-        print(f"⚠️ Payment failed for {email}")
+    elif kind == "invoice.payment_failed":
+        # Stripe retries and emails the customer; if it never succeeds we get subscription.deleted.
+        print(f"Payment failed for customer {obj.get('customer')}")
 
     return {"status": "ok"}
