@@ -31,14 +31,14 @@ CATEGORY_NAMES = {
 def normalise_url(raw: str) -> str:
     raw = (raw or "").strip()
     if not raw:
-        raise UnsafeURLError("Enter your website address, for example rosewoodbakery.ca")
+        raise UnsafeURLError("Enter your website address, for example yourbusiness.ca")
     if len(raw) > 300:
         raise UnsafeURLError("That address is too long.")
     if not re.match(r"^https?://", raw, re.I):
         raw = "https://" + raw
     parsed = urlparse(raw)
     if not parsed.hostname or "." not in parsed.hostname:
-        raise UnsafeURLError("That doesn't look like a website address. Try something like rosewoodbakery.ca")
+        raise UnsafeURLError("That doesn't look like a website address. Try something like yourbusiness.ca")
     # Always report on the homepage
     return f"{parsed.scheme.lower()}://{parsed.hostname.lower()}{':' + str(parsed.port) if parsed.port else ''}/"
 
