@@ -1,11 +1,11 @@
 {% extends "_feature.html" %}
 {% block title %}Website defacement and hack monitoring for small businesses | Uptraqr{% endblock %}
-{% block description %}Uptraqr checks your website every 30 minutes for signs of hacking: defacement, card-skimming code, hijacked forms, spam links and redirects. Plain-English alerts, free for one site.{% endblock %}
+{% block description %}Uptraqr checks your website every 10 to 30 minutes for signs of hacking: defacement, card-skimming code, hijacked forms, spam links and redirects. Plain-English alerts on plans from $10/month.{% endblock %}
 {% block head_extra %}
 <script type="application/ld+json" nonce="{{ request.state.csp_nonce }}">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
  {"@type":"Question","name":"Will I get an alert every time I update my own website?","acceptedAnswer":{"@type":"Answer","text":"No. Small edits are ignored, and parts that change on their own, like dates, counters and rotating banners, are learned and skipped. Bigger changes send one email asking if it was you, and one tap tells us to use the new version from then on."}},
- {"@type":"Question","name":"How often is my website checked for tampering?","acceptedAnswer":{"@type":"Answer","text":"Every 30 minutes, around the clock. You can also run a check yourself at any time from your dashboard."}},
+ {"@type":"Question","name":"How often is my website checked for tampering?","acceptedAnswer":{"@type":"Answer","text":"Every 30 minutes on the Starter plan and every 10 minutes on Pro and Agency, around the clock. You can also run a check yourself at any time from your dashboard."}},
  {"@type":"Question","name":"Do I need to install anything on my website?","acceptedAnswer":{"@type":"Answer","text":"No. Uptraqr looks at your website from the outside, the same way a visitor does. It works with WordPress, Shopify, Wix, Squarespace and hand-built sites."}},
  {"@type":"Question","name":"Can Uptraqr fix a hacked website?","acceptedAnswer":{"@type":"Answer","text":"Uptraqr finds the problem and tells you quickly. The alert explains what changed and what to do next, so you or your web designer can restore a clean backup and change your passwords."}}
 ]}
@@ -13,7 +13,7 @@
 {% endblock %}
 {% block crumb %}Hack and defacement monitoring{% endblock %}
 {% block h1 %}Find out fast if someone tampers with your website{% endblock %}
-{% block lede %}Uptraqr compares your website with its known-good version every 30 minutes and looks for the things attackers actually do. If it spots one, you get a plain-English email explaining what changed and what to do.{% endblock %}
+{% block lede %}Uptraqr compares your website with its known-good version every 10 to 30 minutes and looks for the things attackers actually do. If it spots one, you get a plain-English email explaining what changed and what to do.{% endblock %}
 {% block body %}
 <h2>What is website defacement?</h2>
 <p>Defacement is when someone breaks into a website and changes what visitors see. Sometimes it's obvious, like a "hacked by" message replacing your homepage. Often it's quiet: a hidden script that copies card numbers at checkout, a contact form that now sends messages to someone else, or spam links tucked out of sight.</p>
@@ -33,18 +33,18 @@
 <h2>How it works</h2>
 <ol class="steps">
   <li><strong>We learn your page.</strong> When you add your website, we load it twice and save a known-good snapshot. Anything that changed between the two loads, like the date or a rotating banner, is treated as normal and ignored from then on.</li>
-  <li><strong>We check every 30 minutes.</strong> Each check compares your page with the snapshot and looks for the warning signs above.</li>
+  <li><strong>We check every 10 to 30 minutes.</strong> Each check compares your page with the snapshot and looks for the warning signs above.</li>
   <li><strong>You hear about real problems.</strong> Hacker signs send an urgent email. Smaller changes send one email asking "Was this you?". The same problem never alerts twice.</li>
   <li><strong>You confirm or fix.</strong> If you made the change, tap "Yes, I made this change" and the new version becomes your snapshot. If you didn't, the email tells you what to do next.</li>
 </ol>
 
-<div class="callout">Uptraqr checks your site from the outside, like a visitor would. There's nothing to install and no access to your website account needed.</div>
+<div class="callout">Tamper watch is included on every paid plan, from $10/month. Uptraqr checks your site from the outside, like a visitor would. There's nothing to install and no access to your website account needed.</div>
 {% endblock %}
 {% block faq %}
 <section class="prose faq" aria-labelledby="faq-h">
   <h2 id="faq-h">Common questions</h2>
   <details><summary>Will I get an alert every time I update my own website?</summary><p>No. Small edits are ignored, and parts that change on their own, like dates, counters and rotating banners, are learned and skipped. Bigger changes send one email asking if it was you, and one tap tells us to use the new version from then on.</p></details>
-  <details><summary>How often is my website checked for tampering?</summary><p>Every 30 minutes, around the clock. You can also run a check yourself at any time from your dashboard.</p></details>
+  <details><summary>How often is my website checked for tampering?</summary><p>Every 30 minutes on the Starter plan and every 10 minutes on Pro and Agency, around the clock. You can also run a check yourself at any time from your dashboard.</p></details>
   <details><summary>Do I need to install anything on my website?</summary><p>No. Uptraqr looks at your website from the outside, the same way a visitor does. It works with WordPress, Shopify, Wix, Squarespace and hand-built sites.</p></details>
   <details><summary>Can Uptraqr fix a hacked website?</summary><p>Uptraqr finds the problem and tells you quickly. The alert explains what changed and what to do next, so you or your web designer can restore a clean backup and change your passwords.</p></details>
 </section>

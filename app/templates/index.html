@@ -22,7 +22,13 @@
 .hero h1{font-size:clamp(34px,5.4vw,56px);max-width:13ch}
 .hero .lede{color:#C3CDDD;font-size:18px;max-width:46ch;margin-top:20px}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
-.hero .fine{color:var(--muted);font-size:14px;margin-top:14px}
+.hero .fine{color:var(--muted);font-size:14px;margin-top:12px;max-width:52ch}
+.check{margin-top:28px;max-width:540px}
+.check label{display:block;font-weight:500;color:#C6D0E0;margin-bottom:8px}
+.check-row{display:flex;gap:8px}
+.check-row input{flex:1;min-width:0;min-height:52px;padding:10px 14px;background:var(--console);border:1px solid var(--rule-strong);border-radius:var(--r-sm);color:var(--ink);font:400 17px var(--body)}
+.check-row input:focus{outline:none;border-color:var(--signal);box-shadow:0 0 0 3px rgba(92,200,255,.18)}
+@media (max-width:520px){.check-row{flex-direction:column}.check-row .btn{width:100%}}
 @media (max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:36px}.hero{padding-top:36px}}
 
 /* ---------- The watch panel demo (the one bold element) ---------- */
@@ -99,12 +105,15 @@
   <div class="wrap">
     <div>
       <h1>Know the moment your website goes down or gets hacked.</h1>
-      <p class="lede">Uptraqr checks your site every 5 minutes, looks for signs of tampering every 30, and tells you in plain English by email and text when something is wrong.</p>
-      <div class="ctas">
-        <a href="/signup" class="btn btn-primary btn-lg">Watch my website free</a>
-        <a href="#pricing" class="btn btn-ghost btn-lg">See pricing</a>
-      </div>
-      <p class="fine">Free for one website. No credit card. Built in Surrey, BC.</p>
+      <p class="lede">Uptraqr checks your website around the clock, looks for signs that someone has tampered with it, and emails you in plain English when something is wrong.</p>
+      <form class="check" id="check" action="/check" method="get" role="search">
+        <label for="check-url">Try it now: check your website's health</label>
+        <div class="check-row">
+          <input id="check-url" name="url" placeholder="yourbusiness.ca" inputmode="url" autocomplete="url" required>
+          <button class="btn btn-primary btn-lg" type="submit" data-busy="Checking…">Check my site</button>
+        </div>
+      </form>
+      <p class="fine">Free, no sign-up. Get a score for security, hacking signs, Google and speed in about 10 seconds. Built in Surrey, BC.</p>
     </div>
 
     <div>
@@ -125,7 +134,7 @@
         </div>
         <div class="alert" role="status">
           <div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-          <div><strong>Possible hack on rosewoodbakery.ca</strong><span>"Hacked by" text appeared and most of your page was replaced. Texted to Maria at 2:14 am.</span></div>
+          <div><strong>Possible hack on rosewoodbakery.ca</strong><span>"Hacked by" text appeared and most of your page was replaced. Emailed to Maria at 2:14 am.</span></div>
         </div>
       </div>
       <div class="replay"><button class="btn btn-quiet btn-sm" id="replay" type="button">Play the example again</button></div>
@@ -141,13 +150,13 @@
       <div class="watch-row">
         <h3><span class="dot" style="background:var(--clear)"></span>Is it online?</h3>
         <div>
-          <p>We open your website every 5 minutes, just like a customer would. If it stops answering, you get an email and a text right away, and another when it's back.</p>
+          <p>We open your website as often as every minute, just like a customer would. If it stops answering, you get an email right away, and another when it's back.</p>
         </div>
       </div>
       <div class="watch-row">
         <h3><span class="dot" style="background:var(--breach)"></span>Has someone tampered with it? <span class="new">New</span></h3>
         <div>
-          <p>Every 30 minutes we compare your page with its known-good version and look for the things attackers actually do:</p>
+          <p>On paid plans, every 10 to 30 minutes we compare your page with its known-good version and look for the things attackers actually do:</p>
           <ul>
             <li>"Hacked by…" messages or your page being replaced</li>
             <li>New code from unknown websites that can steal card details</li>
@@ -173,8 +182,8 @@
     <h2>How tamper watch works</h2>
     <ol class="steps">
       <li><h3>We learn your page</h3><p>When you add your site, we take a snapshot of how it normally looks, and note which parts change on their own.</p></li>
-      <li><h3>We check every 30 minutes</h3><p>Each check compares your page with that snapshot and looks for attack signs.</p></li>
-      <li><h3>You hear about real problems</h3><p>Hacker signs trigger an email and a text. Smaller edits get an email asking if it was you.</p></li>
+      <li><h3>We check every 10 to 30 minutes</h3><p>Each check compares your page with that snapshot and looks for attack signs.</p></li>
+      <li><h3>You hear about real problems</h3><p>Hacker signs trigger an urgent email. Smaller edits get an email asking if it was you.</p></li>
       <li><h3>You confirm or fix</h3><p>Made the change yourself? Tap "Yes, I made this change." If not, our email tells you what to do next.</p></li>
     </ol>
   </div>
@@ -183,53 +192,12 @@
 <section class="section" id="pricing">
   <div class="wrap">
     <h2>Simple pricing in Canadian dollars</h2>
-    <p class="intro">Start free with one website. Upgrade when you need more. Cancel any time.</p>
-    <div class="plans">
-      <div class="plan">
-        <h3>Starter</h3>
-        <div class="price">$10<small> /month</small></div>
-        <ul>
-          <li>3 websites</li>
-          <li>Checks every 5 minutes</li>
-          <li class="hl">Tamper watch</li>
-          <li>Email alerts</li>
-          <li>SSL reminders</li>
-          <li>30 days of history</li>
-        </ul>
-        <a href="/signup" class="btn btn-ghost">Start free</a>
-      </div>
-      <div class="plan featured">
-        <span class="tag">Most popular</span>
-        <h3>Pro</h3>
-        <div class="price">$25<small> /month</small></div>
-        <ul>
-          <li>10 websites</li>
-          <li>Checks every minute</li>
-          <li class="hl">Tamper watch</li>
-          <li>Email and text alerts</li>
-          <li>SSL reminders</li>
-          <li>90 days of history</li>
-        </ul>
-        <a href="/signup" class="btn btn-primary">Start free</a>
-      </div>
-      <div class="plan">
-        <h3>Agency</h3>
-        <div class="price">$65<small> /month</small></div>
-        <ul>
-          <li>Unlimited websites</li>
-          <li>Checks every minute</li>
-          <li class="hl">Tamper watch</li>
-          <li>Email and text alerts</li>
-          <li>SSL reminders</li>
-          <li>1 year of history</li>
-        </ul>
-        <a href="/signup" class="btn btn-ghost">Start free</a>
-      </div>
-    </div>
+    <p class="intro">Start free with one website. Upgrade for more websites, faster checks, tamper watch and history. Cancel any time.</p>
+    {% set checkout = false %}{% include "_plan_cards.html" %}
 
     <div class="closing">
       <h2>Find out before your customers do.</h2>
-      <p>Add your website in under a minute. We'll take its known-good snapshot and start watching right away.</p>
+      <p>Run a free health check now, or add your website in under a minute and we'll start watching it right away.</p>
       <a href="/signup" class="btn btn-primary btn-lg">Watch my website free</a>
     </div>
   </div>
@@ -238,6 +206,7 @@
 
 {% block scripts %}
 <script nonce="{{ request.state.csp_nonce }}">
+document.getElementById('check').addEventListener('submit',e=>{const b=e.target.querySelector('[data-busy]');b.disabled=true;b.textContent=b.dataset.busy;});
 (function(){
   const panel=document.getElementById('demo'), pill=document.getElementById('demo-pill');
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;

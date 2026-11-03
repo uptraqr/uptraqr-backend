@@ -6,6 +6,9 @@
   <div class="auth-card">
     <h1>Welcome back</h1>
     <p class="sub">Log in to see how your websites are doing.</p>
+    {% if request.query_params.get('sent') %}
+    <div class="notice info" role="status">If that email has an Uptraqr account, a login link is on its way. It works for 30 minutes.</div>
+    {% endif %}
     {% if request.query_params.get('error') == 'invalid' %}
     <div class="notice error" role="alert">That email and password don't match. Check for typos and try again.</div>
     {% endif %}
@@ -13,6 +16,12 @@
       <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" required></div>
       <div class="field"><label for="password">Password</label><input id="password" type="password" name="password" autocomplete="current-password" required></div>
       <button type="submit" class="btn btn-primary btn-lg">Log in</button>
+    </form>
+    <div class="or"><span>or</span></div>
+    <form method="POST" action="/api/auth/login-link">
+      <div class="field"><label for="link-email">Log in without a password</label><input id="link-email" type="email" name="email" autocomplete="email" placeholder="you@yourbusiness.ca" required>
+        <span class="hint">We'll email you a link that logs you in.</span></div>
+      <button type="submit" class="btn btn-ghost btn-lg">Email me a login link</button>
     </form>
     <p class="switch">New to Uptraqr? <a href="/signup">Create a free account</a></p>
   </div>

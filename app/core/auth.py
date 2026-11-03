@@ -78,3 +78,17 @@ def read_verify_token(token: str):
     if payload.get("purpose") != "verify-email":
         return None
     return payload.get("sub")
+
+
+def create_link_token(email: str, purpose: str, minutes: int, **extra) -> str:
+    """A one-purpose emailed link (e.g. 'login', 'quickstart'). Never accepted as a login cookie."""
+    exp = datetime.utcnow() + timedelta(minutes=minutes)
+    return jwt.encode({"sub": email, "purpose": purpose, "exp": exp, **extra}, SECRET_KEY, algorithm=ALGORITHM)
+
+def read_link_token(token: str, purpose: str):
+    """The token's contents if it is valid, unexpired and for this purpose; otherwise None."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return None
+    return payload if payload.get("purpose") == purpose and payload.get("sub") else None

@@ -9,21 +9,21 @@ PLANS = {
         "name": "Starter",
         "price": 1000,
         "currency": "cad",
-        "monitors": 3,
+        "monitors": 5,
         "interval": "month"
     },
     "pro": {
         "name": "Pro",
         "price": 2500,
         "currency": "cad",
-        "monitors": 10,
+        "monitors": 15,
         "interval": "month"
     },
     "agency": {
         "name": "Agency",
         "price": 6500,
         "currency": "cad",
-        "monitors": 999,
+        "monitors": 50,
         "interval": "month"
     }
 }
@@ -42,7 +42,7 @@ def create_checkout_session(plan: str, user_email: str, success_url: str, cancel
                 "currency": plan_data["currency"],
                 "product_data": {
                     "name": f"Uptraqr {plan_data['name']} Plan",
-                    "description": f"Up to {plan_data['monitors']} monitors"
+                    "description": f"Up to {plan_data['monitors']} websites"
                 },
                 "unit_amount": plan_data["price"],
                 "recurring": {

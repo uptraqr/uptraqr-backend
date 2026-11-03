@@ -11,27 +11,8 @@
 {% block content %}
 <section class="page"><div class="wrap">
   <h1>Choose your plan</h1>
-  <p class="intro">Prices are in Canadian dollars per month. Every plan includes tamper watch. Cancel any time from your dashboard.</p>
-  <div class="plans">
-    <div class="plan">
-      <h3>Starter</h3>
-      <div class="price">$10<small> /month</small></div>
-      <ul><li>3 websites</li><li>Checks every 5 minutes</li><li class="hl">Tamper watch</li><li>Email alerts</li><li>SSL reminders</li><li>30 days of history</li></ul>
-      <a class="btn btn-ghost" href="/api/payments/checkout/starter">Choose Starter</a>
-    </div>
-    <div class="plan featured">
-      <span class="tag">Most popular</span>
-      <h3>Pro</h3>
-      <div class="price">$25<small> /month</small></div>
-      <ul><li>10 websites</li><li>Checks every minute</li><li class="hl">Tamper watch</li><li>Email and text alerts</li><li>SSL reminders</li><li>90 days of history</li></ul>
-      <a class="btn btn-primary" href="/api/payments/checkout/pro">Choose Pro</a>
-    </div>
-    <div class="plan">
-      <h3>Agency</h3>
-      <div class="price">$65<small> /month</small></div>
-      <ul><li>Unlimited websites</li><li>Checks every minute</li><li class="hl">Tamper watch</li><li>Email and text alerts</li><li>SSL reminders</li><li>1 year of history</li></ul>
-      <a class="btn btn-ghost" href="/api/payments/checkout/agency">Choose Agency</a>
-    </div>
-  </div>
+  <p class="intro">Start free with one website. Upgrade for more websites, faster checks, tamper watch and history. Cancel any time.</p>
+  {% set checkout = true %}{% include "_plan_cards.html" %}
+  <p class="intro" style="margin-top:20px">Free accounts can check one website and get email alerts. Tamper watch and history are on paid plans. All prices in Canadian dollars.</p>
 </div></section>
 {% endblock %}

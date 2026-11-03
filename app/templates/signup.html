@@ -9,6 +9,10 @@
     {% set err = request.query_params.get('error') %}
     {% if err == 'exists' %}
     <div class="notice error" role="alert">There's already an account with that email. <a href="/login">Log in instead</a>.</div>
+    {% elif err == 'disposable' %}
+    <div class="notice error" role="alert">Temporary email addresses can't be used. Please use an email you check regularly, since that's where your alerts go.</div>
+    {% elif err == 'limit' %}
+    <div class="notice error" role="alert">Too many accounts have been created from your connection today. Try again tomorrow, or email {{ support_email }} if you need help.</div>
     {% elif err == 'short' %}
     <div class="notice error" role="alert">Your password needs at least 8 characters.</div>
     {% endif %}

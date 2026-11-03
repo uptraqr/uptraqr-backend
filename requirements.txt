@@ -49,3 +49,4 @@ urllib3==2.6.3
 uvicorn==0.42.0
 yarl==1.23.0
 psycopg[binary]==3.2.3
+dnspython==2.7.0

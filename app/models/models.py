@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, Date, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -15,6 +15,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     email_verified = Column(Boolean, default=False, nullable=False)
+    email_canonical = Column(String, nullable=True, index=True)  # used to spot duplicate inboxes
 
 class Monitor(Base):
     __tablename__ = "monitors"
@@ -77,3 +78,17 @@ class SslAlertState(Base):
     expiry_date = Column(String, nullable=True)       # certificate expiry the reminders refer to
     last_threshold = Column(Integer, nullable=True)   # e.g. 30, 14, 7, 3, 1, 0
     last_checked_at = Column(DateTime, nullable=True)
+
+
+
+class DailySummary(Base):
+    """One row per website per day: kept for the plan's full history after detailed checks are tidied away."""
+    __tablename__ = "daily_summaries"
+    __table_args__ = (UniqueConstraint("monitor_id", "day", name="uq_daily_monitor_day"),)
+    id = Column(Integer, primary_key=True)
+    monitor_id = Column(Integer, ForeignKey("monitors.id"), nullable=False, index=True)
+    day = Column(Date, nullable=False)
+    checks = Column(Integer, default=0)
+    up_checks = Column(Integer, default=0)
+    avg_response = Column(Float, nullable=True)
+    max_response = Column(Float, nullable=True)

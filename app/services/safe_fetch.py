@@ -55,16 +55,21 @@ def check_url_is_safe(url: str) -> str:
     return url
 
 
-def safe_get(url: str):
+def safe_get_detailed(url: str, max_bytes: int = MAX_BYTES):
     """
-    Fetch a page, checking every hop. Returns (final_url, status_code, html_text).
+    Fetch a page, checking every hop against the private-network rules.
+    Returns a dict: final_url, status, text, headers (of the final page),
+    seconds (total time), hops (list of URLs visited), bytes.
     Raises UnsafeURLError or requests.RequestException.
     """
-    current = url
+    import time as _t
+    start = _t.monotonic()
+    current, hops = url, []
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
     for _ in range(MAX_REDIRECTS + 1):
         check_url_is_safe(current)
+        hops.append(current)
         resp = session.get(current, timeout=TIMEOUT, allow_redirects=False, stream=True)
         if resp.is_redirect or resp.is_permanent_redirect:
             location = resp.headers.get("Location")
@@ -77,10 +82,23 @@ def safe_get(url: str):
         for chunk in resp.iter_content(chunk_size=65536):
             chunks.append(chunk)
             total += len(chunk)
-            if total >= MAX_BYTES:
+            if total >= max_bytes:
                 break
         resp.close()
         encoding = resp.encoding or "utf-8"
-        text = b"".join(chunks).decode(encoding, errors="replace")
-        return current, resp.status_code, text
+        return {
+            "final_url": current,
+            "status": resp.status_code,
+            "text": b"".join(chunks).decode(encoding, errors="replace"),
+            "headers": {k.lower(): v for k, v in resp.headers.items()},
+            "seconds": round(_t.monotonic() - start, 2),
+            "hops": hops,
+            "bytes": total,
+        }
     raise requests.TooManyRedirects("Too many redirects")
+
+
+def safe_get(url: str):
+    """Fetch a page, checking every hop. Returns (final_url, status_code, html_text)."""
+    r = safe_get_detailed(url)
+    return r["final_url"], r["status"], r["text"]

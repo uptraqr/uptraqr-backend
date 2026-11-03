@@ -1,4 +1,4 @@
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px}
+.plans{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:36px}
 .plan{border:1px solid var(--rule);border-radius:var(--r-md);padding:26px;display:flex;flex-direction:column;background:var(--console)}
 .plan.featured{border-color:var(--signal);background:var(--console-2)}
 .plan .tag{align-self:flex-start;font-size:13px;font-weight:600;color:var(--signal-ink);background:var(--signal);border-radius:999px;padding:3px 10px;margin-bottom:12px}
@@ -9,4 +9,7 @@
 .plan li{padding:8px 0 8px 26px;position:relative;color:#C3CDDD;border-top:1px solid var(--rule);font-size:15px}
 .plan li::before{content:"";position:absolute;left:2px;top:15px;width:12px;height:7px;border-left:2px solid var(--clear);border-bottom:2px solid var(--clear);transform:rotate(-45deg)}
 .plan li.hl{color:var(--ink);font-weight:500}
-@media (max-width:860px){.plans{grid-template-columns:1fr}}
+.plan li.no{color:var(--faint)}
+.plan li.no::before{border:0;width:auto;height:auto;transform:none;content:"✕";color:var(--faint);top:8px;left:2px;font-size:13px}
+@media (max-width:1000px){.plans{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:620px){.plans{grid-template-columns:1fr}}

@@ -6,6 +6,7 @@ import requests
 
 from app.core.database import SessionLocal
 from app.models.models import Monitor, User, DefacementWatch, DefacementEvent
+from app.core.plans import plan_for
 from app.services.defacement import build_baseline, scan, overall_status, findings_key, UnsafeURLError
 from app.services.email_alerts import send_defacement_alert, send_defacement_cleared_alert
 from app.services.sms_alerts import send_defacement_sms
@@ -90,12 +91,29 @@ def check_monitor(db, monitor: Monitor, send_alerts: bool = True) -> DefacementW
     return watch
 
 
+def tamper_allowed(user) -> bool:
+    return plan_for(user)["tamper_minutes"] is not None
+
+
 def run_defacement_checks():
+    """Runs every 10 minutes; scans each site at its plan's speed. Free plans are skipped."""
+    from datetime import timedelta
     db = SessionLocal()
     try:
-        monitors = db.query(Monitor).filter(Monitor.is_active == True).all()
-        for monitor in monitors:
-            check_monitor(db, monitor)
-            db.commit()
+        owners = {u.id: u for u in db.query(User).all()}
+        now = datetime.utcnow()
+        for monitor in db.query(Monitor).filter(Monitor.is_active == True).all():
+            minutes = plan_for(owners.get(monitor.user_id))["tamper_minutes"]
+            if minutes is None:
+                continue
+            watch = db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).first()
+            if watch and watch.last_checked_at and now - watch.last_checked_at < timedelta(minutes=minutes) - timedelta(seconds=30):
+                continue
+            try:
+                check_monitor(db, monitor)
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                print(f"Tamper check failed for monitor {monitor.id}: {e}")
     finally:
         db.close()

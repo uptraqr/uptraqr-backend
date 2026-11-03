@@ -41,7 +41,7 @@
     <li>
       <div><div class="n">{{ m.name }}</div><div class="u">{{ m.url }}</div></div>
       {% if m.is_up %}<span class="pill clear">Working</span>{% elif m.is_up == False %}<span class="pill breach">Down</span>{% else %}<span class="pill idle">Not checked yet</span>{% endif %}
-      <div class="m"><span>Uptime <strong>{{ m.uptime }}%</strong></span><span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span></div>
+      <div class="m"><span>Uptime, 30 days <strong>{{ m.uptime }}%</strong></span><span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span></div>
     </li>
     {% else %}
     <li><div class="u">No websites are being monitored yet.</div></li>

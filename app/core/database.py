@@ -55,6 +55,16 @@ def _add_missing_columns():
         if "email_verified" not in cols:
             # Accounts that existed before email confirmation are treated as confirmed.
             cx.execute(text("ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT TRUE"))
+        if "email_canonical" not in cols:
+            cx.execute(text("ALTER TABLE users ADD COLUMN email_canonical VARCHAR"))
+        cx.execute(text("CREATE INDEX IF NOT EXISTS ix_users_email_canonical ON users (email_canonical)"))
+        # Fill it in for accounts that don't have it yet
+        from app.core.abuse import canonical_email
+        for uid, email in cx.execute(text("SELECT id, email FROM users WHERE email_canonical IS NULL")).fetchall():
+            cx.execute(text("UPDATE users SET email_canonical = :c WHERE id = :i"), {"c": canonical_email(email), "i": uid})
+        # Fast lookups of a site's checks by time (works on both PostgreSQL and SQLite).
+        cx.execute(text("CREATE INDEX IF NOT EXISTS ix_check_results_monitor_time ON check_results (monitor_id, checked_at)"))
+        cx.execute(text("CREATE INDEX IF NOT EXISTS ix_incidents_monitor ON incidents (monitor_id)"))
 
 
 def get_db():

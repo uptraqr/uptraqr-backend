@@ -1,0 +1,19 @@
+{% extends "_auth.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block title %}Check your inbox · Uptraqr{% endblock %}
+{% block content %}
+<section class="auth">
+  <div class="auth-card">
+    {% if error %}
+      <h1>That didn't work</h1>
+      <div class="notice error" role="alert">{{ error }}</div>
+      <a href="/#check" class="btn btn-primary btn-lg">Back to the website check</a>
+    {% else %}
+      <h1>Check your inbox</h1>
+      <p class="sub">We've sent your website report to <strong style="color:var(--ink)">{{ email }}</strong>. Tap the button in the email to turn on free alerts.</p>
+      <div class="notice info">It comes from alerts@uptraqr.com and usually arrives within a minute. If you can't see it, check your spam or promotions folder.</div>
+      <a href="/" class="btn btn-ghost btn-lg">Back to Uptraqr</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

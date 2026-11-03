@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.models import Monitor, CheckResult, User
 from datetime import datetime
+from app.services.history import uptime_percent
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -34,14 +35,9 @@ def public_status(username: str, request: Request, db: Session = Depends(get_db)
         is_up = latest.is_up if latest else None
         response_time = round(latest.response_time, 2) if latest and latest.response_time else "N/A"
 
-        total = db.query(CheckResult).filter(
-            CheckResult.monitor_id == monitor.id
-        ).count()
-        up_count = db.query(CheckResult).filter(
-            CheckResult.monitor_id == monitor.id,
-            CheckResult.is_up == True
-        ).count()
-        uptime = round((up_count / total * 100), 2) if total > 0 else 100.0
+        uptime = uptime_percent(db, monitor.id, 30)
+        if uptime is None:
+            uptime = 100.0
 
         if is_up == False:
             all_up = False

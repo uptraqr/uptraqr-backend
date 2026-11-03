@@ -9,6 +9,7 @@
 {% block styles %}
 .dash{padding:36px 0 0}
 .dash-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.flash{margin:20px 0 0}
 .dash-head h1{font-size:clamp(26px,4vw,34px)}
 .dash-head .who{color:var(--muted);margin-top:6px;font-size:15px}
 .dash-head .who strong{color:var(--ink);font-weight:500}
@@ -43,6 +44,17 @@
 .tw[open] summary .chev{transform:rotate(180deg)}
 .tw-body{padding:4px 20px 20px}
 .tw-body .state{color:#C3CDDD}
+.locked{border:1px dashed var(--rule-strong);border-radius:var(--r-md);padding:16px;color:#C3CDDD}
+.locked p{margin:0 0 10px}
+.locked strong{color:var(--ink)}
+.hist-up{display:flex;flex-wrap:wrap;gap:8px 20px;color:var(--muted);font-size:14px;margin-bottom:14px}
+.hist-up strong{color:var(--ink);font-weight:500}
+.bars{display:flex;gap:3px;align-items:flex-end;height:34px}
+.bars i{flex:1;min-width:3px;height:100%;border-radius:2px;background:var(--rule)}
+.bars i.ok{background:var(--clear)} .bars i.meh{background:var(--watch)} .bars i.bad{background:var(--breach)}
+.bars-cap{display:flex;justify-content:space-between;color:var(--faint);font-size:12px;margin-top:6px}
+.outages{list-style:none;padding:0;margin:14px 0 0;font-size:14px;color:#C3CDDD}
+.outages li{padding:8px 0;border-top:1px solid var(--rule)}
 .finding{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 0;border-top:1px solid var(--rule)}
 .finding:first-child{border-top:0}
 .finding .sev{font-size:13px;font-weight:600;padding-top:2px}
@@ -82,16 +94,23 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
   "suspicious": ("breach", "Possible hack"),
   "error": ("idle", "Couldn't check"),
   "paused": ("idle", "Tamper watch paused"),
+  "locked": ("idle", "Tamper watch: paid plans"),
 } %}
 <section class="dash"><div class="wrap">
   <div class="dash-head">
     <div>
       <h1>Your websites</h1>
-      <p class="who">{{ user.name or user.email }}, on the <strong>{{ (user.plan or 'free') | capitalize }} plan</strong></p>
+      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan</strong>. Using {{ monitors|length }} of {{ plan.sites }} website{{ 's' if plan.sites != 1 }}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' %} <a href="/pricing">Upgrade</a>{% endif %}</p>
     </div>
     <button class="btn btn-primary" data-action="add">Add a website</button>
   </div>
 
+  {% set note = request.query_params.get('note') %}
+  {% if note == 'added' %}<div class="notice info flash" role="status">Your email is confirmed and your website is now being watched. We'll email you if anything goes wrong.</div>
+  {% elif note == 'exists' %}<div class="notice info flash" role="status">You're logged in. That website is already on your list.</div>
+  {% elif note == 'limit' %}<div class="notice info flash" role="status">You're logged in, but your plan has no room for another website. <a href="/pricing">See plans</a></div>
+  {% elif note == 'taken' %}<div class="notice info flash" role="status">You're logged in, but that website is already watched on another free account. <a href="/pricing">Upgrade</a> to watch it here.</div>
+  {% endif %}
   <div class="summary" aria-label="Summary">
     <div><b>{{ total_monitors }}</b><span>Websites</span></div>
     <div class="is-clear"><b>{{ sites_up }}</b><span>Online</span></div>
@@ -118,6 +137,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
         <div class="site-meta">
           <span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span>
           <span>SSL <strong>{% if m.ssl_days != 'N/A' %}{{ m.ssl_days }} days left{% else %}not found{% endif %}</strong></span>
+          {% if m.uptime_30 is not none %}<span>Uptime, 30 days <strong>{{ m.uptime_30 }}%</strong></span>{% endif %}
           <span>Last check <strong>{{ m.last_checked }} UTC</strong></span>
         </div>
         <div class="site-actions">
@@ -125,10 +145,36 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
           <button class="btn btn-danger btn-sm" data-action="remove" data-id="{{ m.id }}" data-name="{{ m.name }}">Remove</button>
         </div>
       </div>
+      {% if m.tamper_status == 'locked' %}
+      <details class="tw" data-locked="1">
+        <summary>Tamper watch <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="tw-body"><div class="locked">
+          <p><strong>Get alerted if someone hacks this website.</strong></p>
+          <p>Tamper watch checks your page for hacker messages, card-skimming code, hijacked forms, spam links and redirects, and emails you the moment it spots one. It's included on every paid plan.</p>
+          <a class="btn btn-primary btn-sm" href="/pricing">See plans from $10/month</a>
+        </div></div>
+      </details>
+      {% else %}
       <details class="tw" {% if m.tamper_status in ('changed','suspicious') %}open{% endif %} data-id="{{ m.id }}">
         <summary>Tamper watch <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
         <div class="tw-body" id="tw-{{ m.id }}"><p class="state">Loading…</p></div>
       </details>
+      {% endif %}
+      {% if plan.history_days %}
+      <details class="tw hist" data-id="{{ m.id }}">
+        <summary>History <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="tw-body" id="hist-{{ m.id }}"><p class="state">Loading…</p></div>
+      </details>
+      {% else %}
+      <details class="tw" data-locked="1">
+        <summary>History <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="tw-body"><div class="locked">
+          <p><strong>See uptime and every outage over time.</strong></p>
+          <p>Paid plans keep 30 days to 1 year of history, so you can see how reliable your website and web host really are.</p>
+          <a class="btn btn-primary btn-sm" href="/pricing">See plans</a>
+        </div></div>
+      </details>
+      {% endif %}
     </article>
     {% endfor %}
   </div>
@@ -140,16 +186,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
   </div>
   {% endif %}
 
-  <div class="texts">
-    <div>
-      <h2>Text message alerts</h2>
-      <p>Get a text when a site goes down or shows signs of a hack.{% if user.phone %} Texts go to <strong>{{ user.phone }}</strong>.{% endif %}</p>
-    </div>
-    <form id="phoneForm">
-      <div class="field"><label for="phone" class="sr">Mobile number</label><input id="phone" type="tel" placeholder="+1 604 555 0123" value="{{ user.phone or '' }}" autocomplete="tel" required></div>
-      <button class="btn btn-ghost" type="submit">Save</button>
-    </form>
-  </div>
+  {# Text alerts are hidden until the SMS add-on is available (Twilio not connected yet). #}
 </div></section>
 
 <dialog id="addDialog">
@@ -219,6 +256,26 @@ function renderTamper(id, d){
     box.append(el('p','tw-note','Recent alerts')); box.append(h);
   }
 }
+function dur(m){ if(m<1) return 'under a minute'; if(m<60) return m+' min'; const h=Math.floor(m/60), r=m%60; return h+(h===1?' hour':' hours')+(r?' '+r+' min':''); }
+async function loadHistory(id){
+  const box=document.getElementById('hist-'+id);
+  try{
+    const h=await api(`/api/monitors/${id}/history`); box.replaceChildren();
+    const up=el('div','hist-up');
+    Object.entries(h.uptime).forEach(([d,v])=>{const s=el('span',null,`Uptime, ${d} days `);s.append(el('strong',null,v==null?'no data yet':v+'%'));up.append(s);});
+    box.append(up);
+    const bars=el('div','bars'); bars.setAttribute('role','img'); bars.setAttribute('aria-label','Daily uptime for the last '+h.bars.length+' days');
+    h.bars.forEach(b=>{const i=document.createElement('i'); i.className=b.uptime==null?'':b.uptime>=99.9?'ok':b.uptime>=99?'meh':'bad'; i.title=b.day+': '+(b.uptime==null?'no data':b.uptime+'% up'); bars.append(i);});
+    box.append(bars);
+    const cap=el('div','bars-cap'); cap.append(el('span',null,h.bars.length+' days ago'),el('span',null,'Today')); box.append(cap);
+    if(h.outages.length){
+      box.append(el('p','tw-note','Outages'));
+      const ul=el('ul','outages');
+      h.outages.slice(0,10).forEach(o=>ul.append(el('li',null,`${new Date(o.started_at).toLocaleString()}: down ${dur(o.minutes)}${o.resolved_at?'':' (still down)'}`)));
+      box.append(ul);
+    } else box.append(el('p','tw-note',`No outages in the last ${h.history_days} days.`));
+  }catch(e){ box.replaceChildren(el('p','state',e.message)); }
+}
 async function loadTamper(id){
   try{ renderTamper(id, await api(`/api/monitors/${id}/defacement`)); }
   catch(e){ document.getElementById('tw-'+id).replaceChildren(el('p','state',e.message)); }
@@ -265,11 +322,14 @@ document.addEventListener('click', e => {
   else if(a==='check') checkNow(id, b);
   else if(a==='remove') removeSite(id, b);
 });
-document.addEventListener('toggle', e => { const d=e.target; if(d.matches && d.matches('details.tw') && d.open) loadTamper(d.dataset.id); }, true);
+document.addEventListener('toggle', e => {
+  const d=e.target; if(!(d.matches && d.matches('details.tw')) || !d.open || d.dataset.locked) return;
+  if(d.classList.contains('hist')) loadHistory(d.dataset.id); else loadTamper(d.dataset.id);
+}, true);
 document.getElementById('addForm').addEventListener('submit', addSite);
-document.getElementById('phoneForm').addEventListener('submit', savePhone);
+const pf=document.getElementById('phoneForm'); if(pf) pf.addEventListener('submit', savePhone);
 // Open drawers load their details; refresh the page every 2 minutes unless you're using it.
-document.querySelectorAll('details.tw[open]').forEach(d=>loadTamper(d.closest('.site').dataset.id));
+document.querySelectorAll('details.tw[open]:not([data-locked]):not(.hist)').forEach(d=>loadTamper(d.dataset.id));
 setInterval(()=>{ if(!document.querySelector('details.tw[open]') && !document.getElementById('addDialog').open && document.visibilityState==='visible') location.reload(); },120000);
 </script>
 {% endblock %}

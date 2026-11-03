@@ -17,6 +17,7 @@ from app.api.auth_routes import router as auth_router
 from app.api.status import router as status_router
 from app.api.admin import router as admin_router
 from app.api.payments import router as payments_router
+from app.api.report import router as report_router
 
 app = FastAPI(
     title="Uptraqr",
@@ -34,6 +35,8 @@ templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@upt
 SITE_URL = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
 SITE_HOST = urlparse(SITE_URL).hostname
 templates.env.globals["site_url"] = SITE_URL
+from app.core.plans import PLANS as _PLANS
+templates.env.globals["PLANS"] = _PLANS
 
 
 # ---------------- Security headers ----------------
@@ -158,6 +161,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(auth_router)
 app.include_router(status_router)
 app.include_router(admin_router)
+app.include_router(report_router)
 app.include_router(payments_router, prefix="/api")
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])

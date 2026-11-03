@@ -253,3 +253,70 @@ def send_verification_email(to_email: str, name: str, link: str) -> bool:
     except Exception as e:
         print(f"Failed to send verification email: {e}")
         return False
+
+
+_GRADE_COLOURS = {"A": "#16a34a", "B": "#16a34a", "C": "#d97706", "D": "#dc2626", "F": "#dc2626", "?": "#64748b"}
+
+
+def send_report_email(to_email: str, report: dict, action_link: str, report_link: str, new_account: bool) -> bool:
+    """The website health report, with one button to turn on monitoring (or log in)."""
+    host = escape(report["host"])
+    g = report["grade"]
+    cats = "".join(
+        f'''<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#334155">{escape(c["name"])}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-weight:700;color:{_GRADE_COLOURS.get(c["grade"], "#64748b")};text-align:right">{c["grade"]}</td></tr>'''
+        for c in report["categories"])
+    fixes = "".join(
+        f'''<li style="margin:0 0 12px 0"><strong>{escape(f["detail"])}</strong><br><span style="color:#475569">{escape(f["fix"] or "")}</span></li>'''
+        for f in report["fixes"][:3])
+    hacked = ('''<p style="background:#fef2f2;border-left:4px solid #dc2626;padding:12px 14px;color:#7f1d1d"><strong>Possible signs of hacking.</strong>
+        Please check your website today and contact your web designer or host.</p>''' if report.get("hacked") else "")
+    button = "Turn on free alerts for " + host if new_account else "Log in to Uptraqr"
+    explain = (f"Tap below and we'll start watching {host} for you, free. We'll email you if it goes down or its security certificate is about to expire."
+               if new_account else "You already have an Uptraqr account with this email. Tap below to log in; we'll add this website if your plan has room.")
+    try:
+        _send({
+            "from": FROM_EMAIL,
+            "to": to_email,
+            "reply_to": SUPPORT_EMAIL,
+            "subject": f"Your website health report for {report['host']}: grade {g}",
+            "html": f'''
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#0f172a;">
+              <h2 style="margin:0 0 6px 0;">{host}</h2>
+              <p style="margin:0 0 18px 0;color:#475569;">Overall grade <strong style="color:{_GRADE_COLOURS.get(g, "#64748b")};font-size:20px">{g}</strong> ({report["score"]} out of 100)</p>
+              {hacked}
+              <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;margin-bottom:20px">{cats}</table>
+              {"<h3 style='margin:0 0 10px 0'>Top things to fix</h3><ol style='padding-left:20px;margin:0 0 20px 0'>" + fixes + "</ol>" if fixes else "<p>Nice work, we didn't find anything important to fix.</p>"}
+              <p style="color:#334155">{explain}</p>
+              <p style="margin:24px 0"><a href="{escape(action_link)}" style="background:#5CC8FF;color:#06213A;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">{button}</a></p>
+              <p style="color:#64748b;font-size:14px">See every check and how to fix it: <a href="{escape(report_link)}" style="color:#0284c7">full report</a>. The button works for 24 hours.</p>
+              <p style="color:#94a3b8;font-size:13px">You're getting this because someone asked for this report on uptraqr.com using your email. If that wasn't you, ignore this email and nothing will be set up.</p>
+              {SIGNATURE}
+            </div>'''
+        })
+        return True
+    except Exception as e:
+        print(f"Failed to send report email: {e}")
+        return False
+
+
+def send_login_link_email(to_email: str, link: str) -> bool:
+    try:
+        _send({
+            "from": FROM_EMAIL,
+            "to": to_email,
+            "reply_to": SUPPORT_EMAIL,
+            "subject": "Your Uptraqr login link",
+            "html": f'''
+            <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a;">
+              <h2 style="margin:0 0 12px 0;">Log in to Uptraqr</h2>
+              <p style="color:#334155;">Tap the button to log in. No password needed.</p>
+              <p style="margin:24px 0"><a href="{escape(link)}" style="background:#5CC8FF;color:#06213A;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">Log me in</a></p>
+              <p style="color:#64748b;font-size:14px">The link works for 30 minutes. If you didn't ask to log in, ignore this email; your account is safe.</p>
+              {SIGNATURE}
+            </div>'''
+        })
+        return True
+    except Exception as e:
+        print(f"Failed to send login link: {e}")
+        return False

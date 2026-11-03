@@ -1,0 +1,29 @@
+{# Built from app/core/plans.py so the website always matches what the code does. #}
+{% set feats = {
+  "free":    {"tamper": None, "hist": None},
+  "starter": {"tamper": "Tamper watch every 30 minutes", "hist": "30 days of history"},
+  "pro":     {"tamper": "Tamper watch every 10 minutes", "hist": "90 days of history"},
+  "agency":  {"tamper": "Tamper watch every 10 minutes", "hist": "1 year of history"},
+} %}
+<div class="plans">
+  {% for key in ["free", "starter", "pro", "agency"] %}{% set p = PLANS[key] %}
+  <div class="plan {{ 'featured' if key == 'pro' }}">
+    {% if key == 'pro' %}<span class="tag">Most popular</span>{% endif %}
+    <h3>{{ p.label }}</h3>
+    <div class="price">${{ p.price_cad }}<small>{% if p.price_cad %} /month{% else %} forever{% endif %}</small></div>
+    <ul>
+      <li>{{ p.sites }} website{{ 's' if p.sites != 1 }}</li>
+      <li>Uptime check every {{ p.check_minutes }} minute{{ 's' if p.check_minutes != 1 }}</li>
+      {% if feats[key].tamper %}<li class="hl">{{ feats[key].tamper }}</li>{% else %}<li class="no">No tamper watch</li>{% endif %}
+      <li>Email alerts</li>
+      <li>SSL expiry reminders</li>
+      {% if feats[key].hist %}<li>{{ feats[key].hist }}</li>{% else %}<li class="no">No history</li>{% endif %}
+    </ul>
+    {% if checkout and key != 'free' %}
+      <a class="btn {{ 'btn-primary' if key == 'pro' else 'btn-ghost' }}" href="/api/payments/checkout/{{ key }}">Choose {{ p.label }}</a>
+    {% else %}
+      <a class="btn {{ 'btn-primary' if key == 'pro' else 'btn-ghost' }}" href="/signup">{{ 'Start free' if key == 'free' else 'Start with ' ~ p.label }}</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
