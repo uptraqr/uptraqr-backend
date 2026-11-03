@@ -28,12 +28,12 @@ SIGNATURE = f"""
 <table style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; border-collapse: collapse;">
   <tr>
     <td style="padding-bottom: 12px;">
-      <span style="font-size: 26px; font-weight: 900; color: #38bdf8; letter-spacing: -1px;">up</span><span style="font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -1px;">traqr</span>
+      <span style="font-size: 26px; font-weight: 900; color: #0F1B2D; letter-spacing: -1px;">uptraqr</span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16A34A;margin-left:6px;vertical-align:middle"></span>
     </td>
   </tr>
   <tr>
-    <td style="border-top: 3px solid #38bdf8; padding-top: 12px;">
-      <a href="mailto:{SUPPORT_EMAIL}" style="font-size: 13px; color: #38bdf8; text-decoration: none; font-weight: 600;">{SUPPORT_EMAIL}</a>
+    <td style="border-top: 3px solid #16A34A; padding-top: 12px;">
+      <a href="mailto:{SUPPORT_EMAIL}" style="font-size: 13px; color: #0F1B2D; text-decoration: underline; font-weight: 600;">{SUPPORT_EMAIL}</a>
       <br>
       <a href="https://www.uptraqr.com" style="font-size: 13px; color: #0f172a; text-decoration: none; font-weight: 600;">www.uptraqr.com</a>
       <br><br>
@@ -69,7 +69,7 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None):
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0;">URL</td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #38bdf8;">{url}</a></td>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #0F1B2D;">{url}</a></td>
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time (UTC)</td>
@@ -107,7 +107,7 @@ def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0;">URL</td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #38bdf8;">{url}</a></td>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #0F1B2D;">{url}</a></td>
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time (UTC)</td>
@@ -146,7 +146,7 @@ def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = 
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0;">URL</td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #38bdf8;">{url}</a></td>
+                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #0F1B2D;">{url}</a></td>
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Days Left</td>
@@ -192,7 +192,7 @@ def send_defacement_alert(monitor_name: str, url: str, status: str, findings: li
             <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:20px;">
               <div style="background:{bg};border-left:4px solid {colour};padding:20px;border-radius:8px;margin-bottom:20px;">
                 <h2 style="color:{colour};margin:0 0 12px 0;">{heading}</h2>
-                <p style="color:#e2e8f0;margin:0;"><strong>{name}</strong> — <a href="{safe_url}" style="color:#38bdf8;">{safe_url}</a></p>
+                <p style="color:#e2e8f0;margin:0;"><strong>{name}</strong> — <a href="{safe_url}" style="color:#A7F3D0;">{safe_url}</a></p>
               </div>
               <p style="color:#334155;">{lead}</p>
               <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;">{rows}</table>
@@ -221,7 +221,7 @@ def send_defacement_cleared_alert(monitor_name: str, url: str, to_email: str = N
             <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:20px;">
               <div style="background:#052e16;border-left:4px solid #22c55e;padding:20px;border-radius:8px;">
                 <h2 style="color:#22c55e;margin:0 0 12px 0;">✅ Back to normal</h2>
-                <p style="color:#e2e8f0;margin:0;"><strong>{name}</strong> (<a href="{safe_url}" style="color:#38bdf8;">{safe_url}</a>) matches its known-good version again.</p>
+                <p style="color:#e2e8f0;margin:0;"><strong>{name}</strong> (<a href="{safe_url}" style="color:#A7F3D0;">{safe_url}</a>) matches its known-good version again.</p>
               </div>
               {SIGNATURE}
             </div>'''
@@ -243,7 +243,7 @@ def send_verification_email(to_email: str, name: str, link: str) -> bool:
             <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a;">
               <h2 style="margin:0 0 12px 0;">Confirm your email</h2>
               <p style="color:#334155;">Hi {safe_name}, thanks for signing up. Tap the button below to confirm this is your email address. This is where we'll send your website alerts.</p>
-              <p style="margin:28px 0;"><a href="{safe_link}" style="background:#5CC8FF;color:#06213A;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;">Confirm my email</a></p>
+              <p style="margin:28px 0;"><a href="{safe_link}" style="background:#0F1B2D;color:#FFFFFF;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;">Confirm my email</a></p>
               <p style="color:#64748b;font-size:14px;">The link works for 24 hours. If the button doesn't work, copy this address into your browser:<br><span style="word-break:break-all;">{safe_link}</span></p>
               <p style="color:#64748b;font-size:14px;">Didn't sign up? You can ignore this email and no account will be activated.</p>
               {SIGNATURE}
@@ -288,7 +288,7 @@ def send_report_email(to_email: str, report: dict, action_link: str, report_link
               <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;margin-bottom:20px">{cats}</table>
               {"<h3 style='margin:0 0 10px 0'>Top things to fix</h3><ol style='padding-left:20px;margin:0 0 20px 0'>" + fixes + "</ol>" if fixes else "<p>Nice work, we didn't find anything important to fix.</p>"}
               <p style="color:#334155">{explain}</p>
-              <p style="margin:24px 0"><a href="{escape(action_link)}" style="background:#5CC8FF;color:#06213A;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">{button}</a></p>
+              <p style="margin:24px 0"><a href="{escape(action_link)}" style="background:#0F1B2D;color:#FFFFFF;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">{button}</a></p>
               <p style="color:#64748b;font-size:14px">See every check and how to fix it: <a href="{escape(report_link)}" style="color:#0284c7">full report</a>. The button works for 24 hours.</p>
               <p style="color:#94a3b8;font-size:13px">You're getting this because someone asked for this report on uptraqr.com using your email. If that wasn't you, ignore this email and nothing will be set up.</p>
               {SIGNATURE}
@@ -311,7 +311,7 @@ def send_login_link_email(to_email: str, link: str) -> bool:
             <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a;">
               <h2 style="margin:0 0 12px 0;">Log in to Uptraqr</h2>
               <p style="color:#334155;">Tap the button to log in. No password needed.</p>
-              <p style="margin:24px 0"><a href="{escape(link)}" style="background:#5CC8FF;color:#06213A;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">Log me in</a></p>
+              <p style="margin:24px 0"><a href="{escape(link)}" style="background:#0F1B2D;color:#FFFFFF;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">Log me in</a></p>
               <p style="color:#64748b;font-size:14px">The link works for 30 minutes. If you didn't ask to log in, ignore this email; your account is safe.</p>
               {SIGNATURE}
             </div>'''

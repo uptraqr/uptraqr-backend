@@ -39,8 +39,8 @@
   --ink:#0F1B2D;          /* headings and main text */
   --text:#2E3B4E;         /* body text */
   --muted:#4F5F75; --faint:#66768C;
-  --signal:#0B63CE; --signal-hover:#084FA6; --signal-ink:#FFFFFF; --signal-soft:#E6F0FC;
-  --focus:rgba(11,99,206,.28);
+  --signal:#0F1B2D; --signal-hover:#2A3A55; --signal-ink:#FFFFFF; --signal-soft:#EEF1F6; --pulse:#16A34A;
+  --focus:rgba(15,27,45,.22);
   --clear:#0B7A52; --clear-bg:#E2F5EC; --clear-line:#9FD9BE;
   --watch:#9A5800; --watch-bg:#FFF1D6; --watch-line:#F0C985;
   --breach:#BF2433; --breach-bg:#FDE7E9; --breach-line:#F1A7AF;
@@ -66,8 +66,8 @@ main{flex:1}
 
 /* Brand */
 .brand{font-family:var(--display);font-weight:800;font-size:25px;text-decoration:none;color:var(--ink);letter-spacing:-.02em;display:inline-flex;align-items:center;gap:8px}
-.brand .up{color:var(--signal)}
-.brand-mark{width:26px;height:26px}
+.brand .up{color:inherit}
+.brand-mark{width:26px;height:28px}
 
 /* Top bar */
 .topbar{border-bottom:1px solid var(--rule);background:rgba(255,255,255,.94);position:sticky;top:0;z-index:50;backdrop-filter:blur(8px)}
@@ -115,7 +115,7 @@ main{flex:1}
 .field .hint{font-size:13px;color:var(--muted)}
 .notice{padding:12px 14px;border-radius:var(--r-sm);font-size:15px;margin-bottom:16px}
 .notice.error{background:var(--breach-bg);color:#8A1622;border:1px solid var(--breach-line)}
-.notice.info{background:var(--signal-soft);color:#0B3F7A;border:1px solid #B9D3F3}
+.notice.info{background:var(--signal-soft);color:var(--ink);border:1px solid #D3DAE5}
 
 /* Footer */
 .foot{border-top:1px solid var(--rule);margin-top:80px;background:var(--console)}
@@ -136,8 +136,8 @@ main{flex:1}
 <header class="topbar">
   <div class="wrap">
     <a href="/" class="brand" aria-label="Uptraqr home">
-      <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 20 6v6c0 4.6-3.3 8.4-8 9.5-4.7-1.1-8-4.9-8-9.5V6l8-3.5Z" stroke="#0B63CE" stroke-width="1.8"/><path d="m8 12.2 2.6 2.6L16.2 9" stroke="#0B7A52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><span class="up">up</span>traqr</span>
+      <svg class="brand-mark" viewBox="0 0 24 26" aria-hidden="true"><path d="M12 1 22 5v7.5c0 6-4.3 10.7-10 12.5C6.3 23.2 2 18.5 2 12.5V5l10-4Z" fill="#0F1B2D"/><path d="M5.2 13h3.2l1.7-3.6 3.3 7.4 1.8-3.8H18.8" fill="none" stroke="#22C55E" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>uptraqr</span>
     </a>
     <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav">
       <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
