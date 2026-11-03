@@ -45,31 +45,60 @@
 
 /* ---------- Demo ---------- */
 .panel{position:relative;background:var(--console);border:1px solid var(--rule);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow);transition:border-color .4s,box-shadow .4s}
-.panel.alerted{border-color:var(--breach-line);box-shadow:0 0 0 4px var(--breach-bg),var(--shadow)}
+.panel.alerted.t-breach{border-color:var(--breach-line);box-shadow:0 0 0 4px var(--breach-bg),var(--shadow)}
+.panel.alerted.t-watch{border-color:var(--watch-line);box-shadow:0 0 0 4px var(--watch-bg),var(--shadow)}
+.panel.alerted.t-clear{border-color:var(--clear-line);box-shadow:0 0 0 4px var(--clear-bg),var(--shadow)}
 .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 4px 12px}
 .panel-head .site{font-size:15px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .browser{position:relative;border-radius:var(--r-md);overflow:hidden;background:#F3F4F8;color:#1F2433;min-height:240px;border:1px solid var(--rule)}
 .browser .bar{display:flex;gap:6px;align-items:center;padding:9px 12px;background:#E2E5EE}
 .browser .bar i{width:9px;height:9px;border-radius:50%;background:#BCC2D2}
-.browser .bar span{margin-left:8px;font-size:12px;color:#59617A;background:#F3F4F8;border-radius:4px;padding:2px 8px}
+.browser .bar span{margin-left:8px;font-size:12px;color:#59617A;background:#F3F4F8;border-radius:4px;padding:2px 8px;display:inline-flex;align-items:center;gap:5px;transition:background .3s,color .3s}
+.browser .bar span svg{flex:none}
+.panel.s-ssl.shown .bar span{background:var(--watch-bg);color:var(--watch)}
 .shop{padding:22px 22px 26px}
 .shop h3{font:800 22px/1.2 var(--body);color:#33406B;letter-spacing:-.01em}
 .shop p{font-size:14px;line-height:1.5;margin-top:8px;color:#454D66}
 .shop .tiles{display:flex;gap:8px;margin-top:16px}
 .shop .tiles b{flex:1;height:46px;border-radius:8px;background:#D9DDEB;border-radius:50% 50% 8px 8px}
 .shop .tiles b:nth-child(2){background:#9FA9C9}.shop .tiles b:nth-child(3){background:#4A5A8C}
-.defaced{position:absolute;inset:36px 0 0;display:grid;place-content:center;text-align:center;background:#000;color:#3CFF5A;font:700 22px/1.3 "Courier New",monospace;opacity:0;transition:opacity .2s;padding:20px}
+.ov{position:absolute;inset:36px 0 0;opacity:0;transition:opacity .25s;pointer-events:none}
+.defaced{display:grid;place-content:center;text-align:center;background:#000;color:#3CFF5A;font:700 22px/1.3 "Courier New",monospace;padding:20px}
 .defaced small{display:block;color:#9AF7A8;font-size:12px;font-weight:400;margin-top:8px}
-.panel.breached .defaced{opacity:1}
-.scan{position:absolute;left:0;right:0;top:36px;height:3px;background:#22C55E;box-shadow:0 0 12px 2px rgba(34,197,94,.45);opacity:0}
+.down{display:grid;place-content:center;text-align:center;background:#F7F8FA;color:#454D66;padding:20px;font-size:14px}
+.down b{display:block;font-size:18px;color:#1F2433;margin:10px auto 4px}
+.sslbar{inset:36px 0 auto;background:var(--watch-bg);color:var(--watch);border-bottom:1px solid var(--watch-line);padding:8px 14px;font-size:13px;font-weight:700}
+.grade{display:grid;place-items:center;background:#F3F4F8;padding:10px}
+.grade .card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:10px 14px;width:min(260px,100%);box-shadow:var(--shadow)}
+.grade .top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.grade .big{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--clear-bg);color:var(--clear);font:800 22px var(--body)}
+.grade .top div{font-size:13px;color:var(--muted)}.grade .top strong{display:block;color:var(--ink);font-size:15px}
+.grade ul{list-style:none;padding:0;margin:0;font-size:13px}
+.grade li{display:flex;justify-content:space-between;padding:2px 0;border-top:1px solid var(--rule);color:var(--text)}
+.grade li b.a{color:var(--clear)}.grade li b.c{color:var(--watch)}
+.panel.s-down.shown .down,.panel.s-hack.shown .defaced,.panel.s-ssl.shown .sslbar,.panel.s-report.shown .grade{opacity:1}
+.scan{position:absolute;left:0;right:0;top:36px;height:3px;background:#22C55E;box-shadow:0 0 12px 2px rgba(34,197,94,.45);opacity:0;z-index:2}
 .panel.scanning .scan{animation:sweep 1.4s ease-in-out forwards}
 @keyframes sweep{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(200px)}}
-.alert{margin-top:12px;background:var(--breach-bg);border:1px solid var(--breach-line);border-radius:var(--r-md);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
+.alert{margin-top:12px;border:1px solid var(--rule);border-radius:var(--r-md);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s,background .3s,border-color .3s;min-height:104px}
 .panel.alerted .alert{opacity:1;transform:none}
-.alert .ic{flex:none;width:30px;height:30px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--breach)}
+.t-breach .alert{background:var(--breach-bg);border-color:var(--breach-line)}
+.t-watch .alert{background:var(--watch-bg);border-color:var(--watch-line)}
+.t-clear .alert{background:var(--clear-bg);border-color:var(--clear-line)}
+.alert .ic{flex:none;width:30px;height:30px;border-radius:50%;background:#fff;display:grid;place-items:center}
+.t-breach .alert .ic{color:var(--breach)}.t-watch .alert .ic{color:var(--watch)}.t-clear .alert .ic{color:var(--clear)}
 .alert strong{display:block;font-size:15px;color:var(--ink)}
+.alert .ok,.t-clear .alert .warn{display:none}.t-clear .alert .ok{display:block}
+.shop{transition:transform .25s}.panel.s-ssl.shown .shop{transform:translateY(30px)}
 .alert span{display:block;font-size:14px;color:var(--text);margin-top:2px}
-.replay{margin-top:10px;display:flex;justify-content:flex-end}
+.tour{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.tour button{flex:1 1 0;min-width:0;min-height:44px;padding:6px 8px;border:1px solid var(--rule-strong);background:var(--console);border-radius:999px;font:700 14px var(--body);color:var(--text);cursor:pointer;position:relative;overflow:hidden;white-space:nowrap}
+.tour button[aria-pressed="true"]{border-color:var(--signal);color:var(--ink);background:var(--signal-soft)}
+.tour button i{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--pulse)}
+.tour button[aria-pressed="true"] i.run{animation:fill var(--dur,7s) linear forwards}
+@keyframes fill{to{width:100%}}
+@media (max-width:420px){.tour button{font-size:13px;padding:6px 4px}}
+
 
 /* ---------- Sections ---------- */
 .section{padding-top:80px}
@@ -136,27 +165,38 @@
     </div>
 
     <div>
-      <div class="panel" id="demo" aria-label="Example: Uptraqr spotting a hacked website">
+      <div class="panel t-clear" id="demo" aria-label="Example: what Uptraqr catches on a small business website">
         <div class="panel-head">
           <span class="site">quillfernpottery.ca</span>
           <span class="pill clear" id="demo-pill">Looks normal</span>
         </div>
         <div class="browser" aria-hidden="true">
-          <div class="bar"><i></i><i></i><i></i><span>quillfernpottery.ca</span></div>
+          <div class="bar"><i></i><i></i><i></i><span><svg width="10" height="12" viewBox="0 0 10 12"><rect x="1" y="5" width="8" height="6.5" rx="1.5" fill="currentColor"/><path d="M2.8 5V3.6a2.2 2.2 0 0 1 4.4 0V5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>quillfernpottery.ca</span></div>
           <div class="shop">
             <h3>Quillfern Pottery</h3>
             <p>Handmade mugs, planters and weekend wheel-throwing classes. Book your spot online.</p>
             <div class="tiles"><b></b><b></b><b></b></div>
           </div>
-          <div class="defaced">HACKED BY 0xGHOST<small>your security is an illusion</small></div>
+          <div class="ov down"><svg width="36" height="36" viewBox="0 0 24 24" style="margin:0 auto"><circle cx="12" cy="12" r="10" fill="none" stroke="#9AA3B8" stroke-width="1.8"/><path d="M8 8l8 8M16 8l-8 8" stroke="#9AA3B8" stroke-width="1.8" stroke-linecap="round"/></svg><b>This site can't be reached</b>quillfernpottery.ca took too long to respond.</div>
+          <div class="ov defaced">HACKED BY 0xGHOST<small>your security is an illusion</small></div>
+          <div class="ov sslbar">⚠ Security certificate expires in 7 days</div>
+          <div class="ov grade"><div class="card">
+            <div class="top"><span class="big">B</span><div><strong>Website health: B</strong>3 easy fixes found</div></div>
+            <ul><li>Signs of hacking <b class="a">A</b></li><li>Security settings <b class="a">A</b></li><li>Speed <b class="a">B</b></li><li>Google basics <b class="c">C</b></li><li>Email setup <b class="c">C</b></li></ul>
+          </div></div>
           <div class="scan"></div>
         </div>
-        <div class="alert" role="status">
-          <div class="ic"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
-          <div><strong>Possible hack on quillfernpottery.ca</strong><span>"Hacked by" text appeared and most of the page was replaced. Emailed to Sam at 2:14 am.</span></div>
+        <div class="alert" role="status" aria-live="polite">
+          <div class="ic"><svg class="ok" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg><svg class="warn" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 15 14H1L8 1.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 6v3.5M8 11.6v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <div><strong id="demo-title"></strong><span id="demo-text"></span></div>
         </div>
       </div>
-      <div class="replay"><button class="btn btn-quiet btn-sm" id="replay" type="button">Play the example again</button></div>
+      <div class="tour" role="group" aria-label="Choose an example">
+        <button type="button" data-scene="down" aria-pressed="true">Down<i></i></button>
+        <button type="button" data-scene="hack" aria-pressed="false">Hacked<i></i></button>
+        <button type="button" data-scene="ssl" aria-pressed="false">Padlock<i></i></button>
+        <button type="button" data-scene="report" aria-pressed="false">Health<i></i></button>
+      </div>
     </div>
   </div>
 </section>
@@ -257,23 +297,42 @@
 document.querySelectorAll('#check,#check2').forEach(f=>f.addEventListener('submit',e=>{const b=e.target.querySelector('[data-busy]');b.disabled=true;b.textContent=b.dataset.busy;}));
 (function(){
   const panel=document.getElementById('demo'), pill=document.getElementById('demo-pill');
+  const title=document.getElementById('demo-title'), text=document.getElementById('demo-text');
+  const tabs=[...document.querySelectorAll('.tour button')];
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let timers=[];
-  function set(state){
-    pill.className='pill '+(state==='breach'?'breach':state==='scan'?'idle':'clear');
-    pill.textContent=state==='breach'?'Possible hack':state==='scan'?'Checking…':'Looks normal';
+  // Each example: what goes wrong, what the status pill says, and the alert we'd send.
+  const scenes={
+    down:{dur:9000,pill:['breach','Down'],tone:'breach',title:'quillfernpottery.ca is down',
+          text:'It stopped answering at 9:42 am. We checked twice, then emailed Sam.',
+          then:{at:6200,pill:['clear','Back online'],tone:'clear',title:'quillfernpottery.ca is back online',text:'It was down for 4 minutes. Saved to your history.'}},
+    hack:{dur:7500,pill:['breach','Possible hack'],tone:'breach',title:'Possible hack found',
+          text:'"Hacked by" text replaced most of the page. Emailed to Sam at 2:14 am.'},
+    ssl:{dur:7500,pill:['watch','Padlock expiring'],tone:'watch',title:'Padlock expires in 7 days',
+          text:"Renew it before Nov 10 so visitors don't see a “Not secure” warning."},
+    report:{dur:7500,pill:['clear','Grade B'],tone:'clear',title:'Free health check: grade B',
+          text:'Security, speed, Google basics and email setup, with easy fixes.'}
+  };
+  const order=Object.keys(scenes);
+  let timers=[], current=0, auto=!reduce;
+  function setPill(p){pill.className='pill '+p[0];pill.textContent=p[1];}
+  function setAlert(o){panel.classList.remove('t-breach','t-watch','t-clear');panel.classList.add('t-'+o.tone);title.textContent=o.title;text.textContent=o.text;}
+  function show(i){
+    timers.forEach(clearTimeout); timers=[]; current=i;
+    const key=order[i], sc=scenes[key];
+    panel.className='panel t-clear s-'+key; setPill(['clear','Looks normal']);
+    tabs.forEach((t,j)=>{t.setAttribute('aria-pressed',j===i);const bar=t.querySelector('i');bar.classList.remove('run');void bar.offsetWidth;
+      if(auto&&j===i){t.style.setProperty('--dur',sc.dur+'ms');bar.classList.add('run');}});
+    if(reduce){panel.classList.add('shown','alerted');setPill(sc.pill);setAlert(sc);return;}
+    // 1) the problem happens, 2) our check sweeps over the page, 3) the alert lands
+    if(key!=='report') timers.push(setTimeout(()=>panel.classList.add('shown'),900));
+    timers.push(setTimeout(()=>{panel.classList.add('scanning');setPill(['idle','Checking…'])},1700));
+    timers.push(setTimeout(()=>{panel.classList.add('alerted');if(key==='report')panel.classList.add('shown');setPill(sc.pill);setAlert(sc)},3100));
+    if(sc.then) timers.push(setTimeout(()=>{panel.classList.remove('shown');setPill(sc.then.pill);setAlert(sc.then)},sc.then.at));
+    if(auto) timers.push(setTimeout(()=>show((i+1)%order.length),sc.dur));
   }
-  function play(){
-    timers.forEach(clearTimeout); timers=[];
-    panel.classList.remove('scanning','breached','alerted'); set('clear');
-    if(reduce){panel.classList.add('breached','alerted');set('breach');return;}
-    // 1) the page gets defaced, 2) our scan sweeps over it, 3) the alert lands
-    timers.push(setTimeout(()=>{panel.classList.add('breached')},1200));
-    timers.push(setTimeout(()=>{panel.classList.add('scanning');set('scan')},2000));
-    timers.push(setTimeout(()=>{panel.classList.add('alerted');set('breach')},3400));
-  }
-  document.getElementById('replay').addEventListener('click',()=>{void panel.offsetWidth;play()});
-  play();
+  // Tapping an example stops the automatic tour so people can read at their own pace.
+  tabs.forEach((t,i)=>t.addEventListener('click',()=>{auto=false;show(i)}));
+  show(0);
 })();
 </script>
 {% endblock %}
