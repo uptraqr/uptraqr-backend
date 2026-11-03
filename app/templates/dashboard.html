@@ -88,7 +88,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
       <h1>Your websites</h1>
       <p class="who">{{ user.name or user.email }}, on the <strong>{{ (user.plan or 'free') | capitalize }} plan</strong></p>
     </div>
-    <button class="btn btn-primary" onclick="openAdd()">Add a website</button>
+    <button class="btn btn-primary" data-action="add">Add a website</button>
   </div>
 
   <div class="summary" aria-label="Summary">
@@ -120,11 +120,11 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
           <span>Last check <strong>{{ m.last_checked }} UTC</strong></span>
         </div>
         <div class="site-actions">
-          <button class="btn btn-quiet btn-sm" onclick="checkNow({{ m.id }}, this)">Check now</button>
-          <button class="btn btn-danger btn-sm" onclick="removeSite({{ m.id }}, this)" data-name="{{ m.name }}">Remove</button>
+          <button class="btn btn-quiet btn-sm" data-action="check" data-id="{{ m.id }}">Check now</button>
+          <button class="btn btn-danger btn-sm" data-action="remove" data-id="{{ m.id }}" data-name="{{ m.name }}">Remove</button>
         </div>
       </div>
-      <details class="tw" {% if m.tamper_status in ('changed','suspicious') %}open{% endif %} ontoggle="if(this.open) loadTamper({{ m.id }})">
+      <details class="tw" {% if m.tamper_status in ('changed','suspicious') %}open{% endif %} data-id="{{ m.id }}">
         <summary>Tamper watch <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
         <div class="tw-body" id="tw-{{ m.id }}"><p class="state">Loading…</p></div>
       </details>
@@ -135,7 +135,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
   <div class="empty">
     <h2>Add your first website</h2>
     <p>We'll start checking it right away and take a known-good snapshot for tamper watch within a few minutes.</p>
-    <button class="btn btn-primary" onclick="openAdd()">Add a website</button>
+    <button class="btn btn-primary" data-action="add">Add a website</button>
   </div>
   {% endif %}
 
@@ -144,7 +144,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
       <h2>Text message alerts</h2>
       <p>Get a text when a site goes down or shows signs of a hack.{% if user.phone %} Texts go to <strong>{{ user.phone }}</strong>.{% endif %}</p>
     </div>
-    <form onsubmit="savePhone(event)">
+    <form id="phoneForm">
       <div class="field"><label for="phone" class="sr">Mobile number</label><input id="phone" type="tel" placeholder="+1 604 555 0123" value="{{ user.phone or '' }}" autocomplete="tel" required></div>
       <button class="btn btn-ghost" type="submit">Save</button>
     </form>
@@ -152,14 +152,14 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 </div></section>
 
 <dialog id="addDialog">
-  <form onsubmit="addSite(event)">
+  <form id="addForm">
     <h2>Add a website</h2>
     <p class="sub">We'll check it every 5 minutes and watch for tampering every 30.</p>
     <div id="addError" class="notice error" role="alert" hidden></div>
     <div class="field"><label for="siteName">Name</label><input id="siteName" placeholder="Rosewood Bakery" maxlength="100" required></div>
     <div class="field"><label for="siteUrl">Website address</label><input id="siteUrl" placeholder="rosewoodbakery.ca" inputmode="url" autocomplete="url" required></div>
     <div class="row">
-      <button type="button" class="btn btn-quiet" onclick="document.getElementById('addDialog').close()">Cancel</button>
+      <button type="button" class="btn btn-quiet" data-action="close-add">Cancel</button>
       <button type="submit" class="btn btn-primary" id="addBtn">Add website</button>
     </div>
   </form>
@@ -168,7 +168,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ request.state.csp_nonce }}">
 const SEV = {high: "Hacker sign", medium: "Change", low: "Minor change"};
 const STATE_TEXT = {
   learning: "We're taking a known-good snapshot of this page. This happens within 30 minutes of adding a site.",
@@ -255,6 +255,18 @@ async function savePhone(ev){
   try{ await api('/api/auth/update-phone',{method:'POST',body:JSON.stringify({phone:document.getElementById('phone').value.trim()})}); toast('Saved. Text alerts will go to this number.'); }
   catch(e){ toast(e.message); }
 }
+// Wire up buttons (no inline handlers, so the strict security policy can block injected scripts)
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-action]'); if(!b) return;
+  const a = b.dataset.action, id = b.dataset.id;
+  if(a==='add') openAdd();
+  else if(a==='close-add') document.getElementById('addDialog').close();
+  else if(a==='check') checkNow(id, b);
+  else if(a==='remove') removeSite(id, b);
+});
+document.addEventListener('toggle', e => { const d=e.target; if(d.matches && d.matches('details.tw') && d.open) loadTamper(d.dataset.id); }, true);
+document.getElementById('addForm').addEventListener('submit', addSite);
+document.getElementById('phoneForm').addEventListener('submit', savePhone);
 // Open drawers load their details; refresh the page every 2 minutes unless you're using it.
 document.querySelectorAll('details.tw[open]').forEach(d=>loadTamper(d.closest('.site').dataset.id));
 setInterval(()=>{ if(!document.querySelector('details.tw[open]') && !document.getElementById('addDialog').open && document.visibilityState==='visible') location.reload(); },120000);

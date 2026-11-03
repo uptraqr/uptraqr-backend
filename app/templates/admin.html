@@ -44,7 +44,7 @@
       <td data-l="Websites">{{ user.monitor_count }}</td>
       <td data-l="Joined">{{ user.created_at }}</td>
       <td data-l=""><a class="btn btn-quiet btn-sm" href="/status/{{ user.name }}" target="_blank" rel="noopener">Status page</a>
-        <button class="btn btn-danger btn-sm" onclick="del('users', {{ user.id }}, 'Delete this user and all their websites?')">Delete</button></td>
+        <button class="btn btn-danger btn-sm" data-del="users" data-id="{{ user.id }}" data-q="Delete this user and all their websites?">Delete</button></td>
     </tr>
     {% else %}<tr><td>No users yet.</td></tr>{% endfor %}
     </tbody>
@@ -63,7 +63,7 @@
       <td data-l="Status">{% if monitor.is_up %}<span class="pill clear">Online</span>{% elif monitor.is_up == False %}<span class="pill breach">Down</span>{% else %}<span class="pill idle">Unknown</span>{% endif %}</td>
       <td data-l="Response">{{ monitor.response_time }}{% if monitor.response_time != 'N/A' %}s{% endif %}</td>
       <td data-l="Last check">{{ monitor.last_checked }}</td>
-      <td data-l=""><button class="btn btn-danger btn-sm" onclick="del('monitors', {{ monitor.id }}, 'Delete this website and its history?')">Delete</button></td>
+      <td data-l=""><button class="btn btn-danger btn-sm" data-del="monitors" data-id="{{ monitor.id }}" data-q="Delete this website and its history?">Delete</button></td>
     </tr>
     {% else %}<tr><td>No websites yet.</td></tr>{% endfor %}
     </tbody>
@@ -71,8 +71,9 @@
 </div></section>
 {% endblock %}
 {% block scripts %}
-<script>
+<script nonce="{{ request.state.csp_nonce }}">
 const secret = new URLSearchParams(window.location.search).get('secret') || '';
+document.addEventListener('click', e => { const b=e.target.closest('[data-del]'); if(b) del(b.dataset.del, b.dataset.id, b.dataset.q); });
 async function del(kind, id, question){
   if(!confirm(question)) return;
   const r = await fetch(`/admin/${kind}/${id}?secret=${encodeURIComponent(secret)}`, {method:'DELETE'});

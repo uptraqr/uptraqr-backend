@@ -105,7 +105,7 @@ main{flex:1}
       <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 20 6v6c0 4.6-3.3 8.4-8 9.5-4.7-1.1-8-4.9-8-9.5V6l8-3.5Z" stroke="#5CC8FF" stroke-width="1.8"/><path d="m8 12.2 2.6 2.6L16.2 9" stroke="#3FD69A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span><span class="up">up</span>traqr</span>
     </a>
-    <button class="menu-btn" aria-label="Open menu" aria-expanded="false" onclick="const n=document.getElementById('nav');const o=n.classList.toggle('open');this.setAttribute('aria-expanded',o)">
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav">
       <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
     <nav class="nav" id="nav">
@@ -128,6 +128,10 @@ main{flex:1}
   </div>
 </footer>
 {% endblock %}
+<script nonce="{{ request.state.csp_nonce }}">
+(function(){var b=document.getElementById('menuBtn'),n=document.getElementById('nav');
+if(b&&n)b.addEventListener('click',function(){var o=n.classList.toggle('open');b.setAttribute('aria-expanded',o);});})();
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

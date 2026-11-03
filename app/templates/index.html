@@ -222,7 +222,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
+<script nonce="{{ request.state.csp_nonce }}">
 (function(){
   const panel=document.getElementById('demo'), pill=document.getElementById('demo-pill');
   const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;

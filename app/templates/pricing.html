@@ -17,24 +17,21 @@
       <h3>Starter</h3>
       <div class="price">$10<small> /month</small></div>
       <ul><li>3 websites</li><li>Checks every 5 minutes</li><li class="hl">Tamper watch</li><li>Email alerts</li><li>SSL reminders</li><li>30 days of history</li></ul>
-      <button class="btn btn-ghost" onclick="checkout('starter')">Choose Starter</button>
+      <a class="btn btn-ghost" href="/api/payments/checkout/starter">Choose Starter</a>
     </div>
     <div class="plan featured">
       <span class="tag">Most popular</span>
       <h3>Pro</h3>
       <div class="price">$25<small> /month</small></div>
       <ul><li>10 websites</li><li>Checks every minute</li><li class="hl">Tamper watch</li><li>Email and text alerts</li><li>SSL reminders</li><li>90 days of history</li></ul>
-      <button class="btn btn-primary" onclick="checkout('pro')">Choose Pro</button>
+      <a class="btn btn-primary" href="/api/payments/checkout/pro">Choose Pro</a>
     </div>
     <div class="plan">
       <h3>Agency</h3>
       <div class="price">$65<small> /month</small></div>
       <ul><li>Unlimited websites</li><li>Checks every minute</li><li class="hl">Tamper watch</li><li>Email and text alerts</li><li>SSL reminders</li><li>1 year of history</li></ul>
-      <button class="btn btn-ghost" onclick="checkout('agency')">Choose Agency</button>
+      <a class="btn btn-ghost" href="/api/payments/checkout/agency">Choose Agency</a>
     </div>
   </div>
 </div></section>
-{% endblock %}
-{% block scripts %}
-<script>function checkout(plan){window.location.href=`/api/payments/checkout/${plan}`;}</script>
 {% endblock %}

@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+import secrets
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -26,6 +27,34 @@ app = FastAPI(
 
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
+
+
+# ---------------- Security headers ----------------
+# Sent with every response. They tell browsers to block common attacks:
+# injected scripts (CSP), clickjacking (frame-ancestors / X-Frame-Options),
+# downgrade to plain http (HSTS), and content-type tricks (nosniff).
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    nonce = secrets.token_urlsafe(16)
+    request.state.csp_nonce = nonce   # templates put this on their <script> tags
+    response = await call_next(request)
+    h = response.headers
+    if not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
+        h["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            f"script-src 'self' 'nonce-{nonce}'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data:; "
+            "connect-src 'self'; "
+            "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        )
+    h["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    h["X-Content-Type-Options"] = "nosniff"
+    h["X-Frame-Options"] = "DENY"
+    h["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    return response
 
 
 @app.exception_handler(StarletteHTTPException)
