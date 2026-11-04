@@ -13,7 +13,7 @@ load_dotenv()
 resend.api_key = os.getenv("RESEND_API_KEY")
 
 # Who alerts come from (must be on a domain verified in Resend).
-FROM_EMAIL = os.getenv("FROM_EMAIL", "UpTraQR Alerts <alerts@uptraqr.com>")
+FROM_EMAIL = os.getenv("FROM_EMAIL", "Uptraqr Alerts <alerts@uptraqr.com>")
 # The contact address shown to customers.
 SUPPORT_EMAIL = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
 # Optional: where UpTraQR sends you a hidden copy of every customer alert.
@@ -22,24 +22,17 @@ ADMIN_COPY_EMAIL = os.getenv("ADMIN_COPY_EMAIL") or None
 # Used only when an alert has no customer address (shouldn't normally happen).
 ALERT_EMAIL = ADMIN_COPY_EMAIL or SUPPORT_EMAIL
 
+_SITE = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+# Same look as the team's Gmail signatures: logo, green line, contact, tagline, free check link.
 SIGNATURE = f"""
-<br><br>
-<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-<table style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; border-collapse: collapse;">
-  <tr>
-    <td style="padding-bottom: 12px;">
-      <span style="font-size: 26px; font-weight: 900; color: #0F1B2D; letter-spacing: -1px;">uptraqr</span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16A34A;margin-left:6px;vertical-align:middle"></span>
-    </td>
-  </tr>
-  <tr>
-    <td style="border-top: 3px solid #16A34A; padding-top: 12px;">
-      <a href="mailto:{SUPPORT_EMAIL}" style="font-size: 13px; color: #0F1B2D; text-decoration: underline; font-weight: 600;">{SUPPORT_EMAIL}</a>
-      <br>
-      <a href="https://www.uptraqr.com" style="font-size: 13px; color: #0f172a; text-decoration: none; font-weight: 600;">www.uptraqr.com</a>
-      <br><br>
-      <span style="font-size: 11px; color: #94a3b8; font-style: italic; letter-spacing: 0.5px;">We watch your website 24/7 so you don't have to.</span>
-    </td>
-  </tr>
+<table cellpadding="0" cellspacing="0" border="0" style="margin-top:28px;font-family:Arial,Helvetica,sans-serif;color:#0F1B2D;border-collapse:collapse">
+  <tr><td style="padding:0 0 8px 0"><a href="{_SITE}" style="text-decoration:none"><img src="{_SITE}/static/email-logo.png" width="154" height="49" alt="Uptraqr" style="display:block;border:0;width:154px;height:49px"></a></td></tr>
+  <tr><td style="border-top:2px solid #16A34A;padding:10px 0 0 0;font-size:14px;line-height:20px">
+    <b style="font-size:15px;color:#0F1B2D">Uptraqr Support</b><br>
+    <a href="mailto:{SUPPORT_EMAIL}" style="color:#0F1B2D;text-decoration:none">{SUPPORT_EMAIL}</a> &nbsp;&middot;&nbsp; <a href="{_SITE}" style="color:#0F1B2D;text-decoration:none">www.uptraqr.com</a><br>
+    <span style="color:#64748B;font-size:12px">Uptraq Technologies &middot; Surrey, BC, Canada</span>
+  </td></tr>
+  <tr><td style="padding:10px 0 0 0;font-size:12px;line-height:18px;color:#64748B;font-style:italic">We watch your website 24/7 so you don't have to. <a href="{_SITE}/check" style="color:#16A34A;font-style:normal;font-weight:bold;text-decoration:none">Free website check &rarr;</a></td></tr>
 </table>
 """
 
@@ -96,7 +89,7 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None):
                         <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #0F1B2D;">{url}</a></td>
                     </tr>
                     <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time (UTC)</td>
+                        <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time</td>
                         <td style="padding: 12px 16px; color: #0f172a;">{get_vancouver_time()}</td>
                     </tr>
                 </table>
@@ -134,7 +127,7 @@ def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
                         <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #0F1B2D;">{url}</a></td>
                     </tr>
                     <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time (UTC)</td>
+                        <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time</td>
                         <td style="padding: 12px 16px; color: #0f172a;">{get_vancouver_time()}</td>
                     </tr>
                 </table>
@@ -221,7 +214,7 @@ def send_defacement_alert(monitor_name: str, url: str, status: str, findings: li
               <p style="color:#334155;">{lead}</p>
               <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden;">{rows}</table>
               <p style="color:#475569;margin-top:20px;font-size:14px;"><strong>What to do:</strong><br>
-              • If you made this change: open your UpTraQR dashboard and press <em>"Yes, I made this change"</em>.<br>
+              • If you made this change: open your Uptraqr dashboard and press <em>"Yes, I made this change"</em>.<br>
               • If you didn't: contact whoever runs your website or hosting right away, change your website passwords, and restore a backup.</p>
               <p style="color:#94a3b8;font-size:13px;">Detected {get_vancouver_time()}</p>
               {SIGNATURE}
@@ -262,7 +255,7 @@ def send_verification_email(to_email: str, name: str, link: str) -> bool:
             "from": FROM_EMAIL,
             "to": to_email,
             "reply_to": SUPPORT_EMAIL,
-            "subject": "Confirm your email to start using UpTraQR",
+            "subject": "Confirm your email to start using Uptraqr",
             "html": f'''
             <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a;">
               <h2 style="margin:0 0 12px 0;">Confirm your email</h2>
