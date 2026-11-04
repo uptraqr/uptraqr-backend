@@ -98,10 +98,22 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             ssl_days = "N/A"
         ssl_warning = isinstance(ssl_days, int) and ssl_days <= 30
         domain_days = None
+        domain_known = None
         if kind == "website":
             dstate = db.query(DomainState).filter(DomainState.monitor_id == monitor.id).first()
+            if dstate is None:
+                # Brand-new website: look the domain up once now instead of waiting for the daily check.
+                try:
+                    from app.services.domain_runner import check_monitor_domain
+                    dstate = check_monitor_domain(db, monitor, current_user)
+                    db.commit()
+                except Exception as e:
+                    db.rollback()
+                    print(f"First domain check failed for monitor {monitor.id}: {e!r}")
+                    dstate = None
             if dstate and dstate.expiry_date:
                 domain_days = (dstate.expiry_date - datetime.utcnow()).days
+            domain_known = bool(dstate and dstate.expiry_date)
         domain_warning = domain_days is not None and domain_days <= 30
 
         if is_up == True:
@@ -136,6 +148,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "kind": kind,
             "port": monitor.port,
             "domain_days": domain_days,
+            "domain_checked": kind == "website" and domain_known is not None,
             "domain_warning": domain_warning,
             "every": every_words(monitor.heartbeat_minutes) if kind == "heartbeat" else None,
             "ping_url": f"{SITE_URL}/ping/{monitor.heartbeat_token}" if kind == "heartbeat" else None,

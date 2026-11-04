@@ -45,7 +45,9 @@ def threshold_for(days_left: int):
     return min(reached) if reached else None
 
 
-def check_monitor_domain(db, monitor, user, cache=None, lookup=lookup_expiry, send=send_domain_alert):
+def check_monitor_domain(db, monitor, user, cache=None, lookup=None, send=None):
+    lookup = lookup or lookup_expiry
+    send = send or send_domain_alert
     state = db.query(DomainState).filter(DomainState.monitor_id == monitor.id).first()
     if not state:
         state = DomainState(monitor_id=monitor.id)

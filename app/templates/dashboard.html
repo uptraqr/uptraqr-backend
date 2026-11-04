@@ -198,7 +198,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
           {% endif %}
           {% if m.kind == 'website' %}
           <span>SSL <strong>{% if m.ssl_days == 'N/A' %}not found{% elif m.ssl_days < 0 %}expired{% else %}{{ m.ssl_days }} days left{% endif %}</strong></span>
-          {% if m.domain_days is not none %}<span>Domain <strong>{% if m.domain_days < 0 %}expired{% else %}renews in {{ m.domain_days }} days{% endif %}</strong></span>{% endif %}
+          <span>Domain <strong>{% if m.domain_days is none %}{{ 'not published' if m.domain_checked else 'checking' }}{% elif m.domain_days < 0 %}expired{% else %}renews in {{ m.domain_days }} days{% endif %}</strong></span>
           {% endif %}
           {% if m.uptime_30 is not none %}<span>Uptime, 30 days <strong>{{ m.uptime_30 }}%</strong></span>{% endif %}
           {% if m.kind != 'heartbeat' %}<span>Last check <strong>{{ m.last_checked }}</strong></span>{% endif %}
