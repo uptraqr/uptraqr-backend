@@ -11,6 +11,10 @@
 .dash{padding:36px 0 0}
 .dash-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
 .flash{margin:20px 0 0}
+.trial-bar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between;margin-top:20px;padding:14px 16px;border-radius:var(--r-md);background:var(--signal-soft);border:1px solid #D3DAE5;color:var(--ink);font-size:15px}
+.trial-bar.soon{background:var(--watch-bg);border-color:var(--watch-line)}
+.trial-bar span{flex:1 1 320px}
+.trial-bar form{margin:0}
 .status-banner{display:flex;gap:16px;align-items:center;margin-top:22px;padding:18px 20px;border-radius:var(--r-lg);border:1px solid}
 .status-banner strong{display:block;font-size:19px;color:var(--ink)}
 .status-banner span{display:block;margin-top:2px}
@@ -135,13 +139,25 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
   <div class="dash-head">
     <div>
       <h1>{{ "Your websites and servers" if has_servers else "Your websites" }}</h1>
-      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan</strong>. Using {{ monitors|length }} of {{ plan.sites }} check{{ 's' if plan.sites != 1 }}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' %} <a href="/pricing">Upgrade</a>{% endif %}</p>
+      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan{% if trial_days %} (free trial){% endif %}</strong>. Using {{ monitors|length }} of {{ plan.sites }} check{{ 's' if plan.sites != 1 }}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' and not trial_available %} <a href="/pricing">Upgrade</a>{% endif %}</p>
     </div>
     <button class="btn btn-primary" data-action="add">Add a website or server</button>
   </div>
 
+  {% if trial_days %}
+  <div class="trial-bar {{ 'soon' if trial_days <= 3 }}" role="status">
+    <span><strong>Pro trial: {{ trial_days }} day{{ 's' if trial_days != 1 }} left.</strong> Every feature is on. After the trial you'll move to Free unless you choose a plan. Nothing is deleted.</span>
+    <a href="/pricing" class="btn btn-primary btn-sm">Choose a plan</a>
+  </div>
+  {% elif trial_available %}
+  <div class="trial-bar" role="status">
+    <span><strong>Try every Pro feature free for 14 days.</strong> Tamper watch, history, server checks and the monthly report. No credit card.</span>
+    <form method="POST" action="/account/trial"><button type="submit" class="btn btn-primary btn-sm">Start free trial</button></form>
+  </div>
+  {% endif %}
   {% set note = request.query_params.get('note') %}
-  {% if note == 'added' %}<div class="notice info flash" role="status">Your email is confirmed and your website is now being watched. We'll email you if anything goes wrong.</div>
+  {% if note == 'trial' %}<div class="notice info flash" role="status">Your 14-day Pro trial has started. Tamper watch takes its first snapshot within a few minutes.</div>
+  {% elif note == 'added' %}<div class="notice info flash" role="status">Your email is confirmed and your website is now being watched. We'll email you if anything goes wrong.</div>
   {% elif note == 'exists' %}<div class="notice info flash" role="status">You're logged in. That website is already on your list.</div>
   {% elif note == 'limit' %}<div class="notice info flash" role="status">You're logged in, but your plan has no room for another website. <a href="/pricing">See plans</a></div>
   {% elif note == 'taken' %}<div class="notice info flash" role="status">You're logged in, but that website is already watched on another free account. <a href="/pricing">Upgrade</a> to watch it here.</div>

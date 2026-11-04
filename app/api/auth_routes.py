@@ -85,6 +85,9 @@ def signup(
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    from app.services.trials import start_trial
+    if start_trial(db, new_user):
+        db.commit()
     if REQUIRE_VERIFICATION:
         _send_confirmation(new_user)
     return _login_response(new_user)
@@ -218,6 +221,9 @@ def quickstart(request: Request, email: str = Form(...), url: str = Form(...),
         db.add(user)
         db.commit()
         db.refresh(user)
+        from app.services.trials import start_trial
+        if start_trial(db, user):
+            db.commit()
     token = create_link_token(user.email, "quickstart", 24 * 60, url=site)
     action_link = f"{SITE_URL}/start?token={token}"
     report_link = f"{SITE_URL}/check?url={quote(report['host'])}"

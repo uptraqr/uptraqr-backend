@@ -9,7 +9,8 @@ from app.models.models import Monitor, CheckResult, User, DefacementWatch, Domai
 from datetime import datetime
 from app.core.timefmt import fmt
 import json
-from app.core.plans import plan_for
+from app.core.plans import plan_for, trial_days_left
+from app.services.trials import can_start_trial
 from app.services.history import uptime_percent
 
 router = APIRouter()
@@ -179,6 +180,8 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "user": current_user,
         "plan": plan,
         "has_servers": any(m["kind"] != "website" for m in monitor_data),
+        "trial_days": trial_days_left(current_user),
+        "trial_available": can_start_trial(db, current_user) and plan_for(current_user)["label"] == "Free",
     })
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"

@@ -22,7 +22,9 @@ class User(Base):
     email_alerts = Column(Boolean, default=True, nullable=False)   # down/up, hack and SSL emails
     monthly_reports = Column(Boolean, default=True, nullable=False)
     status_slug = Column(String, nullable=True, unique=True, index=True)
-    timezone = Column(String, nullable=False, default="America/Vancouver")   # times in emails and dashboard   # hard-to-guess public status page address
+    timezone = Column(String, nullable=False, default="America/Vancouver")   # times in emails and dashboard
+    trial_ends_at = Column(DateTime, nullable=True)        # free Pro trial runs until this time
+    trial_notice = Column(Integer, nullable=False, default=0)   # 0 none sent, 1 "3 days left" sent, 2 "trial ended" sent   # hard-to-guess public status page address
 
 class Monitor(Base):
     __tablename__ = "monitors"
@@ -115,3 +117,11 @@ class DomainState(Base):
     expiry_date = Column(DateTime, nullable=True)
     last_checked_at = Column(DateTime, nullable=True)
     last_threshold = Column(Integer, nullable=True)
+
+
+class TrialClaim(Base):
+    """Inboxes that have already had a free trial (kept even if the account is deleted)."""
+    __tablename__ = "trial_claims"
+    id = Column(Integer, primary_key=True)
+    email_canonical = Column(String, unique=True, nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -36,9 +36,16 @@
 
   <div class="box">
     <h2>Your plan</h2>
-    <div class="planline"><strong>{{ plan.label }}</strong>
+    <div class="planline"><strong>{{ plan.label }}{% if trial_days %} (free trial){% endif %}</strong>
       <span class="pill {{ 'clear' if plan_key != 'free' else '' }}">{{ site_count }} of {{ plan.sites }} website{{ '' if plan.sites == 1 else 's' }} used</span></div>
-    {% if user.stripe_customer_id %}
+    {% if trial_days %}
+      <p>Your free trial has <strong>{{ trial_days }} day{{ 's' if trial_days != 1 }}</strong> left. After that you'll move to the Free plan unless you choose one. Nothing is deleted.</p>
+      <a href="/pricing" class="btn btn-primary">Choose a plan</a>
+    {% elif trial_available and plan_key == 'free' %}
+      <p>Try tamper watch, history, server checks and the monthly report free for 14 days. No credit card.</p>
+      <form method="POST" action="/account/trial" style="display:inline"><button type="submit" class="btn btn-primary">Start my free trial</button></form>
+      <a href="/pricing" class="btn btn-ghost" style="margin-left:8px">See plans</a>
+    {% elif user.stripe_customer_id %}
       <p>Change your plan, update your card, see invoices or cancel any time.</p>
       <a href="/api/payments/manage" class="btn btn-ghost">Manage billing</a>
     {% elif plan_key != 'free' %}

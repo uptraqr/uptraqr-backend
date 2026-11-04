@@ -12,6 +12,8 @@ from app.core.database import get_db
 from app.core.plans import plan_for, plan_key
 from app.models.models import User, Monitor
 from app.core.timefmt import TZ_CHOICES, clean_tz, tz_label
+from app.core.plans import trial_days_left
+from app.services.trials import can_start_trial, start_trial
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -23,6 +25,8 @@ password_limiter = RateLimiter(10, 60 * 60)   # wrong current-password guesses p
 MESSAGES = {
     "password": ("ok", "Your password is saved. You can now log in with it."),
     "prefs": ("ok", "Your email choices are saved."),
+    "trial": ("ok", "Your 14-day Pro trial has started. Every feature is switched on."),
+    "notrial": ("error", "A free trial has already been used for this email address."),
     "tz": ("ok", "Your time zone is saved. Alerts and your dashboard now use it."),
     "short": ("error", "Your new password needs at least 8 characters."),
     "mismatch": ("error", "The two new passwords don't match. Please type them again."),
@@ -53,6 +57,7 @@ def account_page(request: Request, msg: str = "", db: Session = Depends(get_db))
         "site_count": db.query(Monitor).filter(Monitor.user_id == user.id).count(),
         "message": MESSAGES.get(msg),
         "tz_choices": TZ_CHOICES, "tz_label": tz_label(user.timezone),
+        "trial_days": trial_days_left(user), "trial_available": can_start_trial(db, user),
     })
 
 
@@ -90,6 +95,17 @@ def save_email_choices(request: Request, email_alerts: str = Form(""), monthly_r
     user.monthly_reports = monthly_reports == "on"
     db.commit()
     return _back("prefs")
+
+
+@router.post("/account/trial")
+def begin_trial(request: Request, db: Session = Depends(get_db)):
+    user, go = _need_login(request, db)
+    if go:
+        return go
+    if not user.email_verified or not start_trial(db, user):
+        return _back("notrial")
+    db.commit()
+    return RedirectResponse("/dashboard?note=trial", status_code=303)
 
 
 @router.post("/account/timezone")

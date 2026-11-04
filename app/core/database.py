@@ -66,6 +66,8 @@ def _add_missing_columns():
             "monthly_reports": "BOOLEAN NOT NULL DEFAULT TRUE",
             "status_slug": "VARCHAR",
             "timezone": "VARCHAR NOT NULL DEFAULT 'America/Vancouver'",
+            "trial_ends_at": "TIMESTAMP",
+            "trial_notice": "INTEGER NOT NULL DEFAULT 0",
         }
         for col, kind in new_cols.items():
             if col not in cols:

@@ -405,3 +405,58 @@ def send_monthly_report_email(to_email: str, month_label: str, sites: list) -> b
     except Exception as e:
         print(f"Failed to send monthly report: {e}")
         return False
+
+
+def _plain_email(heading: str, paras: list, button_text: str, button_link: str) -> str:
+    body = "".join(f'<p style="color:#334155;margin:0 0 14px 0">{p}</p>' for p in paras)
+    return f'''
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#0f172a">
+      <h2 style="margin:0 0 14px 0">{heading}</h2>
+      {body}
+      <p style="margin:22px 0"><a href="{escape(button_link)}" style="background:#0F1B2D;color:#FFFFFF;padding:14px 22px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">{button_text}</a></p>
+      {SIGNATURE}
+    </div>'''
+
+
+def send_trial_reminder_email(to_email: str, days_left: int) -> bool:
+    site = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+    when = "tomorrow" if days_left <= 1 else f"in {days_left} days"
+    try:
+        _send({
+            "from": FROM_EMAIL, "to": to_email, "reply_to": SUPPORT_EMAIL,
+            "subject": f"Your Uptraqr Pro trial ends {when}",
+            "html": _plain_email(
+                f"Your free Pro trial ends {when}",
+                ["Thanks for trying Uptraqr. After your trial, your account moves to the Free plan: one website, "
+                 "checked every 5 minutes, with email alerts and SSL and domain reminders.",
+                 "Tamper watch, history, server and scheduled job checks, and the monthly report will pause. "
+                 "Nothing is deleted, and it all switches back on if you choose a plan.",
+                 "Plans start at $10 a month. You can cancel any time."],
+                "Choose a plan", f"{site}/pricing"),
+        })
+        return True
+    except Exception as e:
+        print(f"Failed to send trial reminder: {e}")
+        return False
+
+
+def send_trial_ended_email(to_email: str, paused: int) -> bool:
+    site = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+    paused_line = (f"We've paused {paused} of your checks to fit the Free plan. They're saved, not deleted."
+                   if paused else "Your website is still being checked on the Free plan.")
+    try:
+        _send({
+            "from": FROM_EMAIL, "to": to_email, "reply_to": SUPPORT_EMAIL,
+            "subject": "Your Uptraqr Pro trial has ended",
+            "html": _plain_email(
+                "Your free Pro trial has ended",
+                ["Your account is now on the Free plan. We'll keep checking your website and email you if it goes down "
+                 "or its padlock or domain is about to expire.",
+                 paused_line,
+                 "Want tamper watch and history back? Choose a plan and everything switches on again straight away."],
+                "See plans", f"{site}/pricing"),
+        })
+        return True
+    except Exception as e:
+        print(f"Failed to send trial ended email: {e}")
+        return False

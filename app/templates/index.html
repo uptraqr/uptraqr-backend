@@ -101,6 +101,7 @@
 
 
 /* ---------- Sections ---------- */
+.trial-line{display:inline-flex;gap:8px;align-items:center;margin:14px 0 4px;padding:8px 14px;border-radius:12px;background:var(--clear-bg);color:#065F3F;font-weight:700;font-size:15px}
 .section{padding-top:80px}
 .section h2{font-size:clamp(28px,3.8vw,38px);max-width:22ch}
 .section .intro{color:var(--muted);max-width:58ch;margin-top:10px;font-size:18px}
@@ -273,6 +274,7 @@
   <div class="wrap">
     <h2>Simple pricing in Canadian dollars</h2>
     <p class="intro">Start free with one website. Upgrade for more websites, faster checks, tamper watch and history. Cancel any time.</p>
+    <p class="trial-line"><span aria-hidden="true">✓</span> Try every Pro feature free for 14 days. No credit card.</p>
     {% set checkout = false %}{% include "_plan_cards.html" %}
   </div>
 </section>
