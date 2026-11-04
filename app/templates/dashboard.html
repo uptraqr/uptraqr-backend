@@ -171,7 +171,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
           <span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span>
           <span>SSL <strong>{% if m.ssl_days == 'N/A' %}not found{% elif m.ssl_days < 0 %}expired{% else %}{{ m.ssl_days }} days left{% endif %}</strong></span>
           {% if m.uptime_30 is not none %}<span>Uptime, 30 days <strong>{{ m.uptime_30 }}%</strong></span>{% endif %}
-          <span>Last check <strong>{{ m.last_checked }} UTC</strong></span>
+          <span>Last check <strong>{{ m.last_checked }}</strong></span>
         </div>
         <div class="site-actions">
           <button class="btn btn-quiet btn-sm" data-action="check" data-id="{{ m.id }}">Check now</button>
@@ -253,6 +253,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 
 {% block scripts %}
 <script nonce="{{ request.state.csp_nonce }}">
+const TZ={{ user.timezone|tojson }};
 const SEV = {high: "Hacker sign", medium: "Change", low: "Minor change"};
 const STATE_TEXT = {
   learning: "We're taking a known-good snapshot of this page. This happens within 30 minutes of adding a site.",
@@ -295,7 +296,7 @@ function renderTamper(id, d){
   box.append(el('p','tw-note', d.enabled ? `Last checked ${ago(d.last_checked_at)}. Snapshot taken ${ago(d.baseline_set_at)}.` : ''));
   if(d.history && d.history.length){
     const h=el('ul','history'); d.history.slice(0,5).forEach(e=>{
-      const when=new Date(e.detected_at).toLocaleString(); const what=e.status==='suspicious'?'Possible hack':'Change';
+      const when=new Date(e.detected_at).toLocaleString(undefined,{timeZone:TZ,dateStyle:'medium',timeStyle:'short'}); const what=e.status==='suspicious'?'Possible hack':'Change';
       const res=e.resolution==='approved'?' · you confirmed it':e.resolution==='reverted'?' · went back to normal':' · not resolved';
       h.append(el('li',null,`${when}: ${what}${res}`));
     });
@@ -317,7 +318,7 @@ async function loadHistory(id){
     if(h.outages.length){
       box.append(el('p','tw-note','Outages'));
       const ul=el('ul','outages');
-      h.outages.slice(0,10).forEach(o=>ul.append(el('li',null,`${new Date(o.started_at).toLocaleString()}: down ${dur(o.minutes)}${o.resolved_at?'':' (still down)'}`)));
+      h.outages.slice(0,10).forEach(o=>ul.append(el('li',null,`${new Date(o.started_at).toLocaleString(undefined,{timeZone:TZ,dateStyle:'medium',timeStyle:'short'})}: down ${dur(o.minutes)}${o.resolved_at?'':' (still down)'}`)));
       box.append(ul);
     } else box.append(el('p','tw-note',`No outages in the last ${h.history_days} days.`));
   }catch(e){ box.replaceChildren(el('p','state',e.message)); }

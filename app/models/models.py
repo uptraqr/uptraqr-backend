@@ -21,7 +21,8 @@ class User(Base):
     password_set = Column(Boolean, default=True, nullable=False)   # False for email-only sign-ups
     email_alerts = Column(Boolean, default=True, nullable=False)   # down/up, hack and SSL emails
     monthly_reports = Column(Boolean, default=True, nullable=False)
-    status_slug = Column(String, nullable=True, unique=True, index=True)   # hard-to-guess public status page address
+    status_slug = Column(String, nullable=True, unique=True, index=True)
+    timezone = Column(String, nullable=False, default="America/Vancouver")   # times in emails and dashboard   # hard-to-guess public status page address
 
 class Monitor(Base):
     __tablename__ = "monitors"

@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.models.models import Monitor, CheckResult, User
 from datetime import datetime
 from app.services.history import uptime_percent
+from app.core.timefmt import fmt as fmt_time
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -56,5 +57,5 @@ def public_status(slug: str, request: Request, db: Session = Depends(get_db)):
         "user_name": user.name,
         "monitors": monitor_data,
         "all_up": all_up,
-        "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        "last_updated": fmt_time(tz=user.timezone)
     })

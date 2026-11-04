@@ -2,11 +2,8 @@ import resend
 import os
 from html import escape
 from datetime import datetime
-import pytz
 
-def get_vancouver_time():
-    vancouver_tz = pytz.timezone('America/Vancouver')
-    return datetime.now(vancouver_tz).strftime('%Y-%m-%d %H:%M:%S PST')
+from app.core.timefmt import fmt as _fmt_time
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -64,7 +61,7 @@ def _send(params: dict, unsubscribe: str = None):
     # Drop empty fields (e.g. no bcc) so the email service doesn't reject them
     return resend.Emails.send({k: v for k, v in params.items() if v})
 
-def send_down_alert(monitor_name: str, url: str, to_email: str = None):
+def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None):
     monitor_name, url = escape(monitor_name), escape(url)
     try:
         _send({
@@ -90,7 +87,7 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None):
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time</td>
-                        <td style="padding: 12px 16px; color: #0f172a;">{get_vancouver_time()}</td>
+                        <td style="padding: 12px 16px; color: #0f172a;">{_fmt_time(tz=tz)}</td>
                     </tr>
                 </table>
                 <p style="color: #475569; margin-top: 20px; font-size: 14px;">We are actively monitoring and will notify you the moment it recovers.</p>
@@ -102,7 +99,7 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None):
     except Exception as e:
         print(f"Failed to send alert: {e}")
 
-def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
+def send_recovery_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None):
     monitor_name, url = escape(monitor_name), escape(url)
     try:
         _send({
@@ -128,7 +125,7 @@ def send_recovery_alert(monitor_name: str, url: str, to_email: str = None):
                     </tr>
                     <tr>
                         <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time</td>
-                        <td style="padding: 12px 16px; color: #0f172a;">{get_vancouver_time()}</td>
+                        <td style="padding: 12px 16px; color: #0f172a;">{_fmt_time(tz=tz)}</td>
                     </tr>
                 </table>
                 <p style="color: #475569; margin-top: 20px; font-size: 14px;">Your site is back online and we are continuing to monitor it 24/7.</p>
@@ -182,7 +179,7 @@ def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = 
 
 SEVERITY_LABEL = {"high": "🚨 Hacker sign", "medium": "⚠️ Change", "low": "ℹ️ Minor change"}
 
-def send_defacement_alert(monitor_name: str, url: str, status: str, findings: list, to_email: str = None):
+def send_defacement_alert(monitor_name: str, url: str, status: str, findings: list, to_email: str = None, tz: str = None):
     name, safe_url = escape(monitor_name), escape(url)
     if status == "suspicious":
         subject = f"🚨 Possible hack: {monitor_name} has signs of an attack"
@@ -216,7 +213,7 @@ def send_defacement_alert(monitor_name: str, url: str, status: str, findings: li
               <p style="color:#475569;margin-top:20px;font-size:14px;"><strong>What to do:</strong><br>
               • If you made this change: open your Uptraqr dashboard and press <em>"Yes, I made this change"</em>.<br>
               • If you didn't: contact whoever runs your website or hosting right away, change your website passwords, and restore a backup.</p>
-              <p style="color:#94a3b8;font-size:13px;">Detected {get_vancouver_time()}</p>
+              <p style="color:#94a3b8;font-size:13px;">Detected {_fmt_time(tz=tz)}</p>
               {SIGNATURE}
             </div>'''
         }, unsubscribe="alerts")

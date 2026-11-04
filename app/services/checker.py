@@ -75,14 +75,14 @@ def _record(db, monitor, user, result):
     if not result["is_up"] and not open_incident:
         db.add(Incident(monitor_id=monitor.id))
         if wants_email:
-            send_down_alert(monitor.name, monitor.url, email)
+            send_down_alert(monitor.name, monitor.url, email, tz=user.timezone)
         if user and user.phone:
             send_down_sms(monitor.name, monitor.url, user.phone)
     elif result["is_up"] and open_incident:
         open_incident.is_resolved = True
         open_incident.resolved_at = datetime.utcnow()
         if wants_email:
-            send_recovery_alert(monitor.name, monitor.url, email)
+            send_recovery_alert(monitor.name, monitor.url, email, tz=user.timezone)
         if user and user.phone:
             send_recovery_sms(monitor.name, monitor.url, user.phone)
 

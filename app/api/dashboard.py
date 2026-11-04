@@ -75,7 +75,8 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 
         is_up = latest.is_up if latest else None
         response_time = round(latest.response_time, 2) if latest and latest.response_time else "N/A"
-        last_checked = latest.checked_at.strftime("%H:%M:%S") if latest else "Never"
+        from app.core.timefmt import fmt
+        last_checked = fmt(latest.checked_at, current_user.timezone, with_date=False) if latest else "Never"
 
         ssl_days = saved_ssl_days(db, monitor)
         ssl_warning = isinstance(ssl_days, int) and ssl_days <= 30

@@ -70,7 +70,7 @@ def check_monitor(db, monitor: Monitor, send_alerts: bool = True) -> DefacementW
             user = db.query(User).filter(User.id == monitor.user_id).first()
             if send_alerts and user and user.email_alerts:
                 send_defacement_alert(monitor.name, monitor.url, watch.status, findings,
-                                      user.email if user else None)
+                                      user.email, tz=user.timezone)
                 if user and user.phone and watch.status == "suspicious":
                     send_defacement_sms(monitor.name, monitor.url, user.phone)
         elif watch.status == "ok" and previous_status in ("changed", "suspicious"):

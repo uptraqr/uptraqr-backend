@@ -65,6 +65,7 @@ def _add_missing_columns():
             "email_alerts": "BOOLEAN NOT NULL DEFAULT TRUE",
             "monthly_reports": "BOOLEAN NOT NULL DEFAULT TRUE",
             "status_slug": "VARCHAR",
+            "timezone": "VARCHAR NOT NULL DEFAULT 'America/Vancouver'",
         }
         for col, kind in new_cols.items():
             if col not in cols:

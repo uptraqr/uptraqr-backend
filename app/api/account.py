@@ -11,6 +11,7 @@ from app.core.auth import get_current_user_optional, hash_password, verify_passw
 from app.core.database import get_db
 from app.core.plans import plan_for, plan_key
 from app.models.models import User, Monitor
+from app.core.timefmt import TZ_CHOICES, clean_tz, tz_label
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -22,6 +23,7 @@ password_limiter = RateLimiter(10, 60 * 60)   # wrong current-password guesses p
 MESSAGES = {
     "password": ("ok", "Your password is saved. You can now log in with it."),
     "prefs": ("ok", "Your email choices are saved."),
+    "tz": ("ok", "Your time zone is saved. Alerts and your dashboard now use it."),
     "short": ("error", "Your new password needs at least 8 characters."),
     "mismatch": ("error", "The two new passwords don't match. Please type them again."),
     "wrong": ("error", "Your current password isn't right. If you've forgotten it, log out and use 'Email me a login link'."),
@@ -50,6 +52,7 @@ def account_page(request: Request, msg: str = "", db: Session = Depends(get_db))
         "plan": plan_for(user), "plan_key": plan_key(user),
         "site_count": db.query(Monitor).filter(Monitor.user_id == user.id).count(),
         "message": MESSAGES.get(msg),
+        "tz_choices": TZ_CHOICES, "tz_label": tz_label(user.timezone),
     })
 
 
@@ -87,6 +90,16 @@ def save_email_choices(request: Request, email_alerts: str = Form(""), monthly_r
     user.monthly_reports = monthly_reports == "on"
     db.commit()
     return _back("prefs")
+
+
+@router.post("/account/timezone")
+def save_timezone(request: Request, tz: str = Form(""), db: Session = Depends(get_db)):
+    user, go = _need_login(request, db)
+    if go:
+        return go
+    user.timezone = clean_tz(tz)
+    db.commit()
+    return _back("tz")
 
 
 @router.post("/account/delete")

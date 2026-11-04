@@ -92,6 +92,7 @@
       <p>We'll email you the full report and keep checking {{ r.host }} for free. Just your email, no password needed.</p>
       <form action="/api/quickstart" method="post">
         <input type="hidden" name="url" value="{{ r.url }}">
+        <input type="hidden" name="tz" value="">
         <label for="qs-email" class="sr">Email</label>
         <input id="qs-email" type="email" name="email" placeholder="you@yourbusiness.ca" autocomplete="email" required>
         <button class="btn btn-primary btn-lg" type="submit" data-busy="Sending…">Email me the report</button>

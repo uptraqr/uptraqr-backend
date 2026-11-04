@@ -19,6 +19,8 @@
 .planline strong{font-size:20px;color:var(--ink)}
 .check{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--rule);cursor:pointer}
 .check:first-of-type{border-top:0}
+.field select{width:100%;min-height:50px;padding:10px 14px;background:var(--console);border:2px solid var(--rule-strong);border-radius:var(--r-sm);color:var(--ink);font:500 17px var(--body)}
+.field select:focus{outline:none;border-color:var(--signal);box-shadow:0 0 0 3px var(--focus)}
 .check input{width:22px;height:22px;margin-top:2px;accent-color:var(--signal);flex:none}
 .check b{display:block;color:var(--ink)}
 .check span{color:var(--muted);font-size:15px}
@@ -55,6 +57,23 @@
       <label class="check"><input type="checkbox" name="monthly_reports" {{ 'checked' if user.monthly_reports }}>
         <div><b>Monthly health report</b><span>A short summary of each website on the 1st of every month. Paid plans only.</span></div></label>
       <button type="submit" class="btn btn-primary" style="margin-top:8px">Save email choices</button>
+    </form>
+  </div>
+
+  <div class="box">
+    <h2>Your time zone</h2>
+    <p>Alert emails, reports and your dashboard show times in this zone.</p>
+    <form method="POST" action="/account/timezone">
+      <div class="field"><label for="tz">Time zone</label>
+        <select id="tz" name="tz">
+          {% set ns = namespace(found=false) %}
+          {% for group, zones in tz_choices %}<optgroup label="{{ group }}">
+            {% for value, label in zones %}{% if value == user.timezone %}{% set ns.found = true %}{% endif %}<option value="{{ value }}" {{ 'selected' if value == user.timezone }}>{{ label }}</option>{% endfor %}
+          </optgroup>{% endfor %}
+          {% if not ns.found %}<option value="{{ user.timezone }}" selected>{{ user.timezone }}</option>{% endif %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Save time zone</button>
     </form>
   </div>
 

@@ -20,6 +20,7 @@
     <div class="notice error" role="alert">Your password needs at least 8 characters.</div>
     {% endif %}
     <form method="POST" action="/api/auth/signup">
+        <input type="hidden" name="tz" value="">
       <div class="field"><label for="name">Your name or business name</label><input id="name" type="text" name="name" autocomplete="name" required>
         <span class="hint">This also becomes your public status page address.</span></div>
       <div class="field"><label for="email">Email</label><input id="email" type="email" name="email" autocomplete="email" required>

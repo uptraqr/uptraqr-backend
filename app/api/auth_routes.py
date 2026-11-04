@@ -15,6 +15,7 @@ import re as _re
 import time
 from app.core.abuse import canonical_email, is_disposable, client_ip, signup_limiter
 from app.models.models import User
+from app.core.timefmt import clean_tz
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -57,6 +58,7 @@ def signup(
     email: str = Form(...),
     password: str = Form(...),
     captcha: str = Form("", alias="cf-turnstile-response"),
+    tz: str = Form(""),
     db: Session = Depends(get_db)
 ):
     if not _turnstile.verify(captcha, client_ip(request)):
@@ -75,6 +77,7 @@ def signup(
     new_user = User(
         email=email,
         password=hash_password(password),
+        timezone=clean_tz(tz),
         name=name.strip()[:100],
         email_verified=not REQUIRE_VERIFICATION,
         email_canonical=canon,
@@ -174,7 +177,8 @@ def _inbox_page(request, email=None, error=None, status_code=200):
 
 @router.post("/api/quickstart", response_class=HTMLResponse)
 def quickstart(request: Request, email: str = Form(...), url: str = Form(...),
-               captcha: str = Form("", alias="cf-turnstile-response"), db: Session = Depends(get_db)):
+               captcha: str = Form("", alias="cf-turnstile-response"), tz: str = Form(""),
+               db: Session = Depends(get_db)):
     """Email the health report; the email's button creates a free account (or logs in) and adds the site."""
     if not _turnstile.verify(captcha, client_ip(request)):
         return _inbox_page(request, error="We couldn't confirm you're a person. Please go back, wait for the check under the email box to finish, and try again.", status_code=400)
@@ -209,6 +213,7 @@ def quickstart(request: Request, email: str = Form(...), url: str = Form(...),
             email_verified=False,
             email_canonical=canon,
             password_set=False,
+            timezone=clean_tz(tz),
         )
         db.add(user)
         db.commit()
