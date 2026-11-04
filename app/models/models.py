@@ -28,10 +28,15 @@ class Monitor(Base):
     __tablename__ = "monitors"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    url = Column(String, nullable=False)
+    url = Column(String, nullable=False)     # website address, or the server's host name for port checks
     name = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    kind = Column(String, nullable=False, default="website")   # website | port | heartbeat
+    port = Column(Integer, nullable=True)                      # port checks only
+    heartbeat_token = Column(String, nullable=True, unique=True, index=True)
+    heartbeat_minutes = Column(Integer, nullable=True)         # how often the job should check in
+    last_ping_at = Column(DateTime, nullable=True)
 
 class CheckResult(Base):
     __tablename__ = "check_results"
@@ -99,3 +104,14 @@ class DailySummary(Base):
     up_checks = Column(Integer, default=0)
     avg_response = Column(Float, nullable=True)
     max_response = Column(Float, nullable=True)
+
+
+class DomainState(Base):
+    """When each website's domain name registration runs out, and which reminder was last sent."""
+    __tablename__ = "domain_states"
+    id = Column(Integer, primary_key=True)
+    monitor_id = Column(Integer, ForeignKey("monitors.id"), unique=True, nullable=False)
+    domain = Column(String, nullable=True)
+    expiry_date = Column(DateTime, nullable=True)
+    last_checked_at = Column(DateTime, nullable=True)
+    last_threshold = Column(Integer, nullable=True)

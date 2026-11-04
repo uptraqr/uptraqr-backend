@@ -12,6 +12,7 @@ PLANS = {
         "check_minutes": 5,        # uptime check interval
         "tamper_minutes": None,    # None = tamper watch locked
         "history_days": 0,         # no history shown
+        "servers": False,          # port and heartbeat checks locked
     },
     "starter": {
         "label": "Starter",
@@ -20,6 +21,7 @@ PLANS = {
         "check_minutes": 2,
         "tamper_minutes": 30,
         "history_days": 30,
+        "servers": True,
     },
     "pro": {
         "label": "Pro",
@@ -28,6 +30,7 @@ PLANS = {
         "check_minutes": 1,
         "tamper_minutes": 10,
         "history_days": 90,
+        "servers": True,
     },
     "agency": {
         "label": "Agency",
@@ -36,6 +39,7 @@ PLANS = {
         "check_minutes": 1,
         "tamper_minutes": 10,
         "history_days": 365,
+        "servers": True,
     },
 }
 

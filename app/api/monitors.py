@@ -23,7 +23,12 @@ def _limit_live_checks(user):
 
 class MonitorCreate(BaseModel):
     name: str
-    url: str
+    url: str = ""
+    kind: str = "website"            # website | port | heartbeat
+    port: Optional[int] = None
+    every_minutes: Optional[int] = None
+
+HEARTBEAT_CHOICES = {5, 15, 30, 60, 360, 720, 1440, 10080}   # 5 min ... 1 week
 
 class MonitorUpdate(BaseModel):
     name: Optional[str]
@@ -51,7 +56,7 @@ def add_monitor_for(db, user, raw_url: str, name: str) -> Monitor:
         raise HTTPException(status_code=400, detail=str(e))
     key = site_key(url)
     mine = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True).all()
-    if any(site_key(m.url) == key for m in mine):
+    if any((m.kind or "website") == "website" and site_key(m.url) == key for m in mine):
         raise HTTPException(status_code=409, detail="You're already watching this website.")
     if len(mine) >= plan["sites"]:
         raise HTTPException(
@@ -61,7 +66,7 @@ def add_monitor_for(db, user, raw_url: str, name: str) -> Monitor:
     if plan["label"] == "Free":
         free_owner_ids = [u.id for u in db.query(User).all() if plan_for(u)["label"] == "Free" and u.id != user.id]
         if free_owner_ids:
-            for (other_url,) in db.query(Monitor.url).filter(Monitor.user_id.in_(free_owner_ids)).all():
+            for (other_url,) in db.query(Monitor.url).filter(Monitor.user_id.in_(free_owner_ids), Monitor.kind == "website").all():
                 if site_key(other_url) == key:
                     raise HTTPException(status_code=409, detail="This website is already being watched on another free account. Upgrade to a paid plan to watch it here too.")
     name = (name or "").strip()[:100] or key
@@ -72,10 +77,58 @@ def add_monitor_for(db, user, raw_url: str, name: str) -> Monitor:
     return new_monitor
 
 
+def add_server_monitor(db, user, data: MonitorCreate) -> Monitor:
+    """Port checks and scheduled-job (heartbeat) checks: paid plans only."""
+    import secrets
+    from app.services.safe_fetch import check_host_is_safe
+    if not user.email_verified:
+        raise HTTPException(status_code=403, detail="Please confirm your email address first. Check your inbox for our link.")
+    plan = plan_for(user)
+    if not plan["servers"]:
+        raise HTTPException(status_code=403, detail="Server and scheduled job checks are included on paid plans. Upgrade to Starter or above to add one.")
+    active = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True).count()
+    if active >= plan["sites"]:
+        raise HTTPException(status_code=403, detail=f"Your {plan['label']} plan includes {plan['sites']} checks. Upgrade your plan to add more.")
+    name = data.name.strip()[:100]
+    if data.kind == "port":
+        host = (data.url or "").strip().lower()
+        for prefix in ("https://", "http://", "tcp://"):
+            if host.startswith(prefix):
+                host = host[len(prefix):]
+        host = host.split("/")[0]
+        if ":" in host and host.count(":") == 1 and data.port is None:
+            host, _, p = host.partition(":")
+            data.port = int(p) if p.isdigit() else None
+        if not data.port:
+            raise HTTPException(status_code=400, detail="Please enter the port number, for example 587 for an email server.")
+        try:
+            check_host_is_safe(host, data.port)
+        except (UnsafeURLError, ValueError) as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        dup = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.kind == "port",
+                                       Monitor.url == host, Monitor.port == data.port).first()
+        if dup:
+            raise HTTPException(status_code=409, detail="You're already watching that server and port.")
+        m = Monitor(user_id=user.id, name=name, url=host, kind="port", port=int(data.port))
+    elif data.kind == "heartbeat":
+        if data.every_minutes not in HEARTBEAT_CHOICES:
+            raise HTTPException(status_code=400, detail="Please choose how often this job runs.")
+        m = Monitor(user_id=user.id, name=name, url="heartbeat", kind="heartbeat",
+                    heartbeat_minutes=data.every_minutes, heartbeat_token=secrets.token_urlsafe(18))
+    else:
+        raise HTTPException(status_code=400, detail="Unknown check type.")
+    db.add(m)
+    db.commit()
+    db.refresh(m)
+    return m
+
+
 @router.post("/monitors")
 def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not monitor.name.strip():
-        raise HTTPException(status_code=400, detail="Please give this website a name.")
+        raise HTTPException(status_code=400, detail="Please give this a name.")
+    if monitor.kind in ("port", "heartbeat"):
+        return add_server_monitor(db, current_user, monitor)
     return add_monitor_for(db, current_user, monitor.url, monitor.name)
 
 @router.delete("/monitors/{monitor_id}")
@@ -131,7 +184,7 @@ def check_ssl_status(monitor_id: int, db: Session = Depends(get_db), current_use
 
 @router.post("/monitors/{monitor_id}/check")
 def check_now(monitor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    from app.services.checker import check_url
+    from app.services.checker import check_any
     from app.models.models import CheckResult
     from datetime import datetime
     
@@ -143,7 +196,9 @@ def check_now(monitor_id: int, db: Session = Depends(get_db), current_user: User
         raise HTTPException(status_code=404, detail="Monitor not found")
     
     _limit_live_checks(current_user)
-    result = check_url(monitor.url)
+    result = check_any(monitor)
+    if result is None:
+        return {"status": "waiting", "is_up": None, "response_time": None}
     check = CheckResult(
         monitor_id=monitor.id,
         status_code=result["status_code"],

@@ -76,6 +76,17 @@ def _add_missing_columns():
         from app.core.abuse import canonical_email
         for uid, email in cx.execute(text("SELECT id, email FROM users WHERE email_canonical IS NULL")).fetchall():
             cx.execute(text("UPDATE users SET email_canonical = :c WHERE id = :i"), {"c": canonical_email(email), "i": uid})
+        mcols = {c["name"] for c in inspect(engine).get_columns("monitors")}
+        for col, kind in {
+            "kind": "VARCHAR NOT NULL DEFAULT 'website'",
+            "port": "INTEGER",
+            "heartbeat_token": "VARCHAR",
+            "heartbeat_minutes": "INTEGER",
+            "last_ping_at": "TIMESTAMP",
+        }.items():
+            if col not in mcols:
+                cx.execute(text(f"ALTER TABLE monitors ADD COLUMN {col} {kind}"))
+        cx.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_monitors_heartbeat_token ON monitors (heartbeat_token)"))
         # Fast lookups of a site's checks by time (works on both PostgreSQL and SQLite).
         cx.execute(text("CREATE INDEX IF NOT EXISTS ix_check_results_monitor_time ON check_results (monitor_id, checked_at)"))
         cx.execute(text("CREATE INDEX IF NOT EXISTS ix_incidents_monitor ON incidents (monitor_id)"))

@@ -102,7 +102,7 @@ def run_defacement_checks():
     try:
         owners = {u.id: u for u in db.query(User).all()}
         now = datetime.utcnow()
-        for monitor in db.query(Monitor).filter(Monitor.is_active == True).all():
+        for monitor in db.query(Monitor).filter(Monitor.is_active == True, Monitor.kind == "website").all():
             minutes = plan_for(owners.get(monitor.user_id))["tamper_minutes"]
             if minutes is None:
                 continue

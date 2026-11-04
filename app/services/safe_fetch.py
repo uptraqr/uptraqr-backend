@@ -102,3 +102,22 @@ def safe_get(url: str):
     """Fetch a page, checking every hop. Returns (final_url, status_code, html_text)."""
     r = safe_get_detailed(url)
     return r["final_url"], r["status"], r["text"]
+
+
+def check_host_is_safe(host: str, port: int) -> str:
+    """For port checks: the public IP address to connect to, or UnsafeURLError."""
+    host = (host or "").strip().lower().rstrip(".")
+    if not host or len(host) > 253 or any(c in host for c in "/@: "):
+        raise UnsafeURLError("Enter just the server's name or IP address, like mail.yourbusiness.ca")
+    if not (1 <= int(port) <= 65535):
+        raise UnsafeURLError("The port must be a number from 1 to 65535.")
+    if host in BLOCKED_HOSTNAMES or host.endswith(BLOCKED_SUFFIXES):
+        raise UnsafeURLError("That address points to a private network.")
+    try:
+        infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    except socket.gaierror:
+        raise UnsafeURLError("We couldn't find that server. Check the name for typos.")
+    for info in infos:
+        if not _ip_is_public(info[4][0]):
+            raise UnsafeURLError("That address points to a private network.")
+    return infos[0][4][0]

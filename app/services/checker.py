@@ -41,6 +41,52 @@ def check_url(url: str):
     return result
 
 
+def _port_once(host: str, port: int):
+    import socket
+    from app.services.safe_fetch import check_host_is_safe
+    try:
+        ip = check_host_is_safe(host, port)   # connect to the checked address, so DNS tricks can't redirect us
+        started = time.monotonic()
+        with socket.create_connection((ip, int(port)), timeout=10):
+            pass
+        return {"is_up": True, "status_code": None, "response_time": round(time.monotonic() - started, 3)}
+    except (OSError, UnsafeURLError, ValueError):
+        return {"is_up": False, "status_code": None, "response_time": None}
+
+
+def check_port(host: str, port: int):
+    """Is the server answering on this port? Look twice before saying it's down."""
+    result = _port_once(host, port)
+    if not result["is_up"]:
+        time.sleep(RETRY_DELAY)
+        result = _port_once(host, port)
+    return result
+
+
+def heartbeat_grace(minutes: int) -> int:
+    """Extra time allowed before a late check-in counts as missed (jobs don't run to the second)."""
+    return max(5, int(minutes * 0.1))
+
+
+def check_heartbeat(monitor, now=None):
+    """Up if the job checked in recently enough; None while waiting for its first check-in."""
+    if not monitor.last_ping_at:
+        return None
+    now = now or datetime.utcnow()
+    allowed = timedelta(minutes=(monitor.heartbeat_minutes or 60) + heartbeat_grace(monitor.heartbeat_minutes or 60))
+    return {"is_up": now - monitor.last_ping_at <= allowed, "status_code": None, "response_time": None}
+
+
+def check_any(monitor):
+    """Run the right kind of check for this monitor."""
+    kind = getattr(monitor, "kind", None) or "website"
+    if kind == "port":
+        return check_port(monitor.url, monitor.port)
+    if kind == "heartbeat":
+        return check_heartbeat(monitor)
+    return check_url(monitor.url)
+
+
 def _due_monitors(db, now):
     """Active monitors whose plan interval has passed since their last check."""
     last = dict(
@@ -60,6 +106,8 @@ def _due_monitors(db, now):
 
 
 def _record(db, monitor, user, result):
+    if result is None:          # a heartbeat that hasn't checked in for the first time yet
+        return
     db.add(CheckResult(
         monitor_id=monitor.id,
         status_code=result["status_code"],
@@ -75,14 +123,14 @@ def _record(db, monitor, user, result):
     if not result["is_up"] and not open_incident:
         db.add(Incident(monitor_id=monitor.id))
         if wants_email:
-            send_down_alert(monitor.name, monitor.url, email, tz=user.timezone)
+            send_down_alert(monitor.name, monitor.url, email, tz=user.timezone, monitor=monitor)
         if user and user.phone:
             send_down_sms(monitor.name, monitor.url, user.phone)
     elif result["is_up"] and open_incident:
         open_incident.is_resolved = True
         open_incident.resolved_at = datetime.utcnow()
         if wants_email:
-            send_recovery_alert(monitor.name, monitor.url, email, tz=user.timezone)
+            send_recovery_alert(monitor.name, monitor.url, email, tz=user.timezone, monitor=monitor)
         if user and user.phone:
             send_recovery_sms(monitor.name, monitor.url, user.phone)
 
@@ -95,7 +143,7 @@ def run_checks():
         if not due:
             return
         with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-            results = list(pool.map(lambda pair: check_url(pair[0].url), due))
+            results = list(pool.map(lambda pair: check_any(pair[0]), due))
         for (monitor, user), result in zip(due, results):
             try:
                 _record(db, monitor, user, result)

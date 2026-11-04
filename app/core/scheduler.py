@@ -5,6 +5,7 @@ from app.services.defacement_runner import run_defacement_checks
 from app.services.ssl_runner import run_ssl_checks
 from app.services.history import tidy_up
 from app.services.monthly_report import send_monthly_reports
+from app.services.domain_runner import run_domain_checks
 
 scheduler = BackgroundScheduler()
 
@@ -20,6 +21,9 @@ def start_scheduler():
                       next_run_time=datetime.now() + timedelta(minutes=5))
     # Nightly at 03:15 UTC: summarise yesterday and delete data each plan no longer keeps.
     scheduler.add_job(tidy_up, "cron", hour=3, minute=15, max_instances=1, coalesce=True)
+    # Domain name expiry: once a day, first run 8 minutes after start-up.
+    scheduler.add_job(run_domain_checks, "interval", hours=24, max_instances=1, coalesce=True,
+                      next_run_time=datetime.now() + timedelta(minutes=8))
     # 1st of each month at 15:20 UTC (morning in Canada): monthly report for paid plans.
     scheduler.add_job(send_monthly_reports, "cron", day=1, hour=15, minute=20, max_instances=1, coalesce=True)
     scheduler.start()

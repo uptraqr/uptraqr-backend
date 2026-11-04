@@ -50,7 +50,7 @@ def check_monitor_ssl(db, monitor: Monitor, send=send_ssl_alert):
 def run_ssl_checks():
     db = SessionLocal()
     try:
-        for monitor in db.query(Monitor).filter(Monitor.is_active == True).all():
+        for monitor in db.query(Monitor).filter(Monitor.is_active == True, Monitor.kind == "website").all():
             try:
                 check_monitor_ssl(db, monitor)
                 db.commit()

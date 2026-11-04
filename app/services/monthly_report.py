@@ -45,7 +45,7 @@ def send_monthly_reports(now=None):
         for user in db.query(User).filter(User.monthly_reports == True, User.email_verified == True).all():
             if plan_key(user) == "free":
                 continue
-            monitors = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True).all()
+            monitors = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True, Monitor.kind == "website").all()
             if not monitors:
                 continue
             try:

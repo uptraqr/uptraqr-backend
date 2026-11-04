@@ -100,6 +100,23 @@ dialog::backdrop{background:rgba(15,27,45,.45)}
 dialog h2{font-size:22px;margin-bottom:6px}
 dialog .sub{color:var(--muted);margin-bottom:20px}
 dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 18px}
+.kinds label{cursor:pointer}
+.kinds input{position:absolute;opacity:0;pointer-events:none}
+.kinds span{display:block;height:100%;border:2px solid var(--rule-strong);border-radius:var(--r-md);padding:10px;background:var(--console)}
+.kinds b{display:block;font-size:15px;color:var(--ink)}
+.kinds small{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.3}
+.kinds input:checked+span{border-color:var(--signal);background:var(--signal-soft)}
+.kinds input:focus-visible+span{box-shadow:0 0 0 3px var(--focus)}
+.kinds input[data-locked]+span b::after{content:" 🔒";font-size:12px}
+dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--console);border:2px solid var(--rule-strong);border-radius:var(--r-sm);color:var(--ink);font:500 17px var(--body)}
+@media (max-width:420px){.kinds{grid-template-columns:1fr}.kinds span{display:flex;gap:8px;align-items:baseline}}
+.hb p{margin:0 0 10px;color:var(--text);font-size:15px}
+.hb-url{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--signal-soft);border:1px solid var(--rule);border-radius:var(--r-sm);padding:8px 10px;margin:0 0 14px}
+.hb-url code{flex:1 1 200px;min-width:0;word-break:break-all;font-size:13px;color:var(--ink)}
+.hb pre{background:#0F1B2D;color:#E2E8F0;border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;white-space:pre-wrap;word-break:break-all;margin:0 0 12px}
+.hb-h{font-weight:700;color:var(--ink)!important;margin-top:4px!important}
+.hb-note{font-size:13px!important;color:var(--muted)!important}
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--console-2);border:1px solid var(--rule-strong);border-radius:var(--r-md);padding:12px 16px;font-size:15px;max-width:calc(100vw - 32px);z-index:100;display:none}
 .toast.show{display:block}
 {% endblock %}
@@ -117,10 +134,10 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 <section class="dash"><div class="wrap">
   <div class="dash-head">
     <div>
-      <h1>Your websites</h1>
-      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan</strong>. Using {{ monitors|length }} of {{ plan.sites }} website{{ 's' if plan.sites != 1 }}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' %} <a href="/pricing">Upgrade</a>{% endif %}</p>
+      <h1>{{ "Your websites and servers" if has_servers else "Your websites" }}</h1>
+      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan</strong>. Using {{ monitors|length }} of {{ plan.sites }} check{{ 's' if plan.sites != 1 }}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' %} <a href="/pricing">Upgrade</a>{% endif %}</p>
     </div>
-    <button class="btn btn-primary" data-action="add">Add a website</button>
+    <button class="btn btn-primary" data-action="add">Add a website or server</button>
   </div>
 
   {% set note = request.query_params.get('note') %}
@@ -135,21 +152,21 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
     <span class="big-lamp" aria-hidden="true"></span>
     <div>
       {% if needs_attention %}
-        <strong>{{ needs_attention }} website{{ 's need' if needs_attention != 1 else ' needs' }} your attention</strong>
-        <span>{% if sites_down %}{{ sites_down }} down. {% endif %}{% if tamper_alerts %}{{ tamper_alerts }} with a tamper alert. {% endif %}{% if ssl_warnings %}{{ ssl_warnings }} with an expiring padlock. {% endif %}Details are on the website{{ 's' if needs_attention != 1 }} below.</span>
+        <strong>{{ needs_attention }} {{ 'thing needs' if needs_attention == 1 else 'things need' }} your attention</strong>
+        <span>{% if sites_down %}{{ sites_down }} down. {% endif %}{% if tamper_alerts %}{{ tamper_alerts }} with a tamper alert. {% endif %}{% if ssl_warnings %}{{ ssl_warnings }} with a padlock or domain name expiring soon. {% endif %}Details are below.</span>
       {% else %}
-        <strong>All good. {{ 'Your website is' if monitors|length == 1 else 'All ' ~ (monitors|length) ~ ' websites are' }} working normally.</strong>
+        <strong>All good. {{ 'Everything is' if monitors|length != 1 else ('Your website is' if monitors[0].kind == 'website' else 'It is') }} working normally.</strong>
         <span>We're checking every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }} and will email you if anything changes.</span>
       {% endif %}
     </div>
   </div>
   {% endif %}
   <div class="summary" aria-label="Summary">
-    <div><b>{{ total_monitors }}</b><span>Websites</span></div>
+    <div><b>{{ total_monitors }}</b><span>{{ "Watching" if has_servers else "Websites" }}</span></div>
     <div class="is-clear"><b>{{ sites_up }}</b><span>Online</span></div>
     <div class="{{ 'is-breach' if sites_down else '' }}"><b>{{ sites_down }}</b><span>Down</span></div>
     <div class="{{ 'is-breach' if tamper_alerts else '' }}"><b>{{ tamper_alerts }}</b><span>Tamper alerts</span></div>
-    <div class="{{ 'is-watch' if ssl_warnings else '' }}"><b>{{ ssl_warnings }}</b><span>SSL expiring</span></div>
+    <div class="{{ 'is-watch' if ssl_warnings else '' }}"><b>{{ ssl_warnings }}</b><span>Expiring soon</span></div>
   </div>
 
   {% if monitors %}
@@ -160,25 +177,54 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
       <div class="site-main">
         <div>
           <div class="site-name">{{ m.name }}</div>
-          <div class="site-url">{{ m.url }}</div>
+          <div class="site-url">{% if m.kind == 'port' %}Server {{ m.url }} · port {{ m.port }}{% elif m.kind == 'heartbeat' %}Scheduled job · checks in every {{ m.every }}{% else %}{{ m.url }}{% endif %}</div>
         </div>
         <div class="site-pills">
-          {% if m.is_up %}<span class="pill clear">Online</span>{% elif m.is_up == False %}<span class="pill breach">Down</span>{% else %}<span class="pill idle">Not checked yet</span>{% endif %}
-          <span class="pill {{ tl[0] }}">{{ tl[1] }}</span>
+          {% if m.kind == 'heartbeat' %}
+            {% if m.is_up %}<span class="pill clear">Checked in</span>{% elif m.is_up == False %}<span class="pill breach">Missed check-in</span>{% else %}<span class="pill idle">Waiting for first check-in</span>{% endif %}
+          {% else %}
+            {% if m.is_up %}<span class="pill clear">Online</span>{% elif m.is_up == False %}<span class="pill breach">Down</span>{% else %}<span class="pill idle">Not checked yet</span>{% endif %}
+          {% endif %}
+          {% if m.kind == 'website' %}<span class="pill {{ tl[0] }}">{{ tl[1] }}</span>{% endif %}
+          {% if m.domain_warning %}{% if m.domain_days < 0 %}<span class="pill breach">Domain expired</span>{% else %}<span class="pill watch">Domain expires in {{ m.domain_days }} days</span>{% endif %}{% endif %}
           {% if m.ssl_warning %}{% if m.ssl_days < 0 %}<span class="pill breach">SSL expired</span>{% else %}<span class="pill watch">SSL ends in {{ m.ssl_days }} days</span>{% endif %}{% endif %}
         </div>
         <div class="site-meta">
+          {% if m.kind == 'heartbeat' %}
+          <span>Last check-in <strong>{{ m.last_ping or 'not yet' }}</strong></span>
+          <span>Expected every <strong>{{ m.every }}</strong></span>
+          {% else %}
           <span>Response <strong>{{ m.response_time }}{% if m.response_time != 'N/A' %}s{% endif %}</strong></span>
+          {% endif %}
+          {% if m.kind == 'website' %}
           <span>SSL <strong>{% if m.ssl_days == 'N/A' %}not found{% elif m.ssl_days < 0 %}expired{% else %}{{ m.ssl_days }} days left{% endif %}</strong></span>
+          {% if m.domain_days is not none %}<span>Domain <strong>{% if m.domain_days < 0 %}expired{% else %}renews in {{ m.domain_days }} days{% endif %}</strong></span>{% endif %}
+          {% endif %}
           {% if m.uptime_30 is not none %}<span>Uptime, 30 days <strong>{{ m.uptime_30 }}%</strong></span>{% endif %}
-          <span>Last check <strong>{{ m.last_checked }}</strong></span>
+          {% if m.kind != 'heartbeat' %}<span>Last check <strong>{{ m.last_checked }}</strong></span>{% endif %}
         </div>
         <div class="site-actions">
-          <button class="btn btn-quiet btn-sm" data-action="check" data-id="{{ m.id }}">Check now</button>
+          {% if m.kind != 'heartbeat' %}<button class="btn btn-quiet btn-sm" data-action="check" data-id="{{ m.id }}">Check now</button>{% endif %}
           <button class="btn btn-danger btn-sm" data-action="remove" data-id="{{ m.id }}" data-name="{{ m.name }}">Remove</button>
         </div>
       </div>
-      {% if m.tamper_status == 'locked' %}
+      {% if m.kind == 'heartbeat' %}
+      <details class="tw" data-locked="1" {% if m.is_up is none %}open{% endif %}>
+        <summary>How to set it up <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="tw-body hb">
+          <p>Make your job visit this private link each time it finishes. If we don't hear from it within {{ 'an ' if m.every == 'hour' else ('a ' if m.every in ('day','week') else '') }}{{ m.every }} (plus a little extra time), we'll email you.</p>
+          <div class="hb-url"><code id="ping-{{ m.id }}">{{ m.ping_url }}</code><button class="btn btn-quiet btn-sm" data-action="copy" data-target="ping-{{ m.id }}">Copy</button></div>
+          <p class="hb-h">Examples</p>
+          <p><strong>Linux or Mac scheduled job (cron):</strong> add this to the end of the job's line</p>
+          <pre>&amp;&amp; curl -fsS -m 10 {{ m.ping_url }}</pre>
+          <p><strong>Windows (PowerShell):</strong> add this as the last step</p>
+          <pre>Invoke-WebRequest -UseBasicParsing {{ m.ping_url }}</pre>
+          <p><strong>Backup software or website builder:</strong> look for a "webhook" or "notify URL" setting and paste the link there.</p>
+          <p class="hb-note">Keep this link private. Anyone with it can mark your job as checked in. Not sure how? Forward this to whoever looks after your server.</p>
+        </div>
+      </details>
+      {% elif m.kind == 'port' %}
+      {% elif m.tamper_status == 'locked' %}
       <details class="tw" data-locked="1">
         <summary>Tamper watch <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
         <div class="tw-body"><div class="locked">
@@ -237,14 +283,28 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 
 <dialog id="addDialog">
   <form id="addForm">
-    <h2>Add a website</h2>
-    <p class="sub">We'll check it every 5 minutes and watch for tampering every 30.</p>
+    <h2>What should we watch?</h2>
+    <div class="kinds" role="radiogroup" aria-label="Type of check">
+      <label><input type="radio" name="kind" value="website" checked><span><b>Website</b><small>Online, padlock, hacks</small></span></label>
+      <label><input type="radio" name="kind" value="port" {{ 'data-locked=1' if not plan.servers }}><span><b>Server</b><small>Email, FTP, game, VoIP…</small></span></label>
+      <label><input type="radio" name="kind" value="heartbeat" {{ 'data-locked=1' if not plan.servers }}><span><b>Scheduled job</b><small>Backups, nightly tasks</small></span></label>
+    </div>
     <div id="addError" class="notice error" role="alert" hidden></div>
+    <div id="lockedNote" class="notice info" hidden>Server and scheduled job checks are included on paid plans. <a href="/pricing">See plans from $10/month</a></div>
+    <div id="addFields">
     <div class="field"><label for="siteName">Name</label><input id="siteName" placeholder="My business website" maxlength="100" required></div>
-    <div class="field"><label for="siteUrl">Website address</label><input id="siteUrl" placeholder="yourbusiness.ca" inputmode="url" autocomplete="url" required></div>
+    <div class="field" data-for="website"><label for="siteUrl">Website address</label><input id="siteUrl" placeholder="yourbusiness.ca" inputmode="url" autocomplete="url"></div>
+    <div class="field" data-for="port" hidden><label for="hostName">Server name or IP address</label><input id="hostName" placeholder="mail.yourbusiness.ca" autocapitalize="off" spellcheck="false">
+      <span class="hint">We'll check that it answers from the internet.</span></div>
+    <div class="field" data-for="port" hidden><label for="portNum">Port</label><input id="portNum" type="number" min="1" max="65535" placeholder="587" inputmode="numeric">
+      <span class="hint">Common ones: 25, 587 or 993 for email, 21 for FTP, 3389 for Remote Desktop, 5060 for phone systems.</span></div>
+    <div class="field" data-for="heartbeat" hidden><label for="everyMin">How often does it run?</label>
+      <select id="everyMin"><option value="5">Every 5 minutes</option><option value="15">Every 15 minutes</option><option value="30">Every 30 minutes</option><option value="60">Every hour</option><option value="360">Every 6 hours</option><option value="720">Every 12 hours</option><option value="1440" selected>Every day</option><option value="10080">Every week</option></select>
+      <span class="hint">After you add it, we'll give you a private link for the job to visit each time it runs.</span></div>
+    </div>
     <div class="row">
       <button type="button" class="btn btn-quiet" data-action="close-add">Cancel</button>
-      <button type="submit" class="btn btn-primary" id="addBtn">Add website</button>
+      <button type="submit" class="btn btn-primary" id="addBtn">Add</button>
     </div>
   </form>
 </dialog>
@@ -337,12 +397,28 @@ async function act(id, action, btn, body){
   }catch(e){ toast(e.message); btn.disabled=false; btn.textContent=old; }
 }
 
-function openAdd(){const d=document.getElementById('addDialog');document.getElementById('addError').hidden=true;d.showModal();document.getElementById('siteName').focus();}
+function openAdd(){const d=document.getElementById('addDialog');showKind();d.showModal();document.getElementById('siteName').focus();}
+function currentKind(){return document.querySelector('input[name=kind]:checked').value;}
+function showKind(){
+  const k=currentKind(), r=document.querySelector('input[name=kind]:checked'), locked=!!r.dataset.locked;
+  document.querySelectorAll('#addFields [data-for]').forEach(f=>{f.hidden=f.dataset.for!==k;});
+  document.getElementById('addFields').hidden=locked; document.getElementById('lockedNote').hidden=!locked;
+  document.getElementById('addBtn').hidden=locked;
+  document.getElementById('siteName').placeholder={website:'My business website',port:'Office email server',heartbeat:'Nightly backup'}[k];
+  document.getElementById('addError').hidden=true;
+}
+document.querySelectorAll('input[name=kind]').forEach(r=>r.addEventListener('change',showKind));
 async function addSite(ev){
   ev.preventDefault(); const btn=document.getElementById('addBtn'), err=document.getElementById('addError');
   btn.disabled=true; err.hidden=true;
+  const k=currentKind(), body={kind:k,name:document.getElementById('siteName').value};
+  if(k==='website') body.url=document.getElementById('siteUrl').value;
+  if(k==='port'){ body.url=document.getElementById('hostName').value; body.port=parseInt(document.getElementById('portNum').value,10)||null; }
+  if(k==='heartbeat') body.every_minutes=parseInt(document.getElementById('everyMin').value,10);
   try{
-    await api('/api/monitors',{method:'POST',body:JSON.stringify({name:document.getElementById('siteName').value,url:document.getElementById('siteUrl').value})});
+    if(k==='website'&&!body.url.trim()) throw new Error('Please enter the website address.');
+    if(k==='port'&&!body.url.trim()) throw new Error("Please enter the server's name or IP address.");
+    await api('/api/monitors',{method:'POST',body:JSON.stringify(body)});
     location.reload();
   }catch(e){ err.textContent=e.message; err.hidden=false; btn.disabled=false; if(/limit/i.test(e.message)){const a=el('a',null,' See plans');a.href='/pricing';err.append(a);} }
 }
@@ -352,7 +428,7 @@ async function removeSite(id, btn){
 }
 async function checkNow(id, btn){
   btn.disabled=true; btn.textContent='Checking…';
-  try{ const r=await api(`/api/monitors/${id}/check`,{method:'POST'}); toast(r.is_up?'Your site is online.':'Your site isn\'t answering.'); setTimeout(()=>location.reload(),900); }
+  try{ const r=await api(`/api/monitors/${id}/check`,{method:'POST'}); toast(r.is_up?'It\'s online.':'It isn\'t answering.'); setTimeout(()=>location.reload(),900); }
   catch(e){ toast(e.message); btn.disabled=false; btn.textContent='Check now'; }
 }
 async function savePhone(ev){
@@ -368,6 +444,7 @@ document.addEventListener('click', e => {
   else if(a==='close-add') document.getElementById('addDialog').close();
   else if(a==='check') checkNow(id, b);
   else if(a==='remove') removeSite(id, b);
+  else if(a==='copy'){ const t=document.getElementById(b.dataset.target).textContent; (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copied.')).catch(()=>toast('Press and hold the link to copy it.')); }
 });
 document.addEventListener('toggle', e => {
   const d=e.target; if(!(d.matches && d.matches('details.tw')) || !d.open || d.dataset.locked) return;

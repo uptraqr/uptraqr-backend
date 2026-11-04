@@ -12,11 +12,12 @@
     <h3>{{ p.label }}</h3>
     <div class="price">${{ p.price_cad }}<small>{% if p.price_cad %} /month{% else %} forever{% endif %}</small></div>
     <ul>
-      <li>{{ p.sites }} website{{ 's' if p.sites != 1 }}</li>
+      <li>{{ p.sites }} website{{ 's' if p.sites != 1 }}{% if p.servers %} or servers{% endif %}</li>
       <li>Uptime check every {{ p.check_minutes }} minute{{ 's' if p.check_minutes != 1 }}</li>
       {% if feats[key].tamper %}<li class="hl">{{ feats[key].tamper }}</li>{% else %}<li class="no">No tamper watch</li>{% endif %}
       <li>Email alerts</li>
-      <li>SSL expiry reminders</li>
+      <li>SSL and domain expiry reminders</li>
+      {% if p.servers %}<li class="hl">Server and scheduled job checks</li>{% else %}<li class="no">No server checks</li>{% endif %}
       {% if key == 'free' %}<li>Website health check</li>{% else %}<li class="hl">Monthly health report email</li>{% endif %}
       {% if feats[key].hist %}<li>{{ feats[key].hist }}</li>{% else %}<li class="no">No history</li>{% endif %}
     </ul>

@@ -46,7 +46,8 @@ def public_status(slug: str, request: Request, db: Session = Depends(get_db)):
 
         monitor_data.append({
             "name": monitor.name,
-            "url": monitor.url,
+            # Server addresses stay private on the public page; only website addresses are shown.
+            "url": monitor.url if (monitor.kind or "website") == "website" else "",
             "is_up": is_up,
             "response_time": response_time,
             "uptime": uptime

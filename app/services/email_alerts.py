@@ -61,81 +61,106 @@ def _send(params: dict, unsubscribe: str = None):
     # Drop empty fields (e.g. no bcc) so the email service doesn't reject them
     return resend.Emails.send({k: v for k, v in params.items() if v})
 
-def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None):
-    monitor_name, url = escape(monitor_name), escape(url)
+def describe_monitor(monitor):
+    """(what it is, where it is) in plain words, for emails."""
+    kind = getattr(monitor, "kind", None) or "website"
+    if kind == "port":
+        return "server", f"{monitor.url} (port {monitor.port})"
+    if kind == "heartbeat":
+        every = monitor.heartbeat_minutes or 60
+        nice = (f"{every // 1440} day{'s' if every // 1440 != 1 else ''}" if every >= 1440 and every % 1440 == 0
+                else f"{every // 60} hour{'s' if every // 60 != 1 else ''}" if every >= 60 and every % 60 == 0
+                else f"{every} minutes")
+        return "scheduled job", f"Checks in every {nice}"
+    return "website", monitor.url
+
+
+def _status_email(colour, bg, line, heading, lead, rows, footer):
+    cells = "".join(
+        f'''<tr><td style="padding:12px 16px;font-weight:600;color:#475569;width:38%;border-bottom:1px solid #e2e8f0">{escape(k)}</td>
+        <td style="padding:12px 16px;color:#0f172a;border-bottom:1px solid #e2e8f0">{v}</td></tr>''' for k, v in rows)
+    return f'''
+    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:20px;color:#0f172a">
+      <div style="background:{bg};border:1px solid {line};border-left:4px solid {colour};padding:18px 20px;border-radius:8px;margin-bottom:18px">
+        <h2 style="color:{colour};margin:0 0 8px 0;font-size:20px">{heading}</h2>
+        <p style="color:#0f172a;margin:0">{lead}</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;overflow:hidden">{cells}</table>
+      <p style="color:#475569;margin-top:18px;font-size:14px">{footer}</p>
+      {SIGNATURE}
+    </div>'''
+
+
+def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None, monitor=None):
+    what, where = describe_monitor(monitor) if monitor else ("website", url)
+    name = escape(monitor_name)
+    if what == "website":
+        place = f'<a href="{escape(where)}" style="color:#0F1B2D">{escape(where)}</a>'
+        lead, footer = f"<strong>{name}</strong> is not responding.", "We'll keep checking and email you the moment it's back."
+    elif what == "server":
+        place = escape(where)
+        lead = f"<strong>{name}</strong> stopped answering on port {monitor.port}."
+        footer = "We checked twice to be sure. We'll email you the moment it answers again."
+    else:
+        place = escape(where)
+        last = _fmt_time(monitor.last_ping_at, tz) if monitor.last_ping_at else "never"
+        lead = f"<strong>{name}</strong> didn't check in when expected. It may have stopped running."
+        footer = f"Its last check-in was {escape(last)}. We'll email you when it checks in again."
     try:
         _send({
-            "from": FROM_EMAIL,
-            "to": to_email or ALERT_EMAIL,
-            "reply_to": SUPPORT_EMAIL,
+            "from": FROM_EMAIL, "to": to_email or ALERT_EMAIL, "reply_to": SUPPORT_EMAIL,
             "bcc": ADMIN_COPY_EMAIL if to_email else None,
-            "subject": f"🔴 ALERT: {monitor_name} is DOWN",
-            "html": f"""
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: #2d0a0a; border-left: 4px solid #ef4444; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <h2 style="color: #ef4444; margin: 0 0 12px 0;">🔴 Site Down Alert</h2>
-                    <p style="color: #e2e8f0; margin: 0;"><strong>{monitor_name}</strong> is not responding.</p>
-                </div>
-                <table style="width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 8px; overflow: hidden;">
-                    <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569; width: 40%; border-bottom: 1px solid #e2e8f0;">Site Name</td>
-                        <td style="padding: 12px 16px; color: #0f172a; border-bottom: 1px solid #e2e8f0;">{monitor_name}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0;">URL</td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #0F1B2D;">{url}</a></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time</td>
-                        <td style="padding: 12px 16px; color: #0f172a;">{_fmt_time(tz=tz)}</td>
-                    </tr>
-                </table>
-                <p style="color: #475569; margin-top: 20px; font-size: 14px;">We are actively monitoring and will notify you the moment it recovers.</p>
-                {SIGNATURE}
-            </div>
-            """
+            "subject": f"🔴 {monitor_name} is down" if what != "scheduled job" else f"🔴 {monitor_name} missed its check-in",
+            "html": _status_email("#BF2433", "#FDE7E9", "#F1A7AF",
+                                  "🔴 Missed check-in" if what == "scheduled job" else f"🔴 {what.capitalize()} down",
+                                  lead, [("Name", name), ("Website" if what == "website" else "Details", place),
+                                         ("Time", escape(_fmt_time(tz=tz)))], footer),
         }, unsubscribe="alerts")
         print(f"Down alert sent for {monitor_name}")
     except Exception as e:
         print(f"Failed to send alert: {e}")
 
-def send_recovery_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None):
-    monitor_name, url = escape(monitor_name), escape(url)
+
+def send_recovery_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None, monitor=None):
+    what, where = describe_monitor(monitor) if monitor else ("website", url)
+    name = escape(monitor_name)
+    place = f'<a href="{escape(where)}" style="color:#0F1B2D">{escape(where)}</a>' if what == "website" else escape(where)
+    lead = (f"<strong>{name}</strong> checked in again." if what == "scheduled job"
+            else f"<strong>{name}</strong> is back online.")
     try:
         _send({
-            "from": FROM_EMAIL,
-            "to": to_email or ALERT_EMAIL,
-            "reply_to": SUPPORT_EMAIL,
+            "from": FROM_EMAIL, "to": to_email or ALERT_EMAIL, "reply_to": SUPPORT_EMAIL,
             "bcc": ADMIN_COPY_EMAIL if to_email else None,
-            "subject": f"✅ RESOLVED: {monitor_name} is back UP",
-            "html": f"""
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: #052e16; border-left: 4px solid #22c55e; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <h2 style="color: #22c55e; margin: 0 0 12px 0;">✅ Site Recovered</h2>
-                    <p style="color: #e2e8f0; margin: 0;"><strong>{monitor_name}</strong> is back online.</p>
-                </div>
-                <table style="width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 8px; overflow: hidden;">
-                    <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569; width: 40%; border-bottom: 1px solid #e2e8f0;">Site Name</td>
-                        <td style="padding: 12px 16px; color: #0f172a; border-bottom: 1px solid #e2e8f0;">{monitor_name}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0;">URL</td>
-                        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0;"><a href="{url}" style="color: #0F1B2D;">{url}</a></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 12px 16px; font-weight: 600; color: #475569;">Time</td>
-                        <td style="padding: 12px 16px; color: #0f172a;">{_fmt_time(tz=tz)}</td>
-                    </tr>
-                </table>
-                <p style="color: #475569; margin-top: 20px; font-size: 14px;">Your site is back online and we are continuing to monitor it 24/7.</p>
-                {SIGNATURE}
-            </div>
-            """
+            "subject": f"✅ {monitor_name} is back" if what != "scheduled job" else f"✅ {monitor_name} checked in again",
+            "html": _status_email("#0B7A52", "#E2F5EC", "#9FD9BE", "✅ All clear", lead,
+                                  [("Name", name), ("Website" if what == "website" else "Details", place),
+                                   ("Time", escape(_fmt_time(tz=tz)))],
+                                  "Everything's working again. We're still watching, day and night."),
         }, unsubscribe="alerts")
         print(f"Recovery alert sent for {monitor_name}")
     except Exception as e:
         print(f"Failed to send alert: {e}")
+
+
+def send_domain_alert(monitor_name: str, domain: str, days_left: int, expiry, to_email: str, tz: str = None):
+    """Reminder that the domain name itself is about to expire (website AND email stop working)."""
+    when = "today" if days_left <= 0 else ("tomorrow" if days_left == 1 else f"in {days_left} days")
+    try:
+        _send({
+            "from": FROM_EMAIL, "to": to_email, "reply_to": SUPPORT_EMAIL,
+            "subject": f"⚠️ Your domain {domain} expires {when}",
+            "html": _status_email("#9A5800", "#FFF1D6", "#F0C985", "⚠️ Domain name expiring",
+                                  f"Your domain <strong>{escape(domain)}</strong> expires {when}.",
+                                  [("Website", escape(monitor_name)), ("Domain", escape(domain)),
+                                   ("Expires", escape(_fmt_time(expiry, tz)))],
+                                  "If it runs out, your website <strong>and</strong> any email addresses on it stop working, "
+                                  "and someone else could register it. Renew it with the company you bought it from "
+                                  "(for example GoDaddy, Namecheap or your web host), or turn on auto-renew there."),
+        }, unsubscribe="alerts")
+        print(f"Domain alert sent for {domain}")
+    except Exception as e:
+        print(f"Failed to send domain alert: {e}")
+
 
 def send_ssl_alert(monitor_name: str, url: str, days_left: int, to_email: str = None):
     monitor_name, url = escape(monitor_name), escape(url)

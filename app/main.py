@@ -19,6 +19,7 @@ from app.api.admin import router as admin_router
 from app.api.payments import router as payments_router
 from app.api.report import router as report_router
 from app.api.account import router as account_router
+from app.api.heartbeat import router as heartbeat_router
 
 app = FastAPI(
     title="Uptraqr",
@@ -132,6 +133,7 @@ def robots():
         "Disallow: /logout\n"
         "Disallow: /account\n"
         "Disallow: /unsubscribe\n"
+        "Disallow: /ping/\n"
         f"\nSitemap: {SITE_URL}/sitemap.xml\n"
     )
 
@@ -180,6 +182,7 @@ app.include_router(status_router)
 app.include_router(admin_router)
 app.include_router(report_router)
 app.include_router(account_router)
+app.include_router(heartbeat_router)
 app.include_router(payments_router, prefix="/api")
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])

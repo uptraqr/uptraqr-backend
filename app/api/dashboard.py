@@ -5,7 +5,9 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_optional
-from app.models.models import Monitor, CheckResult, User, DefacementWatch
+from app.models.models import Monitor, CheckResult, User, DefacementWatch, DomainState
+from datetime import datetime
+from app.core.timefmt import fmt
 import json
 from app.core.plans import plan_for
 from app.services.history import uptime_percent
@@ -14,6 +16,17 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@uptraqr.com")
 templates.env.globals["site_url"] = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+
+SITE_URL = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+
+
+def every_words(minutes):
+    minutes = minutes or 60
+    if minutes % 10080 == 0: return "week" if minutes == 10080 else f"{minutes // 10080} weeks"
+    if minutes % 1440 == 0: return "day" if minutes == 1440 else f"{minutes // 1440} days"
+    if minutes % 60 == 0: return "hour" if minutes == 60 else f"{minutes // 60} hours"
+    return f"{minutes} minutes"
+
 
 def saved_ssl_days(db, monitor):
     """
@@ -78,21 +91,33 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         from app.core.timefmt import fmt
         last_checked = fmt(latest.checked_at, current_user.timezone, with_date=False) if latest else "Never"
 
-        ssl_days = saved_ssl_days(db, monitor)
+        kind = monitor.kind or "website"
+        if kind == "website":
+            ssl_days = saved_ssl_days(db, monitor)
+        else:
+            ssl_days = "N/A"
         ssl_warning = isinstance(ssl_days, int) and ssl_days <= 30
+        domain_days = None
+        if kind == "website":
+            dstate = db.query(DomainState).filter(DomainState.monitor_id == monitor.id).first()
+            if dstate and dstate.expiry_date:
+                domain_days = (dstate.expiry_date - datetime.utcnow()).days
+        domain_warning = domain_days is not None and domain_days <= 30
 
         if is_up == True:
             sites_up += 1
         elif is_up == False:
             sites_down += 1
 
-        if ssl_warning:
+        if ssl_warning or domain_warning:
             ssl_warnings += 1
 
-        watch = db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).first()
+        watch = db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).first() if kind == "website" else None
         tamper_status = "paused" if (watch and not watch.enabled) else (watch.status if watch else "learning")
         if plan["tamper_minutes"] is None:
             tamper_status = "locked"
+        if kind != "website":
+            tamper_status = "none"
         if tamper_status in ("changed", "suspicious"):
             tamper_alerts += 1
 
@@ -108,6 +133,13 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "tamper_status": tamper_status,
             "uptime_30": uptime_percent(db, monitor.id, 30) if plan["history_days"] else None,
             "tamper_checked": watch.last_checked_at.strftime("%Y-%m-%dT%H:%M:%SZ") if watch and watch.last_checked_at else None,
+            "kind": kind,
+            "port": monitor.port,
+            "domain_days": domain_days,
+            "domain_warning": domain_warning,
+            "every": every_words(monitor.heartbeat_minutes) if kind == "heartbeat" else None,
+            "ping_url": f"{SITE_URL}/ping/{monitor.heartbeat_token}" if kind == "heartbeat" else None,
+            "last_ping": fmt(monitor.last_ping_at, current_user.timezone) if monitor.last_ping_at else None,
         })
 
     # Problems first: down sites, then possible hacks, then changes, then expiring SSL.
@@ -115,7 +147,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         if m["is_up"] is False: return 0
         if m["tamper_status"] == "suspicious": return 1
         if m["tamper_status"] == "changed": return 2
-        if m["ssl_warning"]: return 3
+        if m["ssl_warning"] or m["domain_warning"]: return 3
         return 4
     monitor_data.sort(key=urgency)
     needs_attention = sum(1 for m in monitor_data if urgency(m) < 4)
@@ -132,7 +164,8 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "ssl_warnings": ssl_warnings,
         "tamper_alerts": tamper_alerts,
         "user": current_user,
-        "plan": plan
+        "plan": plan,
+        "has_servers": any(m["kind"] != "website" for m in monitor_data),
     })
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     response.headers["Pragma"] = "no-cache"
