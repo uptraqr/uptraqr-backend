@@ -19,16 +19,16 @@ ENDED = {"canceled", "unpaid", "incomplete_expired"}
 def apply_plan(db, user: User, plan_key):
     """Set the plan and pause/resume websites so the user is never over their limit."""
     user.plan = plan_key if plan_key in PLANS and plan_key != "free" else None
+    from app.core.plans import limit_for
     plan = plan_for(user)
     monitors = db.query(Monitor).filter(Monitor.user_id == user.id).order_by(Monitor.created_at.asc(), Monitor.id.asc()).all()
-    if not plan["servers"]:
-        # Server and scheduled-job checks are paid features: pause them, keep the settings.
-        for m in monitors:
-            if (m.kind or "website") != "website":
-                m.is_active = False
-        monitors = [m for m in monitors if (m.kind or "website") == "website"]
-    for i, m in enumerate(monitors):
-        m.is_active = i < plan["sites"]   # oldest stay on; the rest pause until they upgrade again
+    # Each kind has its own allowance (websites, servers, scheduled jobs). Within each kind the
+    # oldest stay on and the rest pause (never deleted) until the customer upgrades again.
+    for kind in ("website", "port", "heartbeat"):
+        mine = [m for m in monitors if (m.kind or "website") == kind]
+        cap = limit_for(plan, kind)
+        for i, m in enumerate(mine):
+            m.is_active = i < cap
 
 
 @router.get("/payments/checkout/{plan}")

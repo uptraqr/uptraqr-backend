@@ -12,7 +12,9 @@ PLANS = {
         "check_minutes": 5,        # uptime check interval
         "tamper_minutes": None,    # None = tamper watch locked
         "history_days": 0,         # no history shown
-        "servers": False,          # port and heartbeat checks locked
+        "servers": False,
+        "server_limit": 0,     # port checks
+        "job_limit": 0,        # scheduled-job (heartbeat) checks
     },
     "starter": {
         "label": "Starter",
@@ -22,6 +24,8 @@ PLANS = {
         "tamper_minutes": 30,
         "history_days": 30,
         "servers": True,
+        "server_limit": 3,     # port checks
+        "job_limit": 5,        # scheduled-job (heartbeat) checks
     },
     "pro": {
         "label": "Pro",
@@ -31,6 +35,8 @@ PLANS = {
         "tamper_minutes": 10,
         "history_days": 90,
         "servers": True,
+        "server_limit": 10,     # port checks
+        "job_limit": 20,        # scheduled-job (heartbeat) checks
     },
     "agency": {
         "label": "Agency",
@@ -40,6 +46,8 @@ PLANS = {
         "tamper_minutes": 10,
         "history_days": 365,
         "servers": True,
+        "server_limit": 30,     # port checks
+        "job_limit": 50,        # scheduled-job (heartbeat) checks
     },
 }
 
@@ -73,6 +81,14 @@ def plan_key(user) -> str:
     if key in PLANS and key != "free":
         return key
     return TRIAL_PLAN if on_trial(user) else "free"
+
+
+KIND_LIMIT = {"website": "sites", "port": "server_limit", "heartbeat": "job_limit"}
+KIND_WORDS = {"website": ("website", "websites"), "port": ("server", "servers"), "heartbeat": ("scheduled job", "scheduled jobs")}
+
+
+def limit_for(plan: dict, kind: str) -> int:
+    return plan[KIND_LIMIT.get(kind or "website", "sites")]
 
 
 def plan_for(user) -> dict:

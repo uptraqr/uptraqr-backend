@@ -11,6 +11,8 @@
 .dash{padding:36px 0 0}
 .dash-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
 .flash{margin:20px 0 0}
+.group-h{font-size:19px;margin:30px 0 -4px;display:flex;align-items:baseline;gap:10px}
+.group-h span{font:500 14px var(--body);color:var(--muted)}
 .trial-bar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between;margin-top:20px;padding:14px 16px;border-radius:var(--r-md);background:var(--signal-soft);border:1px solid #D3DAE5;color:var(--ink);font-size:15px}
 .trial-bar.soon{background:var(--watch-bg);border-color:var(--watch-line)}
 .trial-bar span{flex:1 1 320px}
@@ -139,7 +141,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
   <div class="dash-head">
     <div>
       <h1>{{ "Your websites and servers" if has_servers else "Your websites" }}</h1>
-      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan{% if trial_days %} (free trial){% endif %}</strong>. Using {{ monitors|length }} of {{ plan.sites }} check{{ 's' if plan.sites != 1 }}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' and not trial_available %} <a href="/pricing">Upgrade</a>{% endif %}</p>
+      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan{% if trial_days %} (free trial){% endif %}</strong>. {% set nweb = monitors|selectattr('kind','equalto','website')|list|length %}Using {{ nweb }} of {{ plan.sites }} website{{ 's' if plan.sites != 1 }}{% if plan.servers %} · {{ monitors|selectattr('kind','equalto','port')|list|length }} of {{ plan.server_limit }} servers · {{ monitors|selectattr('kind','equalto','heartbeat')|list|length }} of {{ plan.job_limit }} jobs{% endif %}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' and not trial_available %} <a href="/pricing">Upgrade</a>{% endif %}</p>
     </div>
     <button class="btn btn-primary" data-action="add">Add a website or server</button>
   </div>
@@ -186,8 +188,10 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
   </div>
 
   {% if monitors %}
+  {% for gkind, gtitle, gitems, glimit in groups if gitems %}
+  {% if has_servers %}<h2 class="group-h">{{ gtitle }} <span>{{ gitems|length }} of {{ glimit }}</span></h2>{% endif %}
   <div class="sites">
-    {% for m in monitors %}
+    {% for m in gitems %}
     {% set tl = tamper_label.get(m.tamper_status, ("idle", m.tamper_status)) %}
     <article class="site {{ 'down' if m.is_up == False else '' }} {{ 'alarm' if m.tamper_status == 'suspicious' else '' }} {{ 'warn' if m.tamper_status == 'changed' or m.ssl_warning else '' }} {{ 'unknown' if m.is_up is none else '' }}" data-id="{{ m.id }}">
       <div class="site-main">
@@ -273,6 +277,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
     </article>
     {% endfor %}
   </div>
+  {% endfor %}
   {% endif %}
   {% if paused_monitors %}
   <div class="paused">

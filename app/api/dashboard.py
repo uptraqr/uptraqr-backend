@@ -9,7 +9,7 @@ from app.models.models import Monitor, CheckResult, User, DefacementWatch, Domai
 from datetime import datetime
 from app.core.timefmt import fmt
 import json
-from app.core.plans import plan_for, trial_days_left
+from app.core.plans import plan_for, trial_days_left, limit_for
 from app.services.trials import can_start_trial
 from app.services.history import uptime_percent
 
@@ -172,6 +172,10 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "paused_monitors": paused_monitors,
         "request": request,
         "monitors": monitor_data,
+        "groups": [
+            (kind, title, [m for m in monitor_data if m["kind"] == kind], limit_for(plan, kind))
+            for kind, title in (("website", "Websites"), ("port", "Servers"), ("heartbeat", "Scheduled jobs"))
+        ],
         "total_monitors": len(monitors),
         "sites_up": sites_up,
         "sites_down": sites_down,

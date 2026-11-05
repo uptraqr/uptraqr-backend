@@ -58,7 +58,7 @@ def add_monitor_for(db, user, raw_url: str, name: str) -> Monitor:
     mine = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True).all()
     if any((m.kind or "website") == "website" and site_key(m.url) == key for m in mine):
         raise HTTPException(status_code=409, detail="You're already watching this website.")
-    if len(mine) >= plan["sites"]:
+    if sum(1 for m in mine if (m.kind or "website") == "website") >= plan["sites"]:
         raise HTTPException(
             status_code=403,
             detail=f"Your {plan['label']} plan includes {plan['sites']} website{'s' if plan['sites'] != 1 else ''}. Upgrade your plan to add more."
@@ -86,9 +86,13 @@ def add_server_monitor(db, user, data: MonitorCreate) -> Monitor:
     plan = plan_for(user)
     if not plan["servers"]:
         raise HTTPException(status_code=403, detail="Server and scheduled job checks are included on paid plans. Upgrade to Starter or above to add one.")
-    active = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True).count()
-    if active >= plan["sites"]:
-        raise HTTPException(status_code=403, detail=f"Your {plan['label']} plan includes {plan['sites']} checks. Upgrade your plan to add more.")
+    from app.core.plans import limit_for, KIND_WORDS
+    if data.kind in ("port", "heartbeat"):
+        used = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True, Monitor.kind == data.kind).count()
+        cap = limit_for(plan, data.kind)
+        if used >= cap:
+            one, many = KIND_WORDS[data.kind]
+            raise HTTPException(status_code=403, detail=f"Your {plan['label']} plan includes {cap} {one if cap == 1 else many}. Upgrade your plan to add more.")
     name = data.name.strip()[:100]
     if data.kind == "port":
         host = (data.url or "").strip().lower()

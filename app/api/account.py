@@ -54,7 +54,7 @@ def account_page(request: Request, msg: str = "", db: Session = Depends(get_db))
     return templates.TemplateResponse("account.html", {
         "request": request, "user": user,
         "plan": plan_for(user), "plan_key": plan_key(user),
-        "site_count": db.query(Monitor).filter(Monitor.user_id == user.id).count(),
+        "site_count": db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.kind == "website").count(),
         "message": MESSAGES.get(msg),
         "tz_choices": TZ_CHOICES, "tz_label": tz_label(user.timezone),
         "trial_days": trial_days_left(user), "trial_available": can_start_trial(db, user),
