@@ -66,6 +66,18 @@ def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
     except:
         return None
 
+def looks_logged_in(request) -> bool:
+    """Quick check (no database) for showing the right menu: a valid, unexpired login cookie."""
+    token = request.cookies.get("access_token")
+    if not token:
+        return False
+    try:
+        data = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return False
+    return bool(data.get("sub")) and not data.get("purpose")
+
+
 VERIFY_HOURS = 24
 
 def create_verify_token(email: str) -> str:

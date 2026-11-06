@@ -47,10 +47,14 @@ def _login_response(user, url="/dashboard"):
 
 @router.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
+    if getattr(request.state, "logged_in", False):
+        return RedirectResponse("/dashboard", status_code=303)
     return templates.TemplateResponse("login.html", {"request": request})
 
 @router.get("/signup", response_class=HTMLResponse)
 def signup_page(request: Request):
+    if getattr(request.state, "logged_in", False):
+        return RedirectResponse("/dashboard", status_code=303)
     return templates.TemplateResponse("signup.html", {"request": request})
 
 @router.post("/api/auth/signup")

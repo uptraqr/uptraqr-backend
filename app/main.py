@@ -53,6 +53,8 @@ _turnstile.template_globals(templates.env)
 async def security_headers(request: Request, call_next):
     nonce = secrets.token_urlsafe(16)
     request.state.csp_nonce = nonce   # templates put this on their <script> tags
+    from app.core.auth import looks_logged_in
+    request.state.logged_in = looks_logged_in(request)   # so public pages show "Dashboard" instead of "Log in"
     response = await call_next(request)
     h = response.headers
     if not request.url.path.startswith(("/docs", "/redoc", "/openapi.json")):
