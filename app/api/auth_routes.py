@@ -23,6 +23,8 @@ templates.env.globals["support_email"] = os.getenv("SUPPORT_EMAIL", "support@upt
 from app.core import turnstile as _turnstile
 _turnstile.template_globals(templates.env)
 templates.env.globals["site_url"] = os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/")
+from app.api import google_auth as _google
+_google.template_globals(templates.env)
 SITE_URL = templates.env.globals["site_url"]
 # Safety switch: set REQUIRE_EMAIL_VERIFICATION=false in Railway if emails ever stop sending,
 # so new customers aren't locked out while you fix it.

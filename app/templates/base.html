@@ -180,7 +180,7 @@ main{flex:1}
 <script nonce="{{ request.state.csp_nonce }}">
 (function(){var b=document.getElementById('menuBtn'),n=document.getElementById('nav');
 if(b&&n)b.addEventListener('click',function(){var o=n.classList.toggle('open');b.setAttribute('aria-expanded',o);});})();
-try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;document.querySelectorAll('input[name=tz]').forEach(function(i){if(!i.value)i.value=z;});}catch(e){}
+try{var z=Intl.DateTimeFormat().resolvedOptions().timeZone;document.querySelectorAll('input[name=tz]').forEach(function(i){if(!i.value)i.value=z;});document.querySelectorAll('a[data-google]').forEach(function(a){a.href='/auth/google?tz='+encodeURIComponent(z);});}catch(e){}
 </script>
 {% block scripts %}{% endblock %}
 </body>

@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block nav %}<a href="/">Home</a><a href="/#pricing">Pricing</a>{% endblock %}
 {% block styles %}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#1F1F1F;border:1px solid #747775;font-weight:600}
+.btn-google:hover{background:#F8FAFF;color:#1F1F1F;border-color:#1F1F1F}
+.or{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:14px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--rule-strong)}
 .auth{display:grid;place-items:center;padding:48px var(--gutter) 24px}
 .auth-card{width:100%;max-width:420px;background:var(--console);border:1px solid var(--rule-strong);border-radius:var(--r-lg);padding:clamp(24px,5vw,36px)}
 .auth-card h1{font-size:28px}

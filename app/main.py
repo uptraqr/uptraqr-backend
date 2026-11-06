@@ -20,6 +20,7 @@ from app.api.payments import router as payments_router
 from app.api.report import router as report_router
 from app.api.account import router as account_router
 from app.api.heartbeat import router as heartbeat_router
+from app.api.google_auth import router as google_router
 
 app = FastAPI(
     title="Uptraqr",
@@ -183,6 +184,7 @@ app.include_router(admin_router)
 app.include_router(report_router)
 app.include_router(account_router)
 app.include_router(heartbeat_router)
+app.include_router(google_router)
 app.include_router(payments_router, prefix="/api")
 
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
