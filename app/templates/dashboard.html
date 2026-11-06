@@ -118,6 +118,13 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--console);border:2px solid var(--rule-strong);border-radius:var(--r-sm);color:var(--ink);font:500 17px var(--body)}
 @media (max-width:420px){.kinds{grid-template-columns:1fr}.kinds span{display:flex;gap:8px;align-items:baseline}}
 .hb p{margin:0 0 10px;color:var(--text);font-size:15px}
+.pill.maint{background:var(--signal-soft);color:var(--ink);border:1px solid #D3DAE5}
+.sets .set+.set{border-top:1px solid var(--rule);margin-top:14px;padding-top:14px}
+.sets h4{margin:0 0 4px;font-size:15px;color:var(--ink)}
+.sets p{margin:0 0 10px;color:var(--text);font-size:14px}
+.set-row{display:flex;gap:8px;flex-wrap:wrap}
+.set-row select,.set-row input{flex:1 1 180px;min-height:44px;padding:8px 12px;border:2px solid var(--rule-strong);border-radius:var(--r-sm);background:var(--console);color:var(--ink);font:500 16px var(--body)}
+.set-row select:focus,.set-row input:focus{outline:none;border-color:var(--signal);box-shadow:0 0 0 3px var(--focus)}
 .hb-url{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--signal-soft);border:1px solid var(--rule);border-radius:var(--r-sm);padding:8px 10px;margin:0 0 14px}
 .hb-url code{flex:1 1 200px;min-width:0;word-break:break-all;font-size:13px;color:var(--ink)}
 .hb pre{background:#0F1B2D;color:#E2E8F0;border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;white-space:pre-wrap;word-break:break-all;margin:0 0 12px}
@@ -200,6 +207,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
           <div class="site-url">{% if m.kind == 'port' %}Server {{ m.url }} · port {{ m.port }}{% elif m.kind == 'heartbeat' %}Scheduled job · checks in every {{ m.every }}{% else %}{{ m.url }}{% endif %}</div>
         </div>
         <div class="site-pills">
+          {% if m.maintenance %}<span class="pill maint">🔧 Maintenance until {{ m.maintenance }}</span>{% endif %}
           {% if m.kind == 'heartbeat' %}
             {% if m.is_up %}<span class="pill clear">Checked in</span>{% elif m.is_up == False %}<span class="pill breach">Missed check-in</span>{% else %}<span class="pill idle">Waiting for first check-in</span>{% endif %}
           {% else %}
@@ -224,6 +232,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
           {% if m.kind != 'heartbeat' %}<span>Last check <strong>{{ m.last_checked }}</strong></span>{% endif %}
         </div>
         <div class="site-actions">
+          {% if m.maintenance %}<button class="btn btn-primary btn-sm" data-action="maint" data-minutes="0" data-id="{{ m.id }}">End maintenance</button>{% endif %}
           {% if m.kind != 'heartbeat' %}<button class="btn btn-quiet btn-sm" data-action="check" data-id="{{ m.id }}">Check now</button>{% endif %}
           <button class="btn btn-danger btn-sm" data-action="remove" data-id="{{ m.id }}" data-name="{{ m.name }}">Remove</button>
         </div>
@@ -274,6 +283,29 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
         </div></div>
       </details>
       {% endif %}
+      <details class="tw" data-locked="1">
+        <summary>Settings <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="tw-body sets">
+          <div class="set">
+            <h4>Pause alerts (maintenance)</h4>
+            <p>Working on {{ 'your site' if m.kind == 'website' else 'it' }}? Pause checks and alerts so you don't get false alarms. They switch back on by themselves.{% if m.kind == 'website' and m.tamper_status not in ('locked','none') %} Afterwards, tamper watch takes a fresh snapshot so your changes aren't flagged.{% endif %}</p>
+            <div class="set-row">
+              <select aria-label="How long" id="mt-{{ m.id }}"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="240">4 hours</option><option value="1440">24 hours</option></select>
+              <button class="btn btn-ghost btn-sm" data-action="maint" data-id="{{ m.id }}">Pause alerts</button>
+            </div>
+          </div>
+          {% if m.kind == 'website' %}
+          <div class="set">
+            <h4>Words to check for</h4>
+            <p>Optional. We'll alert you if your page stops showing these words, for example <em>Add to cart</em> or <em>Book now</em>. It catches pages that load but are broken.</p>
+            <div class="set-row">
+              <input id="kw-{{ m.id }}" value="{{ m.keyword or '' }}" maxlength="100" placeholder="e.g. Book now" aria-label="Words to check for">
+              <button class="btn btn-ghost btn-sm" data-action="keyword" data-id="{{ m.id }}">Save</button>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </details>
     </article>
     {% endfor %}
   </div>
@@ -315,6 +347,8 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
     <div id="addFields">
     <div class="field"><label for="siteName">Name</label><input id="siteName" placeholder="My business website" maxlength="100" required></div>
     <div class="field" data-for="website"><label for="siteUrl">Website address</label><input id="siteUrl" placeholder="yourbusiness.ca" inputmode="url" autocomplete="url"></div>
+    <div class="field" data-for="website"><label for="siteKw">Words to check for <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="siteKw" placeholder="e.g. Book now" maxlength="100">
+      <span class="hint">We'll alert you if your page stops showing these words.</span></div>
     <div class="field" data-for="port" hidden><label for="hostName">Server name or IP address</label><input id="hostName" placeholder="mail.yourbusiness.ca" autocapitalize="off" spellcheck="false">
       <span class="hint">We'll check that it answers from the internet.</span></div>
     <div class="field" data-for="port" hidden><label for="portNum">Port</label><input id="portNum" type="number" min="1" max="65535" placeholder="587" inputmode="numeric">
@@ -433,7 +467,7 @@ async function addSite(ev){
   ev.preventDefault(); const btn=document.getElementById('addBtn'), err=document.getElementById('addError');
   btn.disabled=true; err.hidden=true;
   const k=currentKind(), body={kind:k,name:document.getElementById('siteName').value};
-  if(k==='website') body.url=document.getElementById('siteUrl').value;
+  if(k==='website'){ body.url=document.getElementById('siteUrl').value; body.keyword=document.getElementById('siteKw').value; }
   if(k==='port'){ body.url=document.getElementById('hostName').value; body.port=parseInt(document.getElementById('portNum').value,10)||null; }
   if(k==='heartbeat') body.every_minutes=parseInt(document.getElementById('everyMin').value,10);
   try{
@@ -465,6 +499,17 @@ document.addEventListener('click', e => {
   else if(a==='close-add') document.getElementById('addDialog').close();
   else if(a==='check') checkNow(id, b);
   else if(a==='remove') removeSite(id, b);
+  else if(a==='maint'){
+    const mins = b.dataset.minutes!==undefined ? parseInt(b.dataset.minutes,10) : parseInt(document.getElementById('mt-'+id).value,10);
+    b.disabled=true;
+    api('/api/monitors/'+id+'/maintenance',{method:'POST',body:JSON.stringify({minutes:mins})}).then(()=>location.reload()).catch(e=>{toast(e.message);b.disabled=false;});
+  }
+  else if(a==='keyword'){
+    b.disabled=true;
+    api('/api/monitors/'+id+'/settings',{method:'POST',body:JSON.stringify({keyword:document.getElementById('kw-'+id).value})})
+      .then(r=>{toast(r.keyword?'Saved. We\'ll check for “'+r.keyword+'”.':'Keyword check turned off.');b.disabled=false;})
+      .catch(e=>{toast(e.message);b.disabled=false;});
+  }
   else if(a==='copy'){ const t=document.getElementById(b.dataset.target).textContent; (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Link copied.')).catch(()=>toast('Press and hold the link to copy it.')); }
 });
 document.addEventListener('toggle', e => {

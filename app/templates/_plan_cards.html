@@ -5,12 +5,22 @@
   "pro":     {"tamper": "Tamper watch every 10 minutes", "hist": "90 days of history"},
   "agency":  {"tamper": "Tamper watch every 10 minutes", "hist": "1 year of history"},
 } %}
-<div class="plans">
+<div class="billing-switch" role="group" aria-label="Billing period">
+  <button type="button" data-billing="month" aria-pressed="true">Monthly</button>
+  <button type="button" data-billing="year" aria-pressed="false">Yearly <span>2 months free</span></button>
+</div>
+<div class="plans" data-billing="month">
   {% for key in ["free", "starter", "pro", "agency"] %}{% set p = PLANS[key] %}
   <div class="plan {{ 'featured' if key == 'pro' }}">
     {% if key == 'pro' %}<span class="tag">Most popular</span>{% endif %}
     <h3>{{ p.label }}</h3>
-    <div class="price">${{ p.price_cad }}<small>{% if p.price_cad %} /month{% else %} forever{% endif %}</small></div>
+    {% if p.price_cad %}
+    <div class="price per-month">${{ p.price_cad }}<small> /month</small></div>
+    <div class="price per-year">${{ p.price_cad * 10 }}<small> /year</small></div>
+    <p class="save per-year">Like getting 2 months free (${{ p.price_cad * 2 }} off)</p>
+    {% else %}
+    <div class="price">$0<small> forever</small></div>
+    {% endif %}
     <ul>
       <li>{{ p.sites }} website{{ 's' if p.sites != 1 }}</li>
       <li>Uptime check every {{ p.check_minutes }} minute{{ 's' if p.check_minutes != 1 }}</li>
@@ -22,10 +32,20 @@
       {% if feats[key].hist %}<li>{{ feats[key].hist }}</li>{% else %}<li class="no">No history</li>{% endif %}
     </ul>
     {% if checkout and key != 'free' %}
-      <a class="btn {{ 'btn-primary' if key == 'pro' else 'btn-ghost' }}" href="/api/payments/checkout/{{ key }}">Choose {{ p.label }}</a>
+      <a class="btn {{ 'btn-primary' if key == 'pro' else 'btn-ghost' }}" href="/api/payments/checkout/{{ key }}" data-checkout="/api/payments/checkout/{{ key }}">Choose {{ p.label }}</a>
     {% else %}
       <a class="btn {{ 'btn-primary' if key == 'pro' else 'btn-ghost' }}" href="/signup">{{ 'Start free' if key == 'free' else 'Start with ' ~ p.label }}</a>
     {% endif %}
   </div>
   {% endfor %}
 </div>
+<script nonce="{{ request.state.csp_nonce }}">
+(function(){
+  var sw=document.querySelectorAll('.billing-switch button'), plans=document.querySelector('.plans');
+  sw.forEach(function(b){b.addEventListener('click',function(){
+    var v=b.dataset.billing; plans.dataset.billing=v;
+    sw.forEach(function(x){x.setAttribute('aria-pressed', x===b);});
+    document.querySelectorAll('[data-checkout]').forEach(function(a){a.href=a.dataset.checkout+(v==='year'?'?billing=year':'');});
+  });});
+})();
+</script>

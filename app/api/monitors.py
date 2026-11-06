@@ -27,6 +27,24 @@ class MonitorCreate(BaseModel):
     kind: str = "website"            # website | port | heartbeat
     port: Optional[int] = None
     every_minutes: Optional[int] = None
+    keyword: Optional[str] = None
+
+
+class MonitorSettings(BaseModel):
+    keyword: Optional[str] = None
+
+
+class Maintenance(BaseModel):
+    minutes: int          # 0 ends maintenance now
+
+MAINTENANCE_CHOICES = {0, 30, 60, 240, 1440}
+
+
+def _clean_keyword(k):
+    k = (k or "").strip()
+    if len(k) > 100:
+        raise HTTPException(status_code=400, detail="Keep the words to check under 100 characters.")
+    return k or None
 
 HEARTBEAT_CHOICES = {5, 15, 30, 60, 360, 720, 1440, 10080}   # 5 min ... 1 week
 
@@ -133,7 +151,40 @@ def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db), curren
         raise HTTPException(status_code=400, detail="Please give this a name.")
     if monitor.kind in ("port", "heartbeat"):
         return add_server_monitor(db, current_user, monitor)
-    return add_monitor_for(db, current_user, monitor.url, monitor.name)
+    keyword = _clean_keyword(monitor.keyword)
+    m = add_monitor_for(db, current_user, monitor.url, monitor.name)
+    if keyword:
+        m.keyword = keyword
+        db.commit()
+        db.refresh(m)
+    return m
+
+
+@router.post("/monitors/{monitor_id}/settings")
+def update_settings(monitor_id: int, data: MonitorSettings, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    monitor = _own_monitor(db, monitor_id, current_user)
+    if (monitor.kind or "website") != "website":
+        raise HTTPException(status_code=400, detail="Keyword checks are for websites.")
+    monitor.keyword = _clean_keyword(data.keyword)
+    db.commit()
+    return {"keyword": monitor.keyword}
+
+
+@router.post("/monitors/{monitor_id}/maintenance")
+def set_maintenance(monitor_id: int, data: Maintenance, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Pause checks and alerts while the owner works on the site. Ends by itself."""
+    from datetime import datetime, timedelta
+    if data.minutes not in MAINTENANCE_CHOICES:
+        raise HTTPException(status_code=400, detail="Choose how long to pause alerts.")
+    monitor = _own_monitor(db, monitor_id, current_user)
+    if data.minutes == 0:
+        monitor.maintenance_until = None
+    else:
+        monitor.maintenance_until = datetime.utcnow() + timedelta(minutes=data.minutes)
+        if (monitor.kind or "website") == "website":
+            monitor.relearn_after_maintenance = True    # their changes become the new normal for tamper watch
+    db.commit()
+    return {"maintenance_until": monitor.maintenance_until.strftime("%Y-%m-%dT%H:%M:%SZ") if monitor.maintenance_until else None}
 
 @router.delete("/monitors/{monitor_id}")
 def delete_monitor(monitor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

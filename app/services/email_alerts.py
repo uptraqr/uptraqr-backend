@@ -91,10 +91,15 @@ def _status_email(colour, bg, line, heading, lead, rows, footer):
     </div>'''
 
 
-def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None, monitor=None):
+def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None, monitor=None, reason: str = None):
     what, where = describe_monitor(monitor) if monitor else ("website", url)
     name = escape(monitor_name)
-    if what == "website":
+    if what == "website" and reason == "keyword":
+        place = f'<a href="{escape(where)}" style="color:#0F1B2D">{escape(where)}</a>'
+        lead = (f"<strong>{name}</strong> is loading, but the words <strong>\u201c{escape(monitor.keyword)}\u201d</strong> "
+                "are missing from the page. Something on it may be broken.")
+        footer = "We checked twice to be sure. We'll email you as soon as the words are back."
+    elif what == "website":
         place = f'<a href="{escape(where)}" style="color:#0F1B2D">{escape(where)}</a>'
         lead, footer = f"<strong>{name}</strong> is not responding.", "We'll keep checking and email you the moment it's back."
     elif what == "server":
@@ -110,7 +115,9 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str =
         _send({
             "from": FROM_EMAIL, "to": to_email or ALERT_EMAIL, "reply_to": SUPPORT_EMAIL,
             "bcc": ADMIN_COPY_EMAIL if to_email else None,
-            "subject": f"🔴 {monitor_name} is down" if what != "scheduled job" else f"🔴 {monitor_name} missed its check-in",
+            "subject": (f"🔴 {monitor_name} missed its check-in" if what == "scheduled job"
+                        else f"🟠 {monitor_name}: page content missing" if reason == "keyword"
+                        else f"🔴 {monitor_name} is down"),
             "html": _status_email("#BF2433", "#FDE7E9", "#F1A7AF",
                                   "🔴 Missed check-in" if what == "scheduled job" else f"🔴 {what.capitalize()} down",
                                   lead, [("Name", name), ("Website" if what == "website" else "Details", place),

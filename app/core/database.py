@@ -85,6 +85,9 @@ def _add_missing_columns():
             "heartbeat_token": "VARCHAR",
             "heartbeat_minutes": "INTEGER",
             "last_ping_at": "TIMESTAMP",
+            "keyword": "VARCHAR",
+            "maintenance_until": "TIMESTAMP",
+            "relearn_after_maintenance": "BOOLEAN NOT NULL DEFAULT FALSE",
         }.items():
             if col not in mcols:
                 cx.execute(text(f"ALTER TABLE monitors ADD COLUMN {col} {kind}"))

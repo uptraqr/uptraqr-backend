@@ -106,6 +106,21 @@ def run_defacement_checks():
             minutes = plan_for(owners.get(monitor.user_id))["tamper_minutes"]
             if minutes is None:
                 continue
+            if monitor.maintenance_until and monitor.maintenance_until > now:
+                continue          # the owner is changing the site on purpose
+            if monitor.relearn_after_maintenance:
+                # Maintenance just finished: take a fresh "known good" snapshot instead of alerting on their changes.
+                try:
+                    watch = get_or_create_watch(db, monitor)
+                    if watch.enabled:
+                        learn(db, monitor, watch)
+                        resolve_open_events(db, monitor.id, "maintenance")
+                    monitor.relearn_after_maintenance = False
+                    db.commit()
+                except Exception as e:
+                    db.rollback()
+                    print(f"Re-learn after maintenance failed for monitor {monitor.id}: {e}")
+                continue
             watch = db.query(DefacementWatch).filter(DefacementWatch.monitor_id == monitor.id).first()
             if watch and watch.last_checked_at and now - watch.last_checked_at < timedelta(minutes=minutes) - timedelta(seconds=30):
                 continue

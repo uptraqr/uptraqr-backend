@@ -154,6 +154,9 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "every": every_words(monitor.heartbeat_minutes) if kind == "heartbeat" else None,
             "ping_url": f"{SITE_URL}/ping/{monitor.heartbeat_token}" if kind == "heartbeat" else None,
             "last_ping": fmt(monitor.last_ping_at, current_user.timezone) if monitor.last_ping_at else None,
+            "keyword": monitor.keyword,
+            "maintenance": (fmt(monitor.maintenance_until, current_user.timezone, with_date=(monitor.maintenance_until - datetime.utcnow()).total_seconds() > 12 * 3600)
+                            if monitor.maintenance_until and monitor.maintenance_until > datetime.utcnow() else None),
         })
 
     # Problems first: down sites, then possible hacks, then changes, then expiring SSL.

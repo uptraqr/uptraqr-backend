@@ -32,7 +32,7 @@ def apply_plan(db, user: User, plan_key):
 
 
 @router.get("/payments/checkout/{plan}")
-def checkout(plan: str, request: Request, db: Session = Depends(get_db)):
+def checkout(plan: str, request: Request, billing: str = "month", db: Session = Depends(get_db)):
     user = get_current_user_optional(request, db)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
@@ -43,7 +43,7 @@ def checkout(plan: str, request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/api/payments/manage", status_code=302)
     try:
         session = create_checkout_session(
-            plan=plan, user=user,
+            plan=plan, user=user, billing="year" if billing == "year" else "month",
             success_url=f"{SITE_URL}/dashboard?payment=success",
             cancel_url=f"{SITE_URL}/pricing",
         )

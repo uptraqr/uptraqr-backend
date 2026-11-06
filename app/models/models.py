@@ -39,6 +39,9 @@ class Monitor(Base):
     heartbeat_token = Column(String, nullable=True, unique=True, index=True)
     heartbeat_minutes = Column(Integer, nullable=True)         # how often the job should check in
     last_ping_at = Column(DateTime, nullable=True)
+    keyword = Column(String, nullable=True)                    # websites: alert if the page stops showing this
+    maintenance_until = Column(DateTime, nullable=True)        # alerts paused until this time
+    relearn_after_maintenance = Column(Boolean, nullable=False, default=False)
 
 class CheckResult(Base):
     __tablename__ = "check_results"

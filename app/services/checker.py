@@ -41,6 +41,35 @@ def check_url(url: str):
     return result
 
 
+def _keyword_once(url: str, keyword: str):
+    """Load the page (following safe redirects) and check the words are still there."""
+    from app.services.safe_fetch import safe_get_detailed
+    try:
+        r = safe_get_detailed(url)
+    except (requests.exceptions.RequestException, UnsafeURLError):
+        return {"is_up": False, "status_code": None, "response_time": None}
+    if r["status"] >= 500:
+        return {"is_up": False, "status_code": r["status"], "response_time": r["seconds"]}
+    found = keyword.casefold() in r["text"].casefold()
+    out = {"is_up": found, "status_code": r["status"], "response_time": r["seconds"]}
+    if not found:
+        out["reason"] = "keyword"
+    return out
+
+
+def check_keyword(url: str, keyword: str):
+    result = _keyword_once(url, keyword)
+    if not result["is_up"]:
+        time.sleep(RETRY_DELAY)
+        result = _keyword_once(url, keyword)
+    return result
+
+
+def in_maintenance(monitor, now=None) -> bool:
+    until = getattr(monitor, "maintenance_until", None)
+    return bool(until and until > (now or datetime.utcnow()))
+
+
 def _port_once(host: str, port: int):
     import socket
     from app.services.safe_fetch import check_host_is_safe
@@ -84,6 +113,8 @@ def check_any(monitor):
         return check_port(monitor.url, monitor.port)
     if kind == "heartbeat":
         return check_heartbeat(monitor)
+    if getattr(monitor, "keyword", None):
+        return check_keyword(monitor.url, monitor.keyword)
     return check_url(monitor.url)
 
 
@@ -100,6 +131,8 @@ def _due_monitors(db, now):
         interval = timedelta(minutes=plan_for(owner)["check_minutes"])
         prev = last.get(m.id)
         # 15 s of slack so a check that ran a little late isn't skipped for a whole cycle
+        if in_maintenance(m, now):
+            continue            # maintenance: no checks, no alerts, no "down" marks in the history
         if prev is None or now - prev >= interval - timedelta(seconds=15):
             due.append((m, owner))
     return due
@@ -123,7 +156,7 @@ def _record(db, monitor, user, result):
     if not result["is_up"] and not open_incident:
         db.add(Incident(monitor_id=monitor.id))
         if wants_email:
-            send_down_alert(monitor.name, monitor.url, email, tz=user.timezone, monitor=monitor)
+            send_down_alert(monitor.name, monitor.url, email, tz=user.timezone, monitor=monitor, reason=result.get("reason"))
         if user and user.phone:
             send_down_sms(monitor.name, monitor.url, user.phone)
     elif result["is_up"] and open_incident:

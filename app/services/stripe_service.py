@@ -28,11 +28,15 @@ PLANS = {
     }
 }
 
-def create_checkout_session(plan: str, user, success_url: str, cancel_url: str):
+YEARLY_MONTHS = 10   # pay for 10 months, get 12 (2 months free)
+
+
+def create_checkout_session(plan: str, user, success_url: str, cancel_url: str, billing: str = "month"):
     stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
     plan_data = PLANS.get(plan)
     if not plan_data:
         raise ValueError(f"Invalid plan: {plan}")
+    yearly = billing == "year"
     who = {"customer": user.stripe_customer_id} if user.stripe_customer_id else {"customer_email": user.email}
     return stripe.checkout.Session.create(
         **who,
@@ -41,11 +45,11 @@ def create_checkout_session(plan: str, user, success_url: str, cancel_url: str):
             "price_data": {
                 "currency": plan_data["currency"],
                 "product_data": {
-                    "name": f"Uptraqr {plan_data['name']} Plan",
-                    "description": f"Up to {plan_data['monitors']} websites",
+                    "name": f"Uptraqr {plan_data['name']} Plan" + (" (yearly)" if yearly else ""),
+                    "description": f"Up to {plan_data['monitors']} websites" + (", 2 months free" if yearly else ""),
                 },
-                "unit_amount": plan_data["price"],
-                "recurring": {"interval": plan_data["interval"]},
+                "unit_amount": plan_data["price"] * (YEARLY_MONTHS if yearly else 1),
+                "recurring": {"interval": "year" if yearly else plan_data["interval"]},
             },
             "quantity": 1,
         }],
@@ -53,7 +57,7 @@ def create_checkout_session(plan: str, user, success_url: str, cancel_url: str):
         client_reference_id=str(user.id),            # who paid, even if they change their email later
         success_url=success_url,
         cancel_url=cancel_url,
-        metadata={"plan": plan},
-        subscription_data={"metadata": {"plan": plan, "user_id": str(user.id)}},
+        metadata={"plan": plan, "billing": "year" if yearly else "month"},
+        subscription_data={"metadata": {"plan": plan, "user_id": str(user.id), "billing": "year" if yearly else "month"}},
         allow_promotion_codes=True,
     )
