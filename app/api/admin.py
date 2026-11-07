@@ -10,6 +10,7 @@ from app.models.models import Monitor, CheckResult, User, Incident, DefacementWa
 import os
 import hmac
 from app.core.auth import SECRET_KEY, ALGORITHM
+from app.api.testpage import STATES as TEST_STATES, get_state as get_test_state, set_state as set_test_state
 from app.core.abuse import RateLimiter, client_ip
 
 router = APIRouter()
@@ -125,7 +126,18 @@ def admin_panel(request: Request, db: Session = Depends(get_db)):
         "total_monitors": len(monitor_data),
         "sites_up": sites_up,
         "sites_down": sites_down,
+        "test_states": TEST_STATES,
+        "test_state": get_test_state(db),
+        "site_url": os.getenv("SITE_URL", "https://www.uptraqr.com").rstrip("/"),
     })
+
+
+@router.post("/admin/test-page")
+def admin_set_test_page(request: Request, state: str = Form("normal"), db: Session = Depends(get_db)):
+    if not _is_admin(request):
+        return RedirectResponse("/admin/login", status_code=303)
+    set_test_state(db, state)
+    return RedirectResponse("/admin#test-page", status_code=303)
 
 
 from app.services.cleanup import delete_monitor_rows as _delete_monitor_rows, delete_user_everything

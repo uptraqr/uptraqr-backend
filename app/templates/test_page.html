@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{% if state == 'hacked' %}HACKED{% else %}Quillfern Pottery (Uptraqr test page){% endif %}</title>
+<style>
+  body{margin:0;font-family:Georgia,'Times New Roman',serif;background:#FBF7F1;color:#3A2F28}
+  .bar{background:#0F1B2D;color:#fff;font:600 13px/1.4 -apple-system,'Segoe UI',sans-serif;padding:8px 16px;text-align:center}
+  .wrap{max-width:720px;margin:0 auto;padding:32px 16px}
+  h1{font-size:34px;margin:0 0 8px}
+  .lead{font-size:18px;color:#5C4B3F;margin:0 0 24px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:24px 0}
+  .card{background:#fff;border:1px solid #E6DCCF;border-radius:10px;padding:16px}
+  .card b{display:block;font-size:18px}
+  .price{color:#8A5A2B;font-weight:bold}
+  .btn{display:inline-block;background:#8A5A2B;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-family:-apple-system,'Segoe UI',sans-serif;font-weight:600}
+  .notice{background:#FFF4D6;border:1px solid #F0D58A;border-radius:8px;padding:10px 14px;margin:18px 0}
+  footer{color:#8C7B6D;font-size:14px;margin-top:40px}
+  .hacked{background:#000;color:#3CFF5A;min-height:100vh;display:grid;place-content:center;text-align:center;font-family:'Courier New',monospace;padding:20px}
+  .hacked h1{font-size:44px;color:#3CFF5A}
+</style>
+</head>
+<body>
+{% if state == 'hacked' %}
+<div class="hacked">
+  <h1>HACKED BY 0xTEST</h1>
+  <p>your security is an illusion. greetz to the crew.</p>
+  <p style="color:#888;font-size:12px">(This is an Uptraqr test page. Nothing was really hacked.)</p>
+</div>
+{% else %}
+<div class="bar">Uptraqr test page: a pretend business website for testing alerts. Not a real shop.</div>
+<div class="wrap">
+  <h1>{{ 'Quillfern Pottery: Holiday Sale' if state == 'changed' else 'Quillfern Pottery' }}</h1>
+  {% if state == 'changed' %}
+  <p class="lead">Our biggest sale of the year: 20% off all mugs and planters until December 31, plus gift cards for classes.</p>
+  {% else %}
+  <p class="lead">Handmade mugs, planters and weekend wheel-throwing classes in Surrey, BC.</p>
+  {% endif %}
+  {% if state == 'changed' %}
+  <div class="notice">Holiday hours: we're closed December 24 to 27. New spring class dates are now open!</div>
+  {% else %}
+  <div class="notice">Open Tuesday to Sunday, 10 am to 6 pm.</div>
+  {% endif %}
+  <div class="cards">
+    <div class="card"><b>Beginner wheel class</b><span class="price">{{ '$65' if state == 'changed' else '$55' }}</span> per person, 2 hours</div>
+    <div class="card"><b>Handmade mugs</b><span class="price">{{ '$38' if state == 'changed' else '$32' }}</span> each</div>
+    <div class="card"><b>Planters</b><span class="price">from {{ '$28' if state == 'changed' else '$24' }}</span></div>
+  </div>
+  {% if state != 'keyword' %}
+  <p><a class="btn" href="#book">Book a class</a></p>
+  {% else %}
+  <p style="color:#8C7B6D">Bookings are temporarily unavailable.</p>
+  {% endif %}
+  {% if state == 'spam' %}
+  <div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
+    <a href="https://best-online-casino-bonus.example/">online casino</a>
+    <a href="https://cheap-viagra-pills.example/">cheap viagra</a>
+    <a href="https://slot-gacor-maxwin.example/">slot gacor</a>
+    <a href="https://payday-loan-now.example/">payday loan</a>
+  </div>
+  {% endif %}
+  <footer>&copy; Quillfern Pottery (pretend) &middot; 123 Clay Street, Surrey, BC</footer>
+</div>
+{% endif %}
+</body>
+</html>

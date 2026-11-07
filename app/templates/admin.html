@@ -3,6 +3,9 @@
 {% block title %}Admin · Uptraqr{% endblock %}
 {% block nav %}<a href="/">Site</a><form method="POST" action="/admin/logout" style="margin:0"><button type="submit" class="btn btn-ghost btn-sm">Log out</button></form>{% endblock %}
 {% block styles %}
+.tp{background:var(--console);border:1px solid var(--rule-strong);border-radius:var(--r-md);padding:16px;margin-bottom:24px}
+.tp p{margin:0 0 10px;color:var(--text)}
+.tp-form{display:flex;flex-wrap:wrap;gap:8px}
 .admin{padding:36px 0 0}
 .admin h1{font-size:30px}
 .admin h2{font-size:20px;margin:36px 0 12px}
@@ -31,6 +34,17 @@
     <div><b>{{ total_monitors }}</b><span>Websites</span></div>
     <div><b style="color:var(--clear)">{{ sites_up }}</b><span>Online</span></div>
     <div><b style="color:var(--breach)">{{ sites_down }}</b><span>Down</span></div>
+  </div>
+
+  <h2 id="test-page">Test page</h2>
+  <div class="tp">
+    <p>A pretend shop at <a href="{{ site_url }}/test-page" target="_blank" rel="noopener">{{ site_url }}/test-page</a> (and a pretend API at <a href="{{ site_url }}/test-page/api" target="_blank" rel="noopener">/test-page/api</a>). Add it to a test account as a website (and the API as an API check), wait for tamper watch to learn it, then switch states here to trigger real alerts.</p>
+    <p>Showing now: <strong>{{ test_states[test_state] }}</strong></p>
+    <form method="POST" action="/admin/test-page" class="tp-form">
+      {% for key, label in test_states.items() %}
+      <button type="submit" name="state" value="{{ key }}" class="btn btn-sm {{ 'btn-primary' if key == test_state else 'btn-ghost' }}">{{ label.split(':')[0] }}</button>
+      {% endfor %}
+    </form>
   </div>
 
   <h2>Users</h2>

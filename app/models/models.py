@@ -135,3 +135,10 @@ class TrialClaim(Base):
     id = Column(Integer, primary_key=True)
     email_canonical = Column(String, unique=True, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class SiteSetting(Base):
+    """Small app-wide settings, e.g. which state the admin's test page is showing."""
+    __tablename__ = "site_settings"
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=True)
