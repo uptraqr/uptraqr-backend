@@ -155,6 +155,10 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
             "ping_url": f"{SITE_URL}/ping/{monitor.heartbeat_token}" if kind == "heartbeat" else None,
             "last_ping": fmt(monitor.last_ping_at, current_user.timezone) if monitor.last_ping_at else None,
             "keyword": monitor.keyword,
+            "api_method": monitor.api_method,
+            "api_expect": monitor.api_expect_status,
+            "api_max": (monitor.api_max_ms / 1000) if monitor.api_max_ms else None,
+            "api_auth": monitor.api_header_name,
             "maintenance": (fmt(monitor.maintenance_until, current_user.timezone, with_date=(monitor.maintenance_until - datetime.utcnow()).total_seconds() > 12 * 3600)
                             if monitor.maintenance_until and monitor.maintenance_until > datetime.utcnow() else None),
         })
@@ -177,7 +181,7 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
         "monitors": monitor_data,
         "groups": [
             (kind, title, [m for m in monitor_data if m["kind"] == kind], limit_for(plan, kind))
-            for kind, title in (("website", "Websites"), ("port", "Servers"), ("heartbeat", "Scheduled jobs"))
+            for kind, title in (("website", "Websites"), ("port", "Servers"), ("api", "APIs"), ("heartbeat", "Scheduled jobs"))
         ],
         "total_monitors": len(monitors),
         "sites_up": sites_up,

@@ -88,6 +88,12 @@ def _add_missing_columns():
             "keyword": "VARCHAR",
             "maintenance_until": "TIMESTAMP",
             "relearn_after_maintenance": "BOOLEAN NOT NULL DEFAULT FALSE",
+            "api_method": "VARCHAR",
+            "api_expect_status": "INTEGER",
+            "api_max_ms": "INTEGER",
+            "api_header_name": "VARCHAR",
+            "api_header_value": "VARCHAR",
+            "api_body": "VARCHAR",
         }.items():
             if col not in mcols:
                 cx.execute(text(f"ALTER TABLE monitors ADD COLUMN {col} {kind}"))

@@ -66,6 +66,8 @@ def describe_monitor(monitor):
     kind = getattr(monitor, "kind", None) or "website"
     if kind == "port":
         return "server", f"{monitor.url} (port {monitor.port})"
+    if kind == "api":
+        return "API", f"{monitor.api_method or 'GET'} {monitor.url}"
     if kind == "heartbeat":
         every = monitor.heartbeat_minutes or 60
         nice = (f"{every // 1440} day{'s' if every // 1440 != 1 else ''}" if every >= 1440 and every % 1440 == 0
@@ -91,7 +93,7 @@ def _status_email(colour, bg, line, heading, lead, rows, footer):
     </div>'''
 
 
-def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None, monitor=None, reason: str = None):
+def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str = None, monitor=None, reason: str = None, detail: str = None):
     what, where = describe_monitor(monitor) if monitor else ("website", url)
     name = escape(monitor_name)
     if what == "website" and reason == "keyword":
@@ -102,6 +104,14 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str =
     elif what == "website":
         place = f'<a href="{escape(where)}" style="color:#0F1B2D">{escape(where)}</a>'
         lead, footer = f"<strong>{name}</strong> is not responding.", "We'll keep checking and email you the moment it's back."
+    elif what == "API":
+        place = escape(where)
+        lead = {
+            "status": f"<strong>{name}</strong> answered with the wrong status: {escape(detail or '')}.",
+            "slow": f"<strong>{name}</strong> is answering too slowly: {escape(detail or '')}.",
+            "content": f"<strong>{name}</strong> answered, but the reply no longer contains <strong>\u201c{escape(detail or '')}\u201d</strong>.",
+        }.get(reason, f"<strong>{name}</strong> isn't answering.")
+        footer = "We checked twice to be sure. We'll email you as soon as it's working normally again."
     elif what == "server":
         place = escape(where)
         lead = f"<strong>{name}</strong> stopped answering on port {monitor.port}."
@@ -117,10 +127,12 @@ def send_down_alert(monitor_name: str, url: str, to_email: str = None, tz: str =
             "bcc": ADMIN_COPY_EMAIL if to_email else None,
             "subject": (f"🔴 {monitor_name} missed its check-in" if what == "scheduled job"
                         else f"🟠 {monitor_name}: page content missing" if reason == "keyword"
+                        else f"🟠 {monitor_name} is slow" if reason == "slow"
+                        else f"🔴 {monitor_name} has a problem" if reason in ("status", "content")
                         else f"🔴 {monitor_name} is down"),
             "html": _status_email("#BF2433", "#FDE7E9", "#F1A7AF",
-                                  "🔴 Missed check-in" if what == "scheduled job" else f"🔴 {what.capitalize()} down",
-                                  lead, [("Name", name), ("Website" if what == "website" else "Details", place),
+                                  "🔴 Missed check-in" if what == "scheduled job" else ("🔴 API problem" if what == "API" else f"🔴 {what.capitalize()} down"),
+                                  lead, [("Name", name), ("Website" if what == "website" else ("Address" if what == "API" else "Details"), place),
                                          ("Time", escape(_fmt_time(tz=tz)))], footer),
         }, unsubscribe="alerts")
         print(f"Down alert sent for {monitor_name}")

@@ -24,7 +24,7 @@ def apply_plan(db, user: User, plan_key):
     monitors = db.query(Monitor).filter(Monitor.user_id == user.id).order_by(Monitor.created_at.asc(), Monitor.id.asc()).all()
     # Each kind has its own allowance (websites, servers, scheduled jobs). Within each kind the
     # oldest stay on and the rest pause (never deleted) until the customer upgrades again.
-    for kind in ("website", "port", "heartbeat"):
+    for kind in ("website", "port", "heartbeat", "api"):
         mine = [m for m in monitors if (m.kind or "website") == kind]
         cap = limit_for(plan, kind)
         for i, m in enumerate(mine):

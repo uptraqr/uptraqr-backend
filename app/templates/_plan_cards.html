@@ -27,7 +27,7 @@
       {% if feats[key].tamper %}<li class="hl">{{ feats[key].tamper }}</li>{% else %}<li class="no">No tamper watch</li>{% endif %}
       <li>Email alerts</li>
       <li>SSL and domain expiry reminders</li>
-      {% if p.servers %}<li class="hl">{{ p.server_limit }} server checks</li><li class="hl">{{ p.job_limit }} scheduled job checks</li>{% else %}<li class="no">No server or job checks</li>{% endif %}
+      {% if p.servers %}<li class="hl">{{ p.server_limit }} server checks</li><li class="hl">{{ p.api_limit }} API checks</li><li class="hl">{{ p.job_limit }} scheduled job checks</li>{% else %}<li class="no">No server, API or job checks</li>{% endif %}
       {% if key == 'free' %}<li>Website health check</li>{% else %}<li class="hl">Monthly health report email</li>{% endif %}
       {% if feats[key].hist %}<li>{{ feats[key].hist }}</li>{% else %}<li class="no">No history</li>{% endif %}
     </ul>

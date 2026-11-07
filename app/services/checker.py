@@ -65,6 +65,36 @@ def check_keyword(url: str, keyword: str):
     return result
 
 
+def _api_once(monitor):
+    from app.services.safe_fetch import safe_api_request
+    from app.core.secretbox import unseal
+    headers = {}
+    if monitor.api_header_name:
+        headers[monitor.api_header_name] = unseal(monitor.api_header_value)
+    try:
+        r = safe_api_request(monitor.url, monitor.api_method or "GET", headers, monitor.api_body)
+    except (requests.exceptions.RequestException, UnsafeURLError):
+        return {"is_up": False, "status_code": None, "response_time": None}
+    out = {"is_up": True, "status_code": r["status"], "response_time": r["seconds"]}
+    expected = monitor.api_expect_status or 200
+    if r["status"] != expected:
+        out.update(is_up=False, reason="status", detail=f"{r['status']} (expected {expected})")
+    elif monitor.api_max_ms and r["seconds"] * 1000 > monitor.api_max_ms:
+        out.update(is_up=False, reason="slow", detail=f"{r['seconds']:.2f}s (limit {monitor.api_max_ms / 1000:g}s)")
+    elif monitor.keyword and monitor.keyword.casefold() not in r["text"].casefold():
+        out.update(is_up=False, reason="content", detail=monitor.keyword)
+    return out
+
+
+def check_api(monitor):
+    """Call the API; if anything's wrong, wait a few seconds and try again before alerting."""
+    result = _api_once(monitor)
+    if not result["is_up"]:
+        time.sleep(RETRY_DELAY)
+        result = _api_once(monitor)
+    return result
+
+
 def in_maintenance(monitor, now=None) -> bool:
     until = getattr(monitor, "maintenance_until", None)
     return bool(until and until > (now or datetime.utcnow()))
@@ -113,6 +143,8 @@ def check_any(monitor):
         return check_port(monitor.url, monitor.port)
     if kind == "heartbeat":
         return check_heartbeat(monitor)
+    if kind == "api":
+        return check_api(monitor)
     if getattr(monitor, "keyword", None):
         return check_keyword(monitor.url, monitor.keyword)
     return check_url(monitor.url)
@@ -156,7 +188,7 @@ def _record(db, monitor, user, result):
     if not result["is_up"] and not open_incident:
         db.add(Incident(monitor_id=monitor.id))
         if wants_email:
-            send_down_alert(monitor.name, monitor.url, email, tz=user.timezone, monitor=monitor, reason=result.get("reason"))
+            send_down_alert(monitor.name, monitor.url, email, tz=user.timezone, monitor=monitor, reason=result.get("reason"), detail=result.get("detail"))
         if user and user.phone:
             send_down_sms(monitor.name, monitor.url, user.phone)
     elif result["is_up"] and open_incident:

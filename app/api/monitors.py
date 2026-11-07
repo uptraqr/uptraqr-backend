@@ -28,6 +28,16 @@ class MonitorCreate(BaseModel):
     port: Optional[int] = None
     every_minutes: Optional[int] = None
     keyword: Optional[str] = None
+    method: Optional[str] = None
+    expect_status: Optional[int] = None
+    max_seconds: Optional[float] = None
+    header_name: Optional[str] = None
+    header_value: Optional[str] = None
+    body: Optional[str] = None
+
+import re as _re
+_HEADER_NAME = _re.compile(r"^[A-Za-z0-9-]{1,64}$")
+_BLOCKED_HEADERS = {"host", "content-length", "transfer-encoding", "connection", "cookie", "user-agent"}
 
 
 class MonitorSettings(BaseModel):
@@ -53,9 +63,15 @@ class MonitorUpdate(BaseModel):
     url: Optional[str]
     is_active: Optional[bool]
 
+def _public(m):
+    d = {c.name: getattr(m, c.name) for c in m.__table__.columns}
+    d["api_header_value"] = "••••••" if m.api_header_value else None
+    return d
+
+
 @router.get("/monitors")
 def get_monitors(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return db.query(Monitor).filter(Monitor.user_id == current_user.id).all()
+    return [_public(m) for m in db.query(Monitor).filter(Monitor.user_id == current_user.id).all()]
 
 def add_monitor_for(db, user, raw_url: str, name: str) -> Monitor:
     """Shared rules for adding a website (used by the dashboard and the email sign-up link)."""
@@ -105,7 +121,7 @@ def add_server_monitor(db, user, data: MonitorCreate) -> Monitor:
     if not plan["servers"]:
         raise HTTPException(status_code=403, detail="Server and scheduled job checks are included on paid plans. Upgrade to Starter or above to add one.")
     from app.core.plans import limit_for, KIND_WORDS
-    if data.kind in ("port", "heartbeat"):
+    if data.kind in ("port", "heartbeat", "api"):
         used = db.query(Monitor).filter(Monitor.user_id == user.id, Monitor.is_active == True, Monitor.kind == data.kind).count()
         cap = limit_for(plan, data.kind)
         if used >= cap:
@@ -132,6 +148,42 @@ def add_server_monitor(db, user, data: MonitorCreate) -> Monitor:
         if dup:
             raise HTTPException(status_code=409, detail="You're already watching that server and port.")
         m = Monitor(user_id=user.id, name=name, url=host, kind="port", port=int(data.port))
+    elif data.kind == "api":
+        from app.core.secretbox import seal
+        url = (data.url or "").strip()
+        if not url.startswith(("http://", "https://")):
+            url = "https://" + url
+        if len(url) > 2000:
+            raise HTTPException(status_code=400, detail="That address is too long.")
+        try:
+            check_url_is_safe(url)
+        except UnsafeURLError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        method = (data.method or "GET").upper()
+        if method not in ("GET", "POST", "HEAD"):
+            raise HTTPException(status_code=400, detail="Choose GET, POST or HEAD.")
+        expect = data.expect_status or 200
+        if not 100 <= expect <= 599:
+            raise HTTPException(status_code=400, detail="The expected status should be a number like 200.")
+        max_ms = None
+        if data.max_seconds:
+            if not 0.1 <= data.max_seconds <= 30:
+                raise HTTPException(status_code=400, detail="The time limit should be between 0.1 and 30 seconds.")
+            max_ms = int(data.max_seconds * 1000)
+        hname = (data.header_name or "").strip()
+        hvalue = (data.header_value or "").strip()
+        if hname:
+            if not _HEADER_NAME.match(hname) or hname.lower() in _BLOCKED_HEADERS:
+                raise HTTPException(status_code=400, detail="That header name isn't allowed. Use something like Authorization or X-API-Key.")
+            if not hvalue or len(hvalue) > 2000 or any(c in hvalue for c in "\r\n"):
+                raise HTTPException(status_code=400, detail="Please enter the header's value (your API key or token).")
+        body = (data.body or "").strip() if method == "POST" else ""
+        if len(body) > 2000:
+            raise HTTPException(status_code=400, detail="Keep the request body under 2,000 characters.")
+        m = Monitor(user_id=user.id, name=name, url=url, kind="api", api_method=method,
+                    api_expect_status=expect, api_max_ms=max_ms, keyword=_clean_keyword(data.keyword),
+                    api_header_name=hname or None, api_header_value=seal(hvalue) if hname else None,
+                    api_body=body or None)
     elif data.kind == "heartbeat":
         if data.every_minutes not in HEARTBEAT_CHOICES:
             raise HTTPException(status_code=400, detail="Please choose how often this job runs.")
@@ -149,8 +201,8 @@ def add_server_monitor(db, user, data: MonitorCreate) -> Monitor:
 def create_monitor(monitor: MonitorCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not monitor.name.strip():
         raise HTTPException(status_code=400, detail="Please give this a name.")
-    if monitor.kind in ("port", "heartbeat"):
-        return add_server_monitor(db, current_user, monitor)
+    if monitor.kind in ("port", "heartbeat", "api"):
+        return _public(add_server_monitor(db, current_user, monitor))
     keyword = _clean_keyword(monitor.keyword)
     m = add_monitor_for(db, current_user, monitor.url, monitor.name)
     if keyword:

@@ -15,6 +15,7 @@ PLANS = {
         "servers": False,
         "server_limit": 0,     # port checks
         "job_limit": 0,        # scheduled-job (heartbeat) checks
+        "api_limit": 0,         # API checks
     },
     "starter": {
         "label": "Starter",
@@ -26,6 +27,7 @@ PLANS = {
         "servers": True,
         "server_limit": 3,     # port checks
         "job_limit": 5,        # scheduled-job (heartbeat) checks
+        "api_limit": 3,         # API checks
     },
     "pro": {
         "label": "Pro",
@@ -37,6 +39,7 @@ PLANS = {
         "servers": True,
         "server_limit": 10,     # port checks
         "job_limit": 20,        # scheduled-job (heartbeat) checks
+        "api_limit": 10,         # API checks
     },
     "agency": {
         "label": "Agency",
@@ -48,6 +51,7 @@ PLANS = {
         "servers": True,
         "server_limit": 30,     # port checks
         "job_limit": 50,        # scheduled-job (heartbeat) checks
+        "api_limit": 30,         # API checks
     },
 }
 
@@ -83,8 +87,8 @@ def plan_key(user) -> str:
     return TRIAL_PLAN if on_trial(user) else "free"
 
 
-KIND_LIMIT = {"website": "sites", "port": "server_limit", "heartbeat": "job_limit"}
-KIND_WORDS = {"website": ("website", "websites"), "port": ("server", "servers"), "heartbeat": ("scheduled job", "scheduled jobs")}
+KIND_LIMIT = {"website": "sites", "port": "server_limit", "heartbeat": "job_limit", "api": "api_limit"}
+KIND_WORDS = {"website": ("website", "websites"), "port": ("server", "servers"), "heartbeat": ("scheduled job", "scheduled jobs"), "api": ("API", "APIs")}
 
 
 def limit_for(plan: dict, kind: str) -> int:

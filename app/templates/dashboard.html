@@ -106,7 +106,13 @@ dialog::backdrop{background:rgba(15,27,45,.45)}
 dialog h2{font-size:22px;margin-bottom:6px}
 dialog .sub{color:var(--muted);margin-bottom:20px}
 dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
-.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 18px}
+.kinds{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0 18px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{font-weight:400;color:var(--muted)}
+.adv{margin:0 0 16px;border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 12px}
+.adv summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.adv .field:first-of-type{margin-top:12px}
+dialog textarea{width:100%;padding:10px 14px;background:var(--console);border:2px solid var(--rule-strong);border-radius:var(--r-sm);color:var(--ink);font:500 15px/1.4 ui-monospace,Menlo,monospace}
 .kinds label{cursor:pointer}
 .kinds input{position:absolute;opacity:0;pointer-events:none}
 .kinds span{display:block;height:100%;border:2px solid var(--rule-strong);border-radius:var(--r-md);padding:10px;background:var(--console)}
@@ -118,6 +124,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--console);border:2px solid var(--rule-strong);border-radius:var(--r-sm);color:var(--ink);font:500 17px var(--body)}
 @media (max-width:420px){.kinds{grid-template-columns:1fr}.kinds span{display:flex;gap:8px;align-items:baseline}}
 .hb p{margin:0 0 10px;color:var(--text);font-size:15px}
+.kw{font:500 13px ui-monospace,Menlo,monospace;background:var(--signal-soft);padding:1px 5px;border-radius:4px}
 .pill.maint{background:var(--signal-soft);color:var(--ink);border:1px solid #D3DAE5}
 .sets .set+.set{border-top:1px solid var(--rule);margin-top:14px;padding-top:14px}
 .sets h4{margin:0 0 4px;font-size:15px;color:var(--ink)}
@@ -148,7 +155,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
   <div class="dash-head">
     <div>
       <h1>{{ "Your websites and servers" if has_servers else "Your websites" }}</h1>
-      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan{% if trial_days %} (free trial){% endif %}</strong>. {% set nweb = monitors|selectattr('kind','equalto','website')|list|length %}Using {{ nweb }} of {{ plan.sites }} website{{ 's' if plan.sites != 1 }}{% if plan.servers %} · {{ monitors|selectattr('kind','equalto','port')|list|length }} of {{ plan.server_limit }} servers · {{ monitors|selectattr('kind','equalto','heartbeat')|list|length }} of {{ plan.job_limit }} jobs{% endif %}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' and not trial_available %} <a href="/pricing">Upgrade</a>{% endif %}</p>
+      <p class="who">{{ user.name or user.email }}, on the <strong>{{ plan.label }} plan{% if trial_days %} (free trial){% endif %}</strong>. {% set nweb = monitors|selectattr('kind','equalto','website')|list|length %}Using {{ nweb }} of {{ plan.sites }} website{{ 's' if plan.sites != 1 }}{% if plan.servers %} · {{ monitors|selectattr('kind','equalto','port')|list|length }} of {{ plan.server_limit }} servers · {{ monitors|selectattr('kind','equalto','api')|list|length }} of {{ plan.api_limit }} APIs · {{ monitors|selectattr('kind','equalto','heartbeat')|list|length }} of {{ plan.job_limit }} jobs{% endif %}, checked every {{ plan.check_minutes }} minute{{ 's' if plan.check_minutes != 1 }}.{% if plan.label == 'Free' and not trial_available %} <a href="/pricing">Upgrade</a>{% endif %}</p>
     </div>
     <button class="btn btn-primary" data-action="add">Add a website or server</button>
   </div>
@@ -204,7 +211,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
       <div class="site-main">
         <div>
           <div class="site-name">{{ m.name }}</div>
-          <div class="site-url">{% if m.kind == 'port' %}Server {{ m.url }} · port {{ m.port }}{% elif m.kind == 'heartbeat' %}Scheduled job · checks in every {{ m.every }}{% else %}{{ m.url }}{% endif %}</div>
+          <div class="site-url">{% if m.kind == 'port' %}Server {{ m.url }} · port {{ m.port }}{% elif m.kind == 'api' %}API · {{ m.api_method }} {{ m.url }}{% elif m.kind == 'heartbeat' %}Scheduled job · checks in every {{ m.every }}{% else %}{{ m.url }}{% endif %}</div>
         </div>
         <div class="site-pills">
           {% if m.maintenance %}<span class="pill maint">🔧 Maintenance until {{ m.maintenance }}</span>{% endif %}
@@ -228,6 +235,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
           <span>SSL <strong>{% if m.ssl_days == 'N/A' %}not found{% elif m.ssl_days < 0 %}expired{% else %}{{ m.ssl_days }} days left{% endif %}</strong></span>
           <span>Domain <strong>{% if m.domain_days is none %}{{ 'not published' if m.domain_checked else 'checking' }}{% elif m.domain_days < 0 %}expired{% else %}renews in {{ m.domain_days }} days{% endif %}</strong></span>
           {% endif %}
+          {% if m.kind == 'api' %}<span>Expects <strong>{{ m.api_expect }}{% if m.api_max %} in under {{ '%g'|format(m.api_max) }}s{% endif %}{% if m.keyword %}, containing <code class="kw">{{ m.keyword }}</code>{% endif %}</strong></span>{% if m.api_auth %}<span>Sends <strong>{{ m.api_auth }}</strong> 🔒</span>{% endif %}{% endif %}
           {% if m.uptime_30 is not none %}<span>Uptime, 30 days <strong>{{ m.uptime_30 }}%</strong></span>{% endif %}
           {% if m.kind != 'heartbeat' %}<span>Last check <strong>{{ m.last_checked }}</strong></span>{% endif %}
         </div>
@@ -252,7 +260,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
           <p class="hb-note">Keep this link private. Anyone with it can mark your job as checked in. Not sure how? Forward this to whoever looks after your server.</p>
         </div>
       </details>
-      {% elif m.kind == 'port' %}
+      {% elif m.kind in ('port', 'api') %}
       {% elif m.tamper_status == 'locked' %}
       <details class="tw" data-locked="1">
         <summary>Tamper watch <svg class="chev" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
@@ -340,6 +348,7 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
     <div class="kinds" role="radiogroup" aria-label="Type of check">
       <label><input type="radio" name="kind" value="website" checked><span><b>Website</b><small>Online, padlock, hacks</small></span></label>
       <label><input type="radio" name="kind" value="port" {{ 'data-locked=1' if not plan.servers }}><span><b>Server</b><small>Email, FTP, game, VoIP…</small></span></label>
+      <label><input type="radio" name="kind" value="api" {{ 'data-locked=1' if not plan.servers }}><span><b>API</b><small>App and system connections</small></span></label>
       <label><input type="radio" name="kind" value="heartbeat" {{ 'data-locked=1' if not plan.servers }}><span><b>Scheduled job</b><small>Backups, nightly tasks</small></span></label>
     </div>
     <div id="addError" class="notice error" role="alert" hidden></div>
@@ -353,6 +362,19 @@ dialog select{width:100%;min-height:50px;padding:10px 14px;background:var(--cons
       <span class="hint">We'll check that it answers from the internet.</span></div>
     <div class="field" data-for="port" hidden><label for="portNum">Port</label><input id="portNum" type="number" min="1" max="65535" placeholder="587" inputmode="numeric">
       <span class="hint">Common ones: 25, 587 or 993 for email, 21 for FTP, 3389 for Remote Desktop, 5060 for phone systems.</span></div>
+    <div class="field" data-for="api" hidden><label for="apiUrl">API address</label><input id="apiUrl" placeholder="https://api.yourbusiness.ca/health" inputmode="url" autocapitalize="off" spellcheck="false"></div>
+    <div class="field-row" data-for="api" hidden>
+      <div class="field"><label for="apiMethod">Method</label><select id="apiMethod"><option>GET</option><option>POST</option><option>HEAD</option></select></div>
+      <div class="field"><label for="apiStatus">Expected status</label><input id="apiStatus" type="number" min="100" max="599" value="200" inputmode="numeric"></div>
+    </div>
+    <div class="field" data-for="api" hidden><label for="apiKw">Reply must contain <span class="opt">(optional)</span></label><input id="apiKw" maxlength="100" placeholder='e.g. "status":"ok"'></div>
+    <div class="field" data-for="api" hidden><label for="apiMax">Alert if slower than <span class="opt">(optional, seconds)</span></label><input id="apiMax" type="number" min="0.1" max="30" step="0.1" placeholder="2" inputmode="decimal"></div>
+    <details class="adv" data-for="api" hidden><summary>Needs a key or login? <span class="opt">(optional)</span></summary>
+      <div class="field"><label for="apiHName">Header name</label><input id="apiHName" placeholder="Authorization or X-API-Key" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label for="apiHVal">Header value</label><input id="apiHVal" type="password" autocomplete="off" placeholder="Bearer abc123…">
+        <span class="hint">Stored encrypted. Tip: use a read-only key made just for monitoring.</span></div>
+      <div class="field" id="apiBodyField"><label for="apiBody">Body to send with POST</label><textarea id="apiBody" rows="3" maxlength="2000" placeholder='{"ping": true}'></textarea></div>
+    </details>
     <div class="field" data-for="heartbeat" hidden><label for="everyMin">How often does it run?</label>
       <select id="everyMin"><option value="5">Every 5 minutes</option><option value="15">Every 15 minutes</option><option value="30">Every 30 minutes</option><option value="60">Every hour</option><option value="360">Every 6 hours</option><option value="720">Every 12 hours</option><option value="1440" selected>Every day</option><option value="10080">Every week</option></select>
       <span class="hint">After you add it, we'll give you a private link for the job to visit each time it runs.</span></div>
@@ -459,10 +481,11 @@ function showKind(){
   document.querySelectorAll('#addFields [data-for]').forEach(f=>{f.hidden=f.dataset.for!==k;});
   document.getElementById('addFields').hidden=locked; document.getElementById('lockedNote').hidden=!locked;
   document.getElementById('addBtn').hidden=locked;
-  document.getElementById('siteName').placeholder={website:'My business website',port:'Office email server',heartbeat:'Nightly backup'}[k];
+  document.getElementById('siteName').placeholder={website:'My business website',port:'Office email server',api:'Booking app API',heartbeat:'Nightly backup'}[k];
   document.getElementById('addError').hidden=true;
 }
 document.querySelectorAll('input[name=kind]').forEach(r=>r.addEventListener('change',showKind));
+(function(){const m=document.getElementById('apiMethod'),f=document.getElementById('apiBodyField');if(m&&f){const s=()=>{f.hidden=m.value!=='POST';};m.addEventListener('change',s);s();}})();
 async function addSite(ev){
   ev.preventDefault(); const btn=document.getElementById('addBtn'), err=document.getElementById('addError');
   btn.disabled=true; err.hidden=true;
@@ -470,9 +493,12 @@ async function addSite(ev){
   if(k==='website'){ body.url=document.getElementById('siteUrl').value; body.keyword=document.getElementById('siteKw').value; }
   if(k==='port'){ body.url=document.getElementById('hostName').value; body.port=parseInt(document.getElementById('portNum').value,10)||null; }
   if(k==='heartbeat') body.every_minutes=parseInt(document.getElementById('everyMin').value,10);
+  if(k==='api'){ const v=id=>document.getElementById(id).value; body.url=v('apiUrl'); body.method=v('apiMethod'); body.expect_status=parseInt(v('apiStatus'),10)||200;
+    body.keyword=v('apiKw'); body.max_seconds=parseFloat(v('apiMax'))||null; body.header_name=v('apiHName'); body.header_value=v('apiHVal'); body.body=v('apiBody'); }
   try{
     if(k==='website'&&!body.url.trim()) throw new Error('Please enter the website address.');
     if(k==='port'&&!body.url.trim()) throw new Error("Please enter the server's name or IP address.");
+    if(k==='api'&&!body.url.trim()) throw new Error("Please enter the API's address.");
     await api('/api/monitors',{method:'POST',body:JSON.stringify(body)});
     location.reload();
   }catch(e){ err.textContent=e.message; err.hidden=false; btn.disabled=false; if(/limit/i.test(e.message)){const a=el('a',null,' See plans');a.href='/pricing';err.append(a);} }

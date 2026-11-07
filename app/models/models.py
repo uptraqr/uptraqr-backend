@@ -42,6 +42,13 @@ class Monitor(Base):
     keyword = Column(String, nullable=True)                    # websites: alert if the page stops showing this
     maintenance_until = Column(DateTime, nullable=True)        # alerts paused until this time
     relearn_after_maintenance = Column(Boolean, nullable=False, default=False)
+    # API checks
+    api_method = Column(String, nullable=True)           # GET | POST | HEAD
+    api_expect_status = Column(Integer, nullable=True)   # e.g. 200
+    api_max_ms = Column(Integer, nullable=True)          # alert if slower than this
+    api_header_name = Column(String, nullable=True)      # e.g. Authorization
+    api_header_value = Column(String, nullable=True)     # stored encrypted
+    api_body = Column(String, nullable=True)             # JSON sent with POST
 
 class CheckResult(Base):
     __tablename__ = "check_results"

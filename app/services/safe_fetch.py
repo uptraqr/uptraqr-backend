@@ -121,3 +121,29 @@ def check_host_is_safe(host: str, port: int) -> str:
         if not _ip_is_public(info[4][0]):
             raise UnsafeURLError("That address points to a private network.")
     return infos[0][4][0]
+
+
+def safe_api_request(url: str, method: str = "GET", headers: dict = None, body: str = None,
+                     timeout: int = 15, max_bytes: int = 1_000_000):
+    """
+    Call a customer's API once. Public addresses only; redirects are NOT followed
+    (an API answering with a redirect is reported as that status code).
+    """
+    import time
+    check_url_is_safe(url)
+    h = {"User-Agent": USER_AGENT, "Accept": "application/json, */*"}
+    h.update(headers or {})
+    if body and method == "POST":
+        h.setdefault("Content-Type", "application/json")
+    started = time.monotonic()
+    with requests.request(method, url, headers=h, data=body.encode() if (body and method == "POST") else None,
+                          timeout=timeout, allow_redirects=False, stream=True) as r:
+        chunks, size = [], 0
+        if method != "HEAD":
+            for chunk in r.iter_content(16384):
+                chunks.append(chunk); size += len(chunk)
+                if size >= max_bytes:
+                    break
+        seconds = round(time.monotonic() - started, 3)
+        text = b"".join(chunks).decode(r.encoding or "utf-8", errors="replace")
+        return {"status": r.status_code, "seconds": seconds, "text": text}
